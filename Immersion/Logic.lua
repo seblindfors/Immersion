@@ -326,6 +326,30 @@ function TalkBox:SetOffset(newOffset)
 	end)
 end
 
+function TalkBox:OnEnter()
+	local fade
+	-- Complete quest
+	if self.lastEvent == 'QUEST_COMPLETE' then
+		-- check if multiple items to choose between and none chosen
+		if not (QuestInfoFrame.itemChoice == 0 and GetNumQuestChoices() > 1) then
+			fade = true
+		end
+	-- Accept quest
+	elseif self.lastEvent == 'QUEST_DETAIL' then
+		fade = true
+	-- Progress quest (why are these functions named like this?)
+	elseif IsQuestCompletable() then
+		fade = true
+	end
+	if fade then
+		L.UIFrameFadeIn(self.Hilite, 0.15, self.Hilite:GetAlpha(), 1)
+	end
+end
+
+function TalkBox:OnLeave()
+	L.UIFrameFadeOut(self.Hilite, 0.15, self.Hilite:GetAlpha(), 0)
+end
+
 function TalkBox:OnClick()
 	-- Complete quest
 	if self.lastEvent == 'QUEST_COMPLETE' then

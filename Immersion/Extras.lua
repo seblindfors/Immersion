@@ -56,7 +56,7 @@ end
 L.cfg = {
 	titlescale = 1,
 	titleoffset = -500,
-	boxscale = 1.1,
+	boxscale = 1,
 	boxoffset = 150,
 	accept = 'SPACE',
 	reset = 'BACKSPACE',

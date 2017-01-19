@@ -44,7 +44,7 @@ frame.ADDON_LOADED = function(self, name)
 		L.cfg = _G[svref] or L.cfg
 		_G[svref] = L.cfg
 
-		talkbox:SetScale(L.cfg.boxscale or 1.1)
+		talkbox:SetScale(L.cfg.boxscale or 1)
 		titles:SetScale(L.cfg.titlescale or 1)
 		self:SetScale(L.cfg.scale or 1)
 
@@ -94,6 +94,11 @@ L.HideFrame(QuestFrame)
 -- Set talkbox look on elements
 ----------------------------------
 talkbox.Elements:SetBackdrop(L.Backdrops.TALKBOX)
+talkbox.Hilite = CreateFrame('Frame', '$parentHilite', talkbox)
+talkbox.Hilite:SetPoint('TOPLEFT', 8, -8)
+talkbox.Hilite:SetPoint('BOTTOMRIGHT', -8, 8)
+talkbox.Hilite:SetBackdrop(L.Backdrops.GOSSIP_HILITE)
+talkbox.Hilite:SetAlpha(0)
 
 ----------------------------------
 -- Set this point here
