@@ -150,6 +150,7 @@ function NPC:UpdateTalkingHead(title, text, npcType)
 	local unit
 	if ( UnitExists('questnpc') and not UnitIsUnit('questnpc', 'player') and not UnitIsDead('questnpc') ) then
 		unit = 'questnpc'
+	elseif ( UnitExists('npc') and not UnitIsUnit('npc', 'player') and not UnitIsDead('npc') ) then
 		unit = 'npc'
 	else
 		unit = 'player'
