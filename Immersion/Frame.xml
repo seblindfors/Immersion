@@ -5,9 +5,6 @@
 		<Frames>
 			<Frame parentKey="TitleButtons" useParentLevel="true">
 				<Size x="300" y="0"/>
-				<Anchors>
-					<Anchor point="RIGHT" relativeKey="$parent.$parent" relativePoint="CENTER" x="-350" y="0"/>
-				</Anchors>
 			</Frame>
 			<Button parentKey="TalkBox" toplevel="true" frameStrata="HIGH" frameLevel="1">
 				<Size x="570" y="155"/>

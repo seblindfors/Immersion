@@ -7,6 +7,7 @@
 local _, L = ...
 local frame = _G[ _ .. 'Frame' ]
 local talkbox = frame.TalkBox
+local titles = frame.TitleButtons
 L.frame = frame
 
 ----------------------------------
@@ -20,6 +21,7 @@ frame:SetPropagateKeyboardInput(true)
 -- Register events
 ----------------------------------
 for _, event in pairs({
+	'ADDON_LOADED',
 	'GOSSIP_CLOSED',	-- Close gossip frame
 	'GOSSIP_SHOW',		-- Show gossip options, can be a mix of gossip/quests
 	'QUEST_COMPLETE',	-- Quest completed
@@ -31,10 +33,39 @@ for _, event in pairs({
 }) do frame:RegisterEvent(event) end
 
 ----------------------------------
+-- Load SavedVaribles
+----------------------------------
+frame.ADDON_LOADED = function(self, name)
+	if name == _ then
+		self:UnregisterEvent('ADDON_LOADED')
+		self.ADDON_LOADED = nil
+
+		local svref = _ .. 'Setup'
+		L.cfg = _G[svref] or L.cfg
+		_G[svref] = L.cfg
+
+		talkbox:SetScale(L.cfg.boxscale or 1.1)
+		titles:SetScale(L.cfg.titlescale or 1)
+		self:SetScale(L.cfg.scale or 1)
+
+		titles:SetPoint('CENTER', UIParent, 'CENTER', L.cfg.titleoffset or -500, 0)
+
+		LibStub('AceConfigRegistry-3.0'):RegisterOptionsTable(_, L.options)
+		L.config = LibStub('AceConfigDialog-3.0'):AddToBlizOptions(_)
+
+		local logo = CreateFrame('Frame', nil, L.config)
+		logo:SetFrameLevel(4)
+		logo:SetSize(100, 100)
+		logo:SetPoint('BOTTOMRIGHT', -16, 16)
+		logo:SetBackdrop({bgFile = ('Interface\\AddOns\\%s\\Textures\\Logo'):format(_)})
+	end
+end
+
+----------------------------------
 -- TitleButtons
 ----------------------------------
-frame.TitleButtons.Active = {}
-frame.TitleButtons.Buttons = {
+titles.Active = {}
+titles.Buttons = {
 	Gossip = {},
 	Quest = {},
 }
@@ -43,7 +74,7 @@ frame.TitleButtons.Buttons = {
 -- to mimic gossip/quest title buttons.
 for _, bType in pairs({'Gossip', 'Quest'}) do
 	for i=1, NUMGOSSIPBUTTONS do
-		local button = CreateFrame('Button', nil, frame.TitleButtons)
+		local button = CreateFrame('Button', nil, titles)
 		-- Button.lua, Extras.lua
 		L.Mixin(button, L.ButtonMixin, L.Mixins.ScaleOnFocus)
 		button:SetID(i)
@@ -204,6 +235,6 @@ hooksecurefunc('TalkingHead_LoadUI', function()
 		talkbox:SetOffset(self:GetTop() + 4)
 	end)
 	thf:HookScript('OnHide', function(self)
-		talkbox:SetOffset(150)
+		talkbox:SetOffset(L.cfg and L.cfg.boxoffset or 150)
 	end)
 end)

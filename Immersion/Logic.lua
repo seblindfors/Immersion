@@ -148,14 +148,13 @@ end
 
 function NPC:UpdateTalkingHead(title, text, npcType)
 	local unit
-	if ( UnitExists('questnpc') and not UnitIsUnit('questnpc', 'player') ) then
+	if ( UnitExists('questnpc') and not UnitIsUnit('questnpc', 'player') and not UnitIsDead('questnpc') ) then
 		unit = 'questnpc'
-	elseif ( UnitExists('npc') and not UnitIsUnit('npc', 'player') ) then
 		unit = 'npc'
 	else
 		unit = 'player'
 	end
-	local zoom = ( unit and unit == 'player' ) and 0.8 or 0.85
+	local zoom = ( unit and unit == 'player' ) and 0.82 or 0.85
 	local talkBox = self.TalkBox
 	talkBox:SetExtraOffset(0)
 	talkBox.MainFrame.Indicator:SetTexture('Interface\\GossipFrame\\' .. npcType .. 'Icon')
@@ -170,14 +169,19 @@ end
 -- Animation players
 ----------------------------------
 function NPC:PlayIntro(event)
-	self:EnableKeyboard(true)
 	self:Show()
-	local box = self.TalkBox
-	-- Handles the case of gossip -> gossip
-	if self.lastEvent ~= event then
-		self:FadeIn()
-		box:SetPoint('BOTTOM', UIParent, 'BOTTOM', 0, -150)
-		box:SetOffset(box.offset or 150)
+	if IsOptionFrameOpen() then
+		CloseGossip()
+		CloseQuest()
+	else
+		self:EnableKeyboard(true)
+		local box = self.TalkBox
+		-- Handles the case of gossip -> gossip
+		if self.lastEvent ~= event then
+			self:FadeIn()
+			box:SetPoint('BOTTOM', UIParent, 'BOTTOM', 0, -150)
+			box:SetOffset(box.offset or 150)
+		end
 	end
 end
 
@@ -191,33 +195,68 @@ end
 -- Key input handler
 ----------------------------------
 local inputs = {
-	SPACE = function(self)
+	accept = function(self)
 		local text = self.TalkBox.TextFrame.Text
 		if IsShiftKeyDown() then
 			text:RepeatTexts()
 		elseif text:GetNumRemaining() > 1 and text:IsSequence() then
 			text:ForceNext()
-		elseif self.lastEvent == 'GOSSIP_SHOW' and self.TitleButtons:GetNumActive() < 1 then
-			CloseGossip();
+		elseif self.lastEvent == 'GOSSIP_SHOW' and GetNumGossipOptions() < 1 then
+			CloseGossip()
+		elseif self.lastEvent == 'GOSSIP_SHOW' and GetNumGossipOptions() == 1 then
+			SelectGossipOption(1)
 		else
 			self.TalkBox:Click()
 		end
 	end,
-	BACKSPACE = function(self)
+	reset = function(self)
 		self.TalkBox.TextFrame.Text:RepeatTexts()
 	end,
-
--- Maybe add the ability to ignore/unignore quests?
--- 	if CanIgnoreQuest() then
--- --		Control:AddHint(KEY.CIRCLE, IGNORE)
--- 	elseif IsQuestIgnored() then
--- --		Control:AddHint(KEY.CIRCLE, UNIGNORE_QUEST)
--- 	end
+	ignore = function(self)
+		if CanIgnoreQuest() then
+			IgnoreQuest()
+		elseif IsQuestIgnored() then
+			UnignoreQuest()
+		end
+	end,
+	goodbye = function(self)
+		CloseGossip()
+		CloseQuest()
+	end,
+	number = function(self, id)
+		local active, count = self.TitleButtons.Active, 0
+		local button
+		for i=1, NUMGOSSIPBUTTONS do
+			local active = self.TitleButtons.Active[i]
+			if active then
+				count = count + 1
+				if count == id then
+					button = active
+				end
+			end
+		end
+		if button then
+			button.Hilite:SetAlpha(1)
+			button:Click()
+			button:OnLeave()
+			PlaySound("igQuestListSelect")
+		end
+	end,
 }
 
 function NPC:OnKeyDown(button)
-	if inputs[button] then
-		inputs[button](self)
+	local input
+	for action, func in pairs(inputs) do
+		if L.cfg[action] == button then
+			input = func
+			break
+		end
+	end
+	if input then
+		input(self)
+		self:SetPropagateKeyboardInput(false)
+	elseif L.cfg.enablenumbers and tonumber(button) then
+		inputs.number(self, tonumber(button))
 		self:SetPropagateKeyboardInput(false)
 	else
 		self:SetPropagateKeyboardInput(true)
@@ -271,7 +310,7 @@ end
 -- TalkBox button
 ----------------------------------
 function TalkBox:SetOffset(newOffset)
-	newOffset = newOffset or 150
+	newOffset = newOffset or ( L.cfg.boxoffset or 150)
 	self.offset = newOffset
 	newOffset = newOffset + ( self.extraOffset or 0 )
 	self:SetScript('OnUpdate', function(self)
@@ -304,7 +343,7 @@ end
 
 function TalkBox:SetExtraOffset(newOffset)
 	self.extraOffset = newOffset
-	self:SetOffset(self.offset or 150)
+	self:SetOffset(self.offset or (L.cfg.boxoffset or 150) )
 end
 
 ----------------------------------

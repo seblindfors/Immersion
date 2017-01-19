@@ -1,8 +1,11 @@
 ## Interface: 70100
 ## Title: Immersion
 ## Notes: Immersive replacement for quest & gossip
+## SavedVariables: ImmersionSetup
 
 -- Libs
+Libs\LibStub\LibStub.lua
+Libs\AceConfig-3.0\AceConfig-3.0.xml
 Libs\Animation.lua
 
 -- Extra stuff
