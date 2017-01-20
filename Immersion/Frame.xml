@@ -12,6 +12,12 @@
 					<Anchor point="BOTTOM" relativeKey="$parent.$parent" relativePoint="BOTTOM" x="0" y="150"/>
 				</Anchors>
 				<Frames>
+					<Frame parentKey="Hilite" useParentLevel="true" alpha="0.01">
+						<Anchors>
+							<Anchor point="TOPLEFT" x="8" y="-8"/>
+							<Anchor point="BOTTOMRIGHT" x="-8" y="8"/>
+						</Anchors>
+					</Frame>
 					<Frame parentKey="Elements" useParentLevel="true">
 						<Size x="570" y="0"/>
 						<Anchors>
@@ -270,13 +276,6 @@
 						</Animations>
 					</Frame>
 				</Frames>
-				<Scripts><!-- 
-					<OnLoad function="TalkingHeadFrame_OnLoad"/>
-					<OnShow function="TalkingHeadFrame_OnShow"/>
-					<OnHide function="TalkingHeadFrame_OnHide"/>
-					<OnEvent function="TalkingHeadFrame_OnEvent"/>
-					<OnClick function="TalkingHeadFrame_OnClick"/> -->
-				</Scripts>
 			</Button>
 		</Frames>
 	</Frame>

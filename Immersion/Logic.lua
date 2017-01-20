@@ -36,7 +36,6 @@ function NPC:GOSSIP_SHOW(...)
 end
 
 function NPC:GOSSIP_CLOSED(...)
-	self:ResetButtons()
 	self:PlayOutro()
 end
 
@@ -62,24 +61,18 @@ function NPC:QUEST_PROGRESS(...) -- special case, doesn't use QuestInfo
 	elements:Show()
 	elements:SetHeight(1)
 	elements.Progress:Show()
-	local top, offset = elements:GetTop()
-	for _, child in pairs({elements.Progress:GetRegions(), elements.Progress:GetChildren()}) do
+	elements:AdjustToChildren()
+	for _, child in pairs({elements.Progress:GetChildren()}) do
 		if child:IsVisible() then
-			local childOffset = child:GetBottom()
-			if childOffset and ( not offset or childOffset < offset ) then
-				offset = childOffset
-			end
+			-- add some padding to get the backdrop to wrap the frame properly.
+			local height = elements.Progress:GetHeight() + 90
+			elements:SetSize(364, height)
+			elements.Progress:SetHeight(height)
+			self.TalkBox:SetExtraOffset(height - 16)
+			return -- something was visible, break out.
 		end
 	end
-	if offset then
-		local atop, aoff = abs(top), abs(offset)
-		local newHeight = abs(offset) - abs(top) + 32
-		elements:SetSize(364, newHeight)
-		elements.Progress:SetHeight(newHeight)
-		self.TalkBox:SetExtraOffset(newHeight - 16)
-	else
-		self:ResetElements()
-	end
+	self:ResetElements()
 end
 
 function NPC:QUEST_COMPLETE(...)
@@ -122,7 +115,7 @@ function NPC:AddQuestInfo(template, acceptButton)
 			lastFrame = bottomShownFrame or shownFrame
 		end
 	end
-	-- hacky fix to stop a content frame that only contains a spacer from showing. 
+	-- hacky fix to stop a content frame that only contains a spacer from showing.
 	if height > 20 then
 		elements:SetSize(570, height + 32)
 		elements:Show()
@@ -155,33 +148,37 @@ function NPC:UpdateTalkingHead(title, text, npcType)
 	else
 		unit = 'player'
 	end
-	local zoom = ( unit and unit == 'player' ) and 0.82 or 0.85
 	local talkBox = self.TalkBox
 	talkBox:SetExtraOffset(0)
 	talkBox.MainFrame.Indicator:SetTexture('Interface\\GossipFrame\\' .. npcType .. 'Icon')
-	talkBox.MainFrame.Model.unit = unit
+	talkBox.MainFrame.Model:SetUnit(unit)
 	talkBox.NameFrame.Name:SetText(title)
 	talkBox.TextFrame.Text:SetText(text)
-	talkBox.MainFrame.Model:SetUnit(unit)
-	talkBox.MainFrame.Model:SetPortraitZoom(zoom)
 end
 
 ----------------------------------
 -- Animation players
 ----------------------------------
 function NPC:PlayIntro(event)
+	local isShown = self:IsVisible()
 	self:Show()
 	if IsOptionFrameOpen() then
-		CloseGossip()
-		CloseQuest()
+		self:ForceClose()
 	else
 		self:EnableKeyboard(true)
 		local box = self.TalkBox
 		-- Handles the case of gossip -> gossip
 		if self.lastEvent ~= event then
 			self:FadeIn()
-			box:SetPoint('BOTTOM', UIParent, 'BOTTOM', 0, -150)
-			box:SetOffset(box.offset or 150)
+
+			local point = L.Get('boxpoint')
+			local x, y = L.Get('boxoffsetX'), L.Get('boxoffsetY')
+			box:ClearAllPoints()
+			if not isShown then
+				box:SetPoint(point, UIParent, point, -x, -y)
+			end
+			box:SetOffset(box.offsetX or x, box.offsetY or y)
+
 		end
 	end
 end
@@ -190,6 +187,12 @@ end
 function NPC:PlayOutro()
 	self:EnableKeyboard(false)
 	self:FadeOut(0.5)
+end
+
+function NPC:ForceClose()
+	CloseGossip()
+	CloseQuest()
+	self:PlayOutro()
 end
 
 ----------------------------------
@@ -310,38 +313,44 @@ end
 ----------------------------------
 -- TalkBox button
 ----------------------------------
-function TalkBox:SetOffset(newOffset)
-	newOffset = newOffset or ( L.cfg.boxoffset or 150)
-	self.offset = newOffset
-	newOffset = newOffset + ( self.extraOffset or 0 )
+function TalkBox:SetOffset(x, y)
+	local point = L.Get('boxpoint')
+	x = x or L.Get('boxoffsetX')
+	y = y or L.Get('boxoffsetY')
+
+	self.offsetX = x
+	self.offsetY = y
+
+	local isBottom = ( point == 'Bottom' )
+	local isVert = ( isBottom or point == 'Top' )
+
+	y = y +  ( isBottom and self.extraY or 0 )
+
+	local evaluator = self[ 'Get' .. point ]
+	local parent = UIParent
+	local comp = isVert and y or x
+	local func = self[point]
+
 	self:SetScript('OnUpdate', function(self)
-		local offset = self:GetBottom()
-		local diff = newOffset - offset
-		if abs(newOffset - offset) < 0.05 then
-			self:SetPoint('BOTTOM', UIParent, 'BOTTOM', 0, newOffset)
+		local offset = (evaluator(self) or 0) - (evaluator(parent) or 0)
+		local diff = ( comp - offset )
+		if (offset == 0) or abs( comp - offset ) < 0.3 then
+			self:SetPoint(point, parent, x, y)
 			self:SetScript('OnUpdate', nil)
+		elseif isVert then
+			self:SetPoint(point, parent, x, offset + ( diff / 10 ))
 		else
-			self:SetPoint('BOTTOM', UIParent, 'BOTTOM', 0, offset + ( diff / 10) )
+			self:SetPoint(point, parent, offset + (diff / 10), y)
 		end
 	end)
 end
 
 function TalkBox:OnEnter()
-	local fade
 	-- Complete quest
-	if self.lastEvent == 'QUEST_COMPLETE' then
-		-- check if multiple items to choose between and none chosen
-		if not (QuestInfoFrame.itemChoice == 0 and GetNumQuestChoices() > 1) then
-			fade = true
-		end
-	-- Accept quest
-	elseif self.lastEvent == 'QUEST_DETAIL' then
-		fade = true
-	-- Progress quest (why are these functions named like this?)
-	elseif IsQuestCompletable() then
-		fade = true
-	end
-	if fade then
+	if 	( ( self.lastEvent == 'QUEST_COMPLETE' ) and
+		not (QuestInfoFrame.itemChoice == 0 and GetNumQuestChoices() > 1) ) or
+		( self.lastEvent == 'QUEST_DETAIL' ) or
+		( IsQuestCompletable() ) then
 		L.UIFrameFadeIn(self.Hilite, 0.15, self.Hilite:GetAlpha(), 1)
 	end
 end
@@ -367,8 +376,10 @@ function TalkBox:OnClick()
 end
 
 function TalkBox:SetExtraOffset(newOffset)
-	self.extraOffset = newOffset
-	self:SetOffset(self.offset or (L.cfg.boxoffset or 150) )
+	local currX = ( self.offsetX or L.Get('boxoffsetX') )
+	local currY = ( self.offsetY or L.Get('boxoffsetY') )
+	self.extraY = newOffset
+	self:SetOffset(currX, currY)
 end
 
 ----------------------------------

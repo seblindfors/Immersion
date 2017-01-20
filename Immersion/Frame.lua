@@ -41,14 +41,17 @@ frame.ADDON_LOADED = function(self, name)
 		self.ADDON_LOADED = nil
 
 		local svref = _ .. 'Setup'
-		L.cfg = _G[svref] or L.cfg
+		L.cfg = _G[svref] or L.GetDefaultConfig()
 		_G[svref] = L.cfg
 
-		talkbox:SetScale(L.cfg.boxscale or 1)
-		titles:SetScale(L.cfg.titlescale or 1)
-		self:SetScale(L.cfg.scale or 1)
+		talkbox:SetScale(L.Get('boxscale'))
+		titles:SetScale(L.Get('titlescale'))
+		self:SetScale(L.Get('scale'))
 
-		titles:SetPoint('CENTER', UIParent, 'CENTER', L.cfg.titleoffset or -500, 0)
+		local bPoint = L.Get('boxpoint')
+		talkbox:SetPoint(bPoint, UIParent, bPoint, L.Get('boxoffsetX'), L.Get('boxoffsetY'))
+
+		titles:SetPoint('CENTER', UIParent, 'CENTER', L.Get('titleoffset'), 0)
 
 		LibStub('AceConfigRegistry-3.0'):RegisterOptionsTable(_, L.options)
 		L.config = LibStub('AceConfigDialog-3.0'):AddToBlizOptions(_)
@@ -76,7 +79,7 @@ for _, bType in pairs({'Gossip', 'Quest'}) do
 	for i=1, NUMGOSSIPBUTTONS do
 		local button = CreateFrame('Button', nil, titles)
 		-- Button.lua, Extras.lua
-		L.Mixin(button, L.ButtonMixin, L.Mixins.ScaleOnFocus)
+		L.Mixin(button, L.ButtonMixin, L.ScalerMixin)
 		button:SetID(i)
 		button.NPC = bType
 		button:Init()
@@ -91,14 +94,10 @@ L.HideFrame(QuestFrame)
 ----------------------------------
 
 ----------------------------------
--- Set talkbox look on elements
+-- Set backdrops on elements
 ----------------------------------
 talkbox.Elements:SetBackdrop(L.Backdrops.TALKBOX)
-talkbox.Hilite = CreateFrame('Frame', '$parentHilite', talkbox)
-talkbox.Hilite:SetPoint('TOPLEFT', 8, -8)
-talkbox.Hilite:SetPoint('BOTTOMRIGHT', -8, 8)
 talkbox.Hilite:SetBackdrop(L.Backdrops.GOSSIP_HILITE)
-talkbox.Hilite:SetAlpha(0)
 
 ----------------------------------
 -- Set this point here
@@ -113,38 +112,8 @@ name:SetPoint('TOPLEFT', talkbox.PortraitFrame.Portrait, 'TOPRIGHT', 2, -19)
 -- Model script, light
 ----------------------------------
 local model = talkbox.MainFrame.Model
-model:SetLight(true, false, -250, 0, 0, 0.25, 1, 1, 1, 75, 1, 1, 1)
-model:SetScript('OnAnimFinished', function(self)
-	if self.reading then
-		self:SetAnimation(520)
-	elseif self.delay and self.timestamp then
-		local time = GetTime()
-		local diff = time - self.timestamp
-		-- shave off a second to avoid awkwardly long animation sequences
-		if diff < ( self.delay - 1 ) then
-			self.timestamp = time
-			self.delay = ( self.delay - 1 ) - diff
-			self.talking = true
-			if self.asking then
-				self:SetAnimation(65)
-			else
-				local yell = self.yelling and ( random(2) == 2 )
-				self:SetAnimation(yell and 64 or 60)
-			end
-		else
-			self.timestamp = nil
-			self.delay = nil
-			self.talking = nil
-			self.yelling = nil
-			self.asking = nil
-			self:SetAnimation(0)
-		end 
-	elseif self.talking then
-		self.talking = nil
-		self.yelling = nil
-		self:SetAnimation(0)
-	end
-end)
+model:SetLight(unpack(L.ModelMixin.LightValues))
+L.Mixin(model, L.ModelMixin)
 
 ----------------------------------
 -- Main text things
@@ -159,27 +128,22 @@ hooksecurefunc(text, 'SetNext', function(self, ...)
 	local counter = talkbox.TextFrame.SpeechProgress
 	talkbox.TextFrame.FadeIn:Play()
 	if text then
-		if ( model.unit == 'npc' or model.unit == 'questnpc' ) then
+		model:PrepareAnimation(model:GetUnit(), text)
+		if model:IsNPC() then
 			if not text:match('%b<>') then
 				self:SetVertexColor(1, 1, 1)
-				model.delay = self.delays and self.delays[1]
-				model.timestamp = GetTime()
-				model.asking = text:match('?')
-				model.yelling = text:match('!')
-				model.reading = false
-				model.talking = true
+				model:SetRemainingTime(GetTime(), ( self.delays and self.delays[1]))
 				if model.asking and not self:IsSequence() then
-					model:SetAnimation(65)
+					model:Ask()
 				else
 					local yell = model.yelling and random(2) == 2
-					model:SetAnimation(yell and 64 or 60)
+					if yell then model:Yell() else model:Talk() end
 				end
 			else
 				self:SetVertexColor(1, 0.5, 0)
 			end
-		elseif model.unit == 'player' then
-			model.reading = true
-			model:SetAnimation(520)
+		elseif model:IsPlayer() then
+			model:Read()
 		end
 	end
 
@@ -198,7 +162,9 @@ end)
 -- Misc fixes
 ----------------------------------
 talkbox.TextFrame.SpeechProgress:SetFont('Fonts\\MORPHEUS.ttf', 16, '')
-talkbox:SetScale(1.1) -- a bit small with 1.0 on default UI scale
+L.Mixin(talkbox.Elements, L.AdjustToChildren)
+L.Mixin(talkbox.Elements.Content, L.AdjustToChildren)
+L.Mixin(talkbox.Elements.Progress, L.AdjustToChildren)
 
 ----------------------------------
 -- Animation things
@@ -227,19 +193,24 @@ frame.FadeOut = function(self, fadeTime)
 end
 
 ----------------------------------
+-- Hacky hacky
 -- Hook the regular talking head,
 -- so that the offset is increased
 -- when they are shown at the same time.
 ----------------------------------
 hooksecurefunc('TalkingHead_LoadUI', function()
 	local thf = TalkingHeadFrame
-	if thf:IsVisible() then
-		talkbox:SetOffset(thf:GetTop() + 4)
+	if L.Get('boxpoint') == 'Bottom' and thf:IsVisible() then
+		talkbox:SetOffset(nil, thf:GetTop() + 8)
 	end
 	thf:HookScript('OnShow', function(self)
-		talkbox:SetOffset(self:GetTop() + 4)
+		if L.Get('boxpoint') == 'Bottom' then
+			talkbox:SetOffset(nil, self:GetTop() + 8)
+		end
 	end)
 	thf:HookScript('OnHide', function(self)
-		talkbox:SetOffset(L.cfg and L.cfg.boxoffset or 150)
+		if L.Get('boxpoint') == 'Bottom' then
+			talkbox:SetOffset()
+		end
 	end)
 end)

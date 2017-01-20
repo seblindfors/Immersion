@@ -1,5 +1,4 @@
-local _, L = ...
-local Button = {}
+local Button, _, L = {}, ...
 L.ButtonMixin = Button
 
 function Button:OnClick(button, down)
@@ -7,7 +6,9 @@ function Button:OnClick(button, down)
 end
 
 function Button:Update(text)
+	if self.cached == text then return end
 	self:SetAlpha(0)
+	self.cached = text
 	C_Timer.After(0.05, function() 
 		self:SetText(text)
 		local textHeight = self.Label:GetStringHeight()
@@ -35,12 +36,13 @@ function Button:SetOwner(owner)
 	hooksecurefunc(owner, 'SetFormattedText', function(_, ...) self:Update(select(2, ...)) end)
 	owner:HookScript('OnShow', function() self:Show() end)
 	owner:HookScript('OnHide', function()
+		self.cached = nil
 		self:SetText()
 		self:SetScale(1)
 		self:SetHeight(1)
 		self:UnlockHighlight()
 		self:OnLeave()
-		self:Hide() 
+		self:Hide()
 		self.Container:UpdateActive(self)
 	end)
 end
