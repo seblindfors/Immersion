@@ -98,7 +98,7 @@ L.options = {
 					get = L.GetFromSV,
 					set = function(_, val) L.cfg.ignore = L.ValidateKey(val) end,
 				},
-				number = {
+				enablenumbers = {
 					type = 'toggle',
 					name = '[1-9] ' .. PET_BATTLE_SELECT_AN_ACTION, -- lol
 					desc = L.GetListString(QUESTS_LABEL, GOSSIP_OPTIONS),

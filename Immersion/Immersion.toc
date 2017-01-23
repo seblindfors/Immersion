@@ -17,6 +17,7 @@ Config.lua
 
 -- Mixins
 Mixins\Scaler.lua
+Mixins\Titles.lua
 Mixins\Text.lua
 Mixins\Model.lua
 Mixins\Button.lua

@@ -1,18 +1,11 @@
 local _, L = ...
-local TEMPLATE, NPC, Titles, TalkBox = {}, {}, {}, {}
+local TEMPLATE, NPC, TalkBox = {}, {}, {}
 local frame, GetTime = L.frame, GetTime
-
-----------------------------------
--- Title button helpers
-----------------------------------
-function NPC:ResetButtons() self.TitleButtons:Hide() end
-function NPC:ShowButtons() self.TitleButtons:Show() end
 
 ----------------------------------
 -- Event handler
 ----------------------------------
 function NPC:OnEvent(event, ...)
-	self:ResetButtons()
 	self:ResetElements()
 	if self[event] then
 		self[event](self, ...)
@@ -26,13 +19,14 @@ end
 -- Events
 ----------------------------------
 function NPC:GOSSIP_SHOW(...)
-	self:PlayIntro('GOSSIP_SHOW')
-	self:ShowButtons()
-	self:UpdateTalkingHead(GetUnitName('npc'), GetGossipText(), 'GossipGossip')
-	NPCFriendshipStatusBar_Update(self.TalkBox)
-	NPCFriendshipStatusBar:ClearAllPoints()
-	NPCFriendshipStatusBar:SetStatusBarColor(0.5, 0.7, 1)
-	NPCFriendshipStatusBar:SetPoint('TOPLEFT', self.TalkBox, 'TOPLEFT', 32, 0)
+	if self:IsGossipAvailable() then
+		self:PlayIntro('GOSSIP_SHOW')
+		self:UpdateTalkingHead(GetUnitName('npc'), GetGossipText(), 'GossipGossip')
+		NPCFriendshipStatusBar_Update(self.TalkBox)
+		NPCFriendshipStatusBar:ClearAllPoints()
+		NPCFriendshipStatusBar:SetStatusBarColor(0.5, 0.7, 1)
+		NPCFriendshipStatusBar:SetPoint('TOPLEFT', self.TalkBox, 'TOPLEFT', 32, 0)
+	end
 end
 
 function NPC:GOSSIP_CLOSED(...)
@@ -42,7 +36,6 @@ end
 function NPC:QUEST_GREETING(...)
 	self:PlayIntro('QUEST_GREETING')
 	self:UpdateTalkingHead(GetUnitName('questnpc') or GetUnitName('npc'), GetGreetingText(), 'AvailableQuest')
-	self:ShowButtons()
 end
 
 function NPC:QUEST_PROGRESS(...) -- special case, doesn't use QuestInfo
@@ -128,6 +121,21 @@ function NPC:AddQuestInfo(template, acceptButton)
 	self.TalkBox.NameFrame.FadeIn:Play()
 end
 
+function NPC:IsGossipAvailable()
+	-- if there is only a non-gossip option, then go to it directly
+	if ( (GetNumGossipAvailableQuests() == 0) and 
+		(GetNumGossipActiveQuests() == 0) and 
+		(GetNumGossipOptions() == 1) and
+		not ForceGossip() ) then
+		local text, gossipType = GetGossipOptions()
+		if ( gossipType ~= "gossip" ) then
+			SelectGossipOption(1)
+			return false
+		end
+	end
+	return true
+end
+
 function NPC:ResetElements()
 	local elements = self.TalkBox.Elements
 	for _, frame in pairs(elements.Active) do
@@ -169,8 +177,7 @@ function NPC:PlayIntro(event)
 		local box = self.TalkBox
 		-- Handles the case of gossip -> gossip
 		if self.lastEvent ~= event then
-			self:FadeIn()
-
+			self:FadeIn(nil, isShown)
 			local point = L.Get('boxpoint')
 			local x, y = L.Get('boxoffsetX'), L.Get('boxoffsetY')
 			box:ClearAllPoints()
@@ -201,16 +208,17 @@ end
 local inputs = {
 	accept = function(self)
 		local text = self.TalkBox.TextFrame.Text
+		local numActive = self.TitleButtons.numActive
 		if IsShiftKeyDown() then
 			text:RepeatTexts()
 		elseif text:GetNumRemaining() > 1 and text:IsSequence() then
 			text:ForceNext()
-		elseif self.lastEvent == 'GOSSIP_SHOW' and GetNumGossipOptions() < 1 then
+		elseif self.lastEvent == 'GOSSIP_SHOW' and numActive < 1 then
 			CloseGossip()
-		elseif self.lastEvent == 'GOSSIP_SHOW' and GetNumGossipOptions() == 1 then
+		elseif self.lastEvent == 'GOSSIP_SHOW' and numActive == 1 then
 			SelectGossipOption(1)
 		else
-			self.TalkBox:Click()
+			self.TalkBox:Click('LeftButton')
 		end
 	end,
 	reset = function(self)
@@ -228,17 +236,7 @@ local inputs = {
 		CloseQuest()
 	end,
 	number = function(self, id)
-		local active, count = self.TitleButtons.Active, 0
-		local button
-		for i=1, NUMGOSSIPBUTTONS do
-			local active = self.TitleButtons.Active[i]
-			if active then
-				count = count + 1
-				if count == id then
-					button = active
-				end
-			end
-		end
+		local button = self.TitleButtons.Buttons[id]
 		if button then
 			button.Hilite:SetAlpha(1)
 			button:Click()
@@ -249,6 +247,10 @@ local inputs = {
 }
 
 function NPC:OnKeyDown(button)
+	if button == 'ESCAPE' then
+		self:ForceClose()
+		return
+	end
 	local input
 	for action, func in pairs(inputs) do
 		if L.cfg[action] == button then
@@ -265,49 +267,6 @@ function NPC:OnKeyDown(button)
 	else
 		self:SetPropagateKeyboardInput(true)
 	end
-end
-
-----------------------------------
--- Title buttons (gossip/quest x32)
-----------------------------------
-function Titles:AdjustHeight(newHeight)
-	self:SetScript('OnUpdate', function(self)
-		local height = self:GetHeight()
-		local diff = newHeight - height
-		if abs(newHeight - height) < 0.05 then
-			self:SetHeight(newHeight)
-			self:SetScript('OnUpdate', nil)
-		else
-			self:SetHeight(height + ( diff / 10 ) )
-		end
-	end)
-end
-
-function Titles:OnShow()
-	self:SetHeight(0)
-end
-
-function Titles:OnHide()
-	for i, button in pairs(self.Active) do
-		button:UnlockHighlight()
-	end
-	wipe(self.Active)
-	self.focus = nil
-end
-
-function Titles:GetNumActive()
-	return self.numActive or 0
-end
-
-function Titles:UpdateActive(button)
-	self.Active[button:GetID()] = button:IsVisible() and button or nil
-	local newHeight, numActive = 0, 0
-	for i, button in pairs(self.Active) do
-		newHeight = newHeight + button:GetHeight()
-		numActive = numActive + 1
-	end
-	self.numActive = numActive
-	self:AdjustHeight(newHeight)
 end
 
 ----------------------------------
@@ -346,7 +305,7 @@ function TalkBox:SetOffset(x, y)
 end
 
 function TalkBox:OnEnter()
-	-- Complete quest
+	-- Highlight the button when it can be clicked
 	if 	( ( self.lastEvent == 'QUEST_COMPLETE' ) and
 		not (QuestInfoFrame.itemChoice == 0 and GetNumQuestChoices() > 1) ) or
 		( self.lastEvent == 'QUEST_DETAIL' ) or
@@ -359,19 +318,28 @@ function TalkBox:OnLeave()
 	L.UIFrameFadeOut(self.Hilite, 0.15, self.Hilite:GetAlpha(), 0)
 end
 
-function TalkBox:OnClick()
-	-- Complete quest
-	if self.lastEvent == 'QUEST_COMPLETE' then
-		-- check if multiple items to choose between and none chosen
-		if not (QuestInfoFrame.itemChoice == 0 and GetNumQuestChoices() > 1) then
-			QuestFrameCompleteQuestButton:Click()
+function TalkBox:OnClick(button)
+	if button == 'LeftButton' then
+		-- Complete quest
+		if self.lastEvent == 'QUEST_COMPLETE' then
+			-- check if multiple items to choose between and none chosen
+			if not (QuestInfoFrame.itemChoice == 0 and GetNumQuestChoices() > 1) then
+				QuestFrameCompleteQuestButton:Click()
+			end
+		-- Accept quest
+		elseif self.lastEvent == 'QUEST_DETAIL' then
+			QuestFrameAcceptButton:Click()
+		-- Progress quest (why are these functions named like this?)
+		elseif IsQuestCompletable() then
+			CompleteQuest()
 		end
-	-- Accept quest
-	elseif self.lastEvent == 'QUEST_DETAIL' then
-		QuestFrameAcceptButton:Click()
-	-- Progress quest (why are these functions named like this?)
-	elseif IsQuestCompletable() then
-		CompleteQuest()
+	elseif button == 'RightButton' then
+		local text = self.TextFrame.Text
+		if text:GetNumRemaining() > 1 and text:IsSequence() then
+			text:ForceNext()
+		elseif text:IsSequence() then
+			text:RepeatTexts()
+		end
 	end
 end
 
@@ -387,7 +355,6 @@ end
 ----------------------------------
 L.Mixin(frame, NPC)
 L.Mixin(frame.TalkBox, TalkBox)
-L.Mixin(frame.TitleButtons, Titles)
 
 ----------------------------------
 -- Quest templates

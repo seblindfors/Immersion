@@ -18,7 +18,7 @@ L.frame = frame
 frame:SetPropagateKeyboardInput(true)
 
 ----------------------------------
--- Register events
+-- Register events for main frame
 ----------------------------------
 for _, event in pairs({
 	'ADDON_LOADED',
@@ -31,6 +31,21 @@ for _, event in pairs({
 	'QUEST_IGNORED',	-- Ignore the currently shown quest
 	'QUEST_PROGRESS',	-- Fires when you click on a quest you're currently on
 }) do frame:RegisterEvent(event) end
+
+----------------------------------
+-- Register events for titlebuttons
+----------------------------------
+for _, event in pairs({
+	'GOSSIP_CLOSED',	-- Hide buttons
+	'GOSSIP_SHOW',		-- Show gossip options, can be a mix of gossip/quests
+	'QUEST_COMPLETE',	-- Hide when going from gossip -> complete
+	'QUEST_DETAIL',		-- Hide when going from gossip -> detail
+	'QUEST_FINISHED',	-- Hide when going from gossip -> finished 
+	'QUEST_GREETING',	-- Show quest options, why is this a thing again?
+	'QUEST_IGNORED',	-- Hide when using ignore binding?
+	'QUEST_PROGRESS',	-- Hide when going from gossip -> active quest
+	'QUEST_LOG_UPDATE',	-- If quest changes while interacting
+}) do titles:RegisterEvent(event) end
 
 ----------------------------------
 -- Load SavedVaribles
@@ -65,31 +80,9 @@ frame.ADDON_LOADED = function(self, name)
 end
 
 ----------------------------------
--- TitleButtons
-----------------------------------
-titles.Active = {}
-titles.Buttons = {
-	Gossip = {},
-	Quest = {},
-}
-
--- Create 2 sets of 32 buttons
--- to mimic gossip/quest title buttons.
-for _, bType in pairs({'Gossip', 'Quest'}) do
-	for i=1, NUMGOSSIPBUTTONS do
-		local button = CreateFrame('Button', nil, titles)
-		-- Button.lua, Extras.lua
-		L.Mixin(button, L.ButtonMixin, L.ScalerMixin)
-		button:SetID(i)
-		button.NPC = bType
-		button:Init()
-	end
-end
-
-----------------------------------
 -- Hide regular frames
 ----------------------------------
-L.HideFrame(GossipFrame)
+L.HideFrame(GossipFrame) GossipFrame:UnregisterAllEvents()
 L.HideFrame(QuestFrame)
 ----------------------------------
 
@@ -98,6 +91,11 @@ L.HideFrame(QuestFrame)
 ----------------------------------
 talkbox.Elements:SetBackdrop(L.Backdrops.TALKBOX)
 talkbox.Hilite:SetBackdrop(L.Backdrops.GOSSIP_HILITE)
+
+----------------------------------
+-- Initiate titlebuttons
+----------------------------------
+L.Mixin(titles, L.TitlesMixin)
 
 ----------------------------------
 -- Set this point here
@@ -161,6 +159,7 @@ end)
 ----------------------------------
 -- Misc fixes
 ----------------------------------
+talkbox:RegisterForClicks('LeftButtonUp', 'RightButtonUp')
 talkbox.TextFrame.SpeechProgress:SetFont('Fonts\\MORPHEUS.ttf', 16, '')
 L.Mixin(talkbox.Elements, L.AdjustToChildren)
 L.Mixin(talkbox.Elements.Content, L.AdjustToChildren)
@@ -176,9 +175,9 @@ frame.FadeIns = {
 	talkbox.PortraitFrame.FadeIn,
 }
 
-frame.FadeIn = function(self, fadeTime)
+frame.FadeIn = function(self, fadeTime, stopPlay)
 	L.UIFrameFadeIn(self, fadeTime or 0.2, self:GetAlpha(), 1)
-	if self.timeStamp ~= GetTime() then
+	if ( not stopPlay ) and ( self.timeStamp ~= GetTime() ) then
 		for _, Fader in pairs(self.FadeIns) do
 			Fader:Play()
 		end

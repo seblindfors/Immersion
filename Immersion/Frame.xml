@@ -5,6 +5,13 @@
 		<Frames>
 			<Frame parentKey="TitleButtons" useParentLevel="true">
 				<Size x="300" y="0"/>
+				<Scripts>
+					<OnLoad>
+						self.Buttons = {};
+						self.Active = {};
+						self.idx = 1;
+					</OnLoad>
+				</Scripts>
 			</Frame>
 			<Button parentKey="TalkBox" toplevel="true" frameStrata="HIGH" frameLevel="1">
 				<Size x="570" y="155"/>
@@ -82,7 +89,7 @@
 							<Layer level="ARTWORK">
 								<FontString parentKey="Name" inherits="Fancy22Font" alpha="0.01" justifyH="LEFT">
 									<Anchors>
-										<Anchor point="RIGHT" x="-42" y="0"/>
+										<Anchor point="RIGHT" x="-60" y="0"/>
 									</Anchors>
 									<Color r="1" g=".82" b="0"/>
 								</FontString>
@@ -228,8 +235,7 @@
 								</Anchors>
 								<Scripts>
 									<OnClick>
-										CloseGossip();
-										CloseQuest();
+										self:GetParent():GetParent():GetParent():ForceClose();
 									</OnClick>
 								</Scripts>
 							</Button>
