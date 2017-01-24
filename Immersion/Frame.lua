@@ -52,8 +52,19 @@ for _, event in pairs({
 ----------------------------------
 frame.ADDON_LOADED = function(self, name)
 	if name == _ then
-		self:UnregisterEvent('ADDON_LOADED')
-		self.ADDON_LOADED = nil
+		-- NomiCakes fix
+		if select(4, GetAddOnInfo('NomiCakes')) then
+			function self:ADDON_LOADED(name)
+				if name == 'NomiCakes' then
+					NomiCakesGossipButtonName = _ .. 'TitleButton'
+					self.ADDON_LOADED = nil
+					self:UnregisterEvent('ADDON_LOADED')
+				end
+			end
+		else
+			self.ADDON_LOADED = nil
+			self:UnregisterEvent('ADDON_LOADED')
+		end
 
 		local svref = _ .. 'Setup'
 		L.cfg = _G[svref] or L.GetDefaultConfig()
@@ -63,13 +74,16 @@ frame.ADDON_LOADED = function(self, name)
 		titles:SetScale(L.Get('titlescale'))
 		self:SetScale(L.Get('scale'))
 
-		local bPoint = L.Get('boxpoint')
-		talkbox:SetPoint(bPoint, UIParent, bPoint, L.Get('boxoffsetX'), L.Get('boxoffsetY'))
-
+		talkbox:SetPoint(L.Get('boxpoint'), UIParent, L.Get('boxoffsetX'), L.Get('boxoffsetY'))
 		titles:SetPoint('CENTER', UIParent, 'CENTER', L.Get('titleoffset'), 0)
 
+		-- Register options table
 		LibStub('AceConfigRegistry-3.0'):RegisterOptionsTable(_, L.options)
 		L.config = LibStub('AceConfigDialog-3.0'):AddToBlizOptions(_)
+
+		-- Slash handler
+		_G['SLASH_' .. _:upper() .. '1'] = '/' .. _:lower()
+		SlashCmdList[_:upper()] = function() LibStub('AceConfigDialog-3.0'):Open(_) end
 
 		local logo = CreateFrame('Frame', nil, L.config)
 		logo:SetFrameLevel(4)

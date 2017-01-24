@@ -45,7 +45,7 @@ end
 function Titles:GetButton(index)
 	local button = self.Buttons[index]
 	if not button then
-		button = CreateFrame('Button', nil, self)
+		button = CreateFrame('Button', _ .. 'TitleButton' .. index, self)
 		L.Mixin(button, L.ButtonMixin, L.ScalerMixin)
 		button:Init(index)
 		self.Buttons[index] = button

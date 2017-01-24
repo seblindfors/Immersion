@@ -1,7 +1,7 @@
 ## Interface: 70100
 ## Title: Immersion
 ## Notes: Immersive replacement for quest & gossip
-## Version: 0.0.4
+## Version: 0.0.6
 ## SavedVariables: ImmersionSetup
 
 -- Libs

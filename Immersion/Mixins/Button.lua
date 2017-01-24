@@ -27,13 +27,21 @@ function Button:OnHide()
 end
 
 function Button:SetFormattedText(...)
-	getmetatable(self).__index.SetFormattedText(self, ...)
-	self:SetHeight(self.Label:GetStringHeight() + 32)
+	local __index = getmetatable(self).__index
+	__index.SetFormattedText(self, ...)
+	__index.SetHeight(self, self.Label:GetStringHeight() + 32)
 end
 
 function Button:SetText(...)
-	getmetatable(self).__index.SetText(self, ...)
-	self:SetHeight(self.Label:GetStringHeight() + 32)
+	local __index = getmetatable(self).__index
+	__index.SetText(self, ...)
+	__index.SetHeight(self, self.Label:GetStringHeight() + 32)
+end
+
+function Button:SetHeight(height, force)
+	if force then
+		getmetatable(self).__index.SetHeight(self, height)
+	end
 end
 
 function Button:SetIcon(texture)
@@ -75,7 +83,7 @@ function Button:Init(id)
 	self.HighlightTexture:SetTexCoord(0.00195313, 0.63867188, 0.70703125, 0.76757813)
 	self:SetHighlightTexture(self.HighlightTexture)
 	----------------------------------
-	self.Icon = self:CreateTexture(nil, 'OVERLAY')
+	self.Icon = self:CreateTexture('$parentGossipIcon', 'OVERLAY')
 	self.Icon:SetSize(20, 20)
 	self.Icon:SetPoint('LEFT', 16, 0)
 	----------------------------------

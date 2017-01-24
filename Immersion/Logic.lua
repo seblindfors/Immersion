@@ -40,13 +40,7 @@ end
 
 function NPC:QUEST_PROGRESS(...) -- special case, doesn't use QuestInfo
 	self:PlayIntro('QUEST_PROGRESS')
-	local npcType
-	if IsQuestCompletable() then
-		npcType = 'ActiveQuest'
-	else
-		npcType = 'IncompleteQuest'
-	end
-	self:UpdateTalkingHead(GetTitleText(), GetProgressText(), npcType)
+	self:UpdateTalkingHead(GetTitleText(), GetProgressText(), IsQuestCompletable() and 'ActiveQuest' or 'IncompleteQuest')
 	local elements = self.TalkBox.Elements
 	local textColor, titleTextColor = GetMaterialTextColors('Stone')
 	elements.Progress.ReqText:SetTextColor(unpack(titleTextColor))
