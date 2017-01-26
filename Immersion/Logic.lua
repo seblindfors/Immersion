@@ -8,6 +8,9 @@ local frame, GetTime = L.frame, GetTime
 function NPC:OnEvent(event, ...)
 	self:ResetElements()
 	if self[event] then
+		if event:match('QUEST') then
+			CloseGossip()
+		end
 		self[event](self, ...)
 	end
 	self.TalkBox.lastEvent = event
@@ -22,14 +25,11 @@ function NPC:GOSSIP_SHOW(...)
 	if self:IsGossipAvailable() then
 		self:PlayIntro('GOSSIP_SHOW')
 		self:UpdateTalkingHead(GetUnitName('npc'), GetGossipText(), 'GossipGossip')
-		NPCFriendshipStatusBar_Update(self.TalkBox)
-		NPCFriendshipStatusBar:ClearAllPoints()
-		NPCFriendshipStatusBar:SetStatusBarColor(0.5, 0.7, 1)
-		NPCFriendshipStatusBar:SetPoint('TOPLEFT', self.TalkBox, 'TOPLEFT', 32, 0)
 	end
 end
 
 function NPC:GOSSIP_CLOSED(...)
+	CloseGossip()
 	self:PlayOutro()
 end
 
@@ -69,10 +69,18 @@ function NPC:QUEST_COMPLETE(...)
 end
 
 function NPC:QUEST_FINISHED(...)
+	CloseQuest()
 	self:PlayOutro()
 end
 
 function NPC:QUEST_DETAIL(...)
+	local questStartItemID = ...
+	if ( QuestIsFromAdventureMap() ) or
+		( QuestGetAutoAccept() and QuestIsFromAreaTrigger()) or
+		(questStartItemID ~= nil and questStartItemID ~= 0) then
+		self:PlayOutro()
+		return
+	end
 	self:PlayIntro('QUEST_DETAIL')
 	self:UpdateTalkingHead(GetTitleText(), GetQuestText(), 'AvailableQuest')
 	self:AddQuestInfo(TEMPLATE.QUEST_DETAIL, QuestFrameAcceptButton)
@@ -152,6 +160,7 @@ function NPC:UpdateTalkingHead(title, text, npcType)
 	end
 	local talkBox = self.TalkBox
 	talkBox:SetExtraOffset(0)
+	talkBox.StatusBar:Show()
 	talkBox.MainFrame.Indicator:SetTexture('Interface\\GossipFrame\\' .. npcType .. 'Icon')
 	talkBox.MainFrame.Model:SetUnit(unit)
 	talkBox.NameFrame.Name:SetText(title)
@@ -169,18 +178,14 @@ function NPC:PlayIntro(event)
 	else
 		self:EnableKeyboard(true)
 		local box = self.TalkBox
-		-- Handles the case of gossip -> gossip
-		if self.lastEvent ~= event then
-			self:FadeIn(nil, isShown)
-			local point = L.Get('boxpoint')
-			local x, y = L.Get('boxoffsetX'), L.Get('boxoffsetY')
-			box:ClearAllPoints()
-			if not isShown then
-				box:SetPoint(point, UIParent, point, -x, -y)
-			end
-			box:SetOffset(box.offsetX or x, box.offsetY or y)
-
+		self:FadeIn(nil, isShown)
+		local point = L.Get('boxpoint')
+		local x, y = L.Get('boxoffsetX'), L.Get('boxoffsetY')
+		box:ClearAllPoints()
+		if not isShown then
+			box:SetPoint(point, UIParent, point, -x, -y)
 		end
+		box:SetOffset(box.offsetX or x, box.offsetY or y)
 	end
 end
 

@@ -281,6 +281,99 @@
 							</AnimationGroup>
 						</Animations>
 					</Frame>
+					<StatusBar parentKey="StatusBar" hidden="true">
+						<Size x="230" y="14"/>
+						<Anchors>
+							<Anchor point="TOPLEFT" x="32" y="0"/>
+						</Anchors>
+						<HitRectInsets>
+							<AbsInset left="-25" right="0" top="-15" bottom="0"/>
+						</HitRectInsets>
+						<Layers>
+							<Layer level="ARTWORK">
+								<Texture file="Interface\Common\friendship-parts">  <!-- the bar itself -->
+									<Size x="267" y="38"/>
+									<Anchors>
+										<Anchor point="TOPLEFT" x="-31" y="18"/>
+									</Anchors>
+									<TexCoords left="0.01367188" right="0.53515625" top="0.01562500" bottom="0.60937500"/>
+								</Texture>
+							</Layer>
+							<Layer level="ARTWORK" textureSubLevel="1">
+								<Texture file="Interface\Common\friendship-heart" parentKey="icon">
+									<Size x="32" y="32"/>
+									<Anchors>
+										<Anchor point="TOPLEFT" x="-27" y="12"/>
+									</Anchors>
+								</Texture>
+								<Texture name="$parentNotch1" file="Interface\Common\friendship-parts">
+									<Size x="4" y="17"/>
+									<Anchors>
+										<Anchor point="TOPLEFT" x="43" y="1"/>
+									</Anchors>
+									<TexCoords left="0.00195313" right="0.00976563" top="0.01562500" bottom="0.28125000"/>
+								</Texture>
+								<Texture name="$parentNotch2" file="Interface\Common\friendship-parts">
+									<Size x="4" y="17"/>
+									<Anchors>
+										<Anchor point="LEFT" relativeTo="$parentNotch1" x="47" y="0"/>
+									</Anchors>
+									<TexCoords left="0.00195313" right="0.00976563" top="0.01562500" bottom="0.28125000"/>
+								</Texture>
+								<Texture name="$parentNotch3" file="Interface\Common\friendship-parts">
+									<Size x="4" y="17"/>
+									<Anchors>
+										<Anchor point="LEFT" relativeTo="$parentNotch2" x="47" y="0"/>
+									</Anchors>
+									<TexCoords left="0.00195313" right="0.00976563" top="0.01562500" bottom="0.28125000"/>
+								</Texture>
+								<Texture name="$parentNotch4" file="Interface\Common\friendship-parts">
+									<Size x="4" y="17"/>
+									<Anchors>
+										<Anchor point="LEFT" relativeTo="$parentNotch3" x="47" y="0"/>
+									</Anchors>
+									<TexCoords left="0.00195313" right="0.00976563" top="0.01562500" bottom="0.28125000"/>
+								</Texture>
+							</Layer>
+							<Layer level="BACKGROUND">
+								<Texture setAllPoints="true">  <!-- bar fill background -->
+									<Color r="0" g="0" b="0" a="0.5"/>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnLoad>
+								self:SetStatusBarTexture(1, 1, 1, "BORDER", -1);
+								self:GetStatusBarTexture():SetGradient("VERTICAL", 8/255, 93/255, 72/255, 11/255, 136/255, 105/255);
+								self:SetStatusBarColor(0.5, 0.7, 1);
+							</OnLoad>
+							<OnEnter>
+								ShowFriendshipReputationTooltip(nil, self, "ANCHOR_BOTTOMRIGHT");
+							</OnEnter>
+							<OnLeave>
+								GameTooltip:Hide();
+							</OnLeave>
+							<OnShow>
+								local id, rep, maxRep, name, text, texture, reaction, threshold, nextThreshold = GetFriendshipReputation();
+								if ( id and id > 0 ) then
+									-- if max rank, make it look like a full bar
+									if ( not nextThreshold ) then
+										threshold, nextThreshold, rep = 0, 1, 1;
+									end
+									if ( texture ) then
+										self.icon:SetTexture(texture);
+									else
+										self.icon:SetTexture("Interface\\Common\\friendship-heart");
+									end
+									self:SetMinMaxValues(threshold, nextThreshold);
+									self:SetValue(rep);
+									self:Show();
+								else
+									self:Hide();
+								end
+							</OnShow>
+						</Scripts>
+					</StatusBar>
 				</Frames>
 			</Button>
 		</Frames>

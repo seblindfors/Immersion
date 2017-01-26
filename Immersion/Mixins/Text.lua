@@ -6,6 +6,9 @@ local LINE_FEED_CODE = string.char(10)
 local CARRIAGE_RETURN_CODE = string.char(13)
 local WEIRD_LINE_BREAK = LINE_FEED_CODE .. CARRIAGE_RETURN_CODE .. LINE_FEED_CODE
 
+local DELAY_DIVISOR = 15
+local MAX_UNTIL_SPLIT = 200
+
 Timer.Texts = {}
 L.TextMixin = {}
 
@@ -17,22 +20,39 @@ function Text:SetText(text)
 	if text then
 		local strings, delays = {}, {}
 		local timeToFinish = 0
-		text = text:gsub(LINE_FEED_CODE .. '+', '\n')
-		text = text:gsub(WEIRD_LINE_BREAK, '\n')
+		text = text:gsub(LINE_FEED_CODE .. '+', '\n'):gsub(WEIRD_LINE_BREAK, '\n')
 		for i, str in pairs({strsplit('\n', text)}) do
-			local length = str:len()
-			if length ~= 0 then
-				local delay = (length / 15 ) + 2
-				timeToFinish = timeToFinish + delay
-				delays[ #strings + 1] = delay
-				strings[ #strings + 1 ] = str
-			end
+			timeToFinish = timeToFinish + self:AddString(str, strings, delays)
 		end
 		self.numTexts = #strings
 		self.timeToFinish = timeToFinish
 		self.timeStarted = GetTime()
 		self:QueueTexts(strings, delays)
 	end
+end
+
+function Text:AddString(str, strings, delays)
+	local length, delay, force = str:len(), 0
+	if length > MAX_UNTIL_SPLIT then
+		local new = str:gsub('%.%s+', '.\n'):gsub('%.%.%.\n', '...\n...'):gsub('%!%s+', '!\n'):gsub('%?%s+', '?\n')
+		--[[ If the string is unchanged, this will recurse infinitely, therefore
+			force the long string to be shown. This safeguard is probably meaningless,
+			as it requires 200+ chars without any punctuation. ]]
+		if ( new == str ) then
+			force = true
+		else
+			for i, short in pairs({strsplit('\n', new)}) do
+				delay = delay + self:AddString(short, strings, delays)
+			end
+			return delay
+		end
+	end
+	if ( length ~= 0 or force ) then
+		delay = (length / DELAY_DIVISOR ) + 2
+		delays[ #strings + 1] = delay
+		strings[ #strings + 1 ] = str
+	end
+	return delay
 end
 
 function Text:QueueTexts(strings, delays)
