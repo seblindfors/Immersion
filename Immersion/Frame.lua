@@ -97,7 +97,7 @@ end
 -- Hide regular frames
 ----------------------------------
 L.HideFrame(GossipFrame) GossipFrame:UnregisterAllEvents()
-L.HideFrame(QuestFrame)
+L.HideFrame(QuestFrame) QuestFrame:UnregisterAllEvents()
 ----------------------------------
 
 ----------------------------------
@@ -110,6 +110,11 @@ talkbox.Hilite:SetBackdrop(L.Backdrops.GOSSIP_HILITE)
 -- Initiate titlebuttons
 ----------------------------------
 L.Mixin(titles, L.TitlesMixin)
+
+----------------------------------
+-- Initiate elements
+----------------------------------
+L.Mixin(talkbox.Elements, L.ElementsMixin)
 
 ----------------------------------
 -- Set this point here

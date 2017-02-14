@@ -5,6 +5,12 @@ local NORMAL_QUEST_DISPLAY = NORMAL_QUEST_DISPLAY:gsub(0, 'f')
 local TRIVIAL_QUEST_DISPLAY = TRIVIAL_QUEST_DISPLAY:gsub(0, 'f')
 local IGNORED_QUEST_DISPLAY = IGNORED_QUEST_DISPLAY:gsub(0, 'f')
 
+-- Priority
+local P_COMPLETE_QUEST = 1
+local P_AVAILABLE_QUEST = 2
+local P_AVAILABLE_GOSSIP = 3
+local P_INCOMPLETE_QUEST = 4
+
 ----------------------------------
 -- Display
 ----------------------------------
@@ -99,6 +105,7 @@ function Titles:UpdateAvailableQuests(...)
 					( isRepeatable and 'DailyActiveQuestIcon' ) or
 					( 'AvailableQuestIcon' )
 		button:SetGossipQuestIcon(icon, qType and 0.5)
+		button:SetPriority(P_AVAILABLE_QUEST)
 		----------------------------------
 		button:SetID(titleIndex)
 		button.type = 'Available'
@@ -125,6 +132,7 @@ function Titles:UpdateActiveQuests(...)
 					( isComplete and 'ActiveQuestIcon' ) or
 					( 'InCompleteQuestIcon' )
 		button:SetGossipQuestIcon(icon, qType and 0.5)
+		button:SetPriority(isComplete and P_COMPLETE_QUEST or P_INCOMPLETE_QUEST)
 		----------------------------------
 		button:SetID(titleIndex)
 		button.type = 'Active'
@@ -142,6 +150,7 @@ function Titles:UpdateGossipOptions(...)
 		----------------------------------
 		button:SetText(titleText)
 		button:SetGossipIcon(icon)
+		button:SetPriority(P_AVAILABLE_GOSSIP)
 		----------------------------------
 		button:SetID(titleIndex)
 		button.type = 'Gossip'
@@ -192,6 +201,7 @@ function Titles:UpdateActiveGreetingQuests(numActiveQuests)
 					( isComplete and 'ActiveQuestIcon') or
 					( 'InCompleteQuestIcon' )
 		button:SetGossipQuestIcon(icon, qType and 0.75)
+		button:SetPriority(isComplete and P_COMPLETE_QUEST or P_INCOMPLETE_QUEST)
 		----------------------------------
 		button:SetID(i)
 		button.type = 'ActiveQuest'
@@ -216,6 +226,7 @@ function Titles:UpdateAvailableGreetingQuests(numAvailableQuests)
 					( isRepeatable and 'DailyActiveQuestIcon' ) or
 					( 'AvailableQuestIcon' )
 		button:SetGossipQuestIcon(icon, qType and 0.5)
+		button:SetPriority(P_AVAILABLE_QUEST)
 		----------------------------------
 		button:SetID(i)
 		button.type = 'AvailableQuest'

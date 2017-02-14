@@ -61,6 +61,17 @@ function Button:SetGossipIcon(texture, vertex)
 	self.Icon:SetVertexColor(vertex, vertex, vertex)
 end
 
+function Button:SetPriority(val)
+	self.priority = val
+end
+
+function Button:ComparePriority(otherButton)
+	if otherButton and (otherButton.priority or 5) < (self.priority or 5) then
+		return otherButton
+	end
+	return self
+end
+
 function Button:Init(id)
 	local parent = self:GetParent()
 	local set = parent.Buttons

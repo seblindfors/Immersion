@@ -1,6 +1,94 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
-	
+
+
+	<!-- Button templates -->
+	<Button name="ImmersionRewardSpellCodeTemplate" virtual="true">
+		<Scripts>
+			<OnEnter>
+				GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+				GameTooltip:SetQuestRewardSpell(self.rewardSpellIndex);
+			</OnEnter>
+			<OnClick>
+				if ( IsModifiedClick("CHATLINK") ) then
+					ChatEdit_InsertLink(GetQuestSpellLink(self.rewardSpellIndex));
+				end
+			</OnClick>
+			<OnLeave>
+				GameTooltip:Hide();
+				ResetCursor();
+			</OnLeave>
+		</Scripts>
+	</Button>
+
+	<Button name="ImmersionRewardItemCodeTemplate" virtual="true">
+		<Scripts>
+			<OnEnter>
+				GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+				if (self.objectType == "item") then
+					GameTooltip:SetQuestItem(self.type, self:GetID());
+					GameTooltip_ShowCompareItem(GameTooltip);
+				elseif (self.objectType == "currency") then
+					GameTooltip:SetQuestCurrency(self.type, self:GetID());
+				end
+				CursorUpdate(self);
+			</OnEnter>
+			<OnClick>
+				if ( IsModifiedClick() and self.objectType == "item") then
+					HandleModifiedItemClick(GetQuestItemLink(self.type, self:GetID()));
+				else
+					if ( ImmersionContentFrame.chooseItems ) then
+						QuestInfoItem_OnClick(self);
+					end
+				end
+			</OnClick>
+			<OnLeave>
+				GameTooltip:Hide();
+				ResetCursor();
+			</OnLeave>
+			<OnUpdate>
+				CursorOnUpdate(self, elapsed);
+			</OnUpdate>
+		</Scripts>
+	</Button>
+
+	<Button name="ImmersionItemButtonTemplate" virtual="true">
+		<Size x="202" y="48" />
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentIconTexture" parentKey="Icon">
+					<Size x="46" y="46" />
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+					</Anchors>
+				</Texture>
+				<Texture name="$parentNameFrame" file="Interface\QuestFrame\UI-QuestItemNameFrame" parentKey="NameFrame">
+					<Size x="180" y="70" />
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="-14" y="0" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<FontString name="$parentName" inherits="GameFontHighlight" justifyH="LEFT" parentKey="Name">
+					<Size x="140" y="36" />
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.NameFrame" x="20" y="0" />
+					</Anchors>
+				</FontString>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString name="$parentCount" inherits="NumberFontNormal" justifyH="RIGHT" parentKey="Count">
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" x="-1" y="1" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Button>
+
+
+	<!-- Main frame -->
 	<Frame name="ImmersionFrame" parent="UIParent" hidden="true">
 		<Frames>
 			<Frame parentKey="TitleButtons" useParentLevel="true">
@@ -36,7 +124,245 @@
 							</OnLoad>
 						</Scripts>
 						<Frames>
-							<Frame parentKey="Content" setAllPoints="true"/>
+							<Frame parentKey="Content" name="ImmersionContentFrame" setAllPoints="true">
+								<Frames>
+
+									<Frame parentKey="SpacerFrame">
+										<Size x="5" y="5"/>
+									</Frame>
+
+									<Frame parentKey="SealFrame">
+										<Size x="257" y="78"/>
+										<Layers>
+											<Layer level="ARTWORK">
+												<FontString parentKey="Text" inherits="QuestFont_Huge" justifyH="LEFT">
+													<Anchors>
+														<Anchor point="LEFT" x="5" y="-12"/>
+													</Anchors>
+												</FontString>
+												<Texture parentKey="Texture">
+													<Anchors>
+														<Anchor point="TOPLEFT" x="160" y="-6"/>
+													</Anchors>
+												</Texture>
+											</Layer>
+										</Layers>
+									</Frame>
+
+									<Frame parentKey="SpecialObjectivesFrame" hidden="true">
+										<Size x="285" y="10"/>
+										<Anchors>
+											<Anchor point="CENTER" />
+										</Anchors>
+										<Layers>
+											<Layer level="OVERLAY">
+												<FontString parentKey="SpellObjectiveLearnLabel" inherits="QuestFontNormalSmall" justifyH="LEFT" text="LEARN_SPELL_OBJECTIVE"/>
+											</Layer>
+										</Layers>
+										<Frames>
+											<Button parentKey="SpellObjectiveFrame" inherits="QuestSpellTemplate" hidden="true"/>
+										</Frames>
+									</Frame>
+
+									<Frame parentKey="RewardsFrame" hidden="true">
+										<Size x="285" y="10" />
+										<Anchors>
+											<Anchor point="CENTER" />
+										</Anchors>
+										<Layers>
+											<Layer level="BACKGROUND">
+												<FontString parentKey="Header" inherits="QuestTitleFont" text="QUEST_REWARDS" justifyH="LEFT">
+													<Size x="285" y="0"/>
+													<Anchors>
+														<Anchor point="TOPLEFT"/>
+													</Anchors>
+												</FontString>
+												<FontString parentKey="ItemChooseText" inherits="SystemFont_Shadow_Med2" text="REWARD_CHOICES" hidden="true" justifyH="LEFT">
+													<Size x="285" y="0"/>
+												</FontString>
+												<FontString parentKey="ItemReceiveText" inherits="SystemFont_Shadow_Med2" hidden="true" justifyH="LEFT" />
+												<FontString parentKey="PlayerTitleText" inherits="SystemFont_Shadow_Med2" text="REWARD_TITLE" hidden="true" justifyH="LEFT" />
+											</Layer>
+										</Layers>
+										<Frames>
+											<Button parentKey="HonorFrame" inherits="ImmersionItemButtonTemplate" hidden="true"/>
+											<Button parentArray="RewardButtons" name="ImmersionQuestInfoItem1" inherits="ImmersionItemButtonTemplate, ImmersionRewardItemCodeTemplate" hidden="true"/>
+											<Frame parentKey="MoneyFrame" name="$parentMoneyFrame" inherits="MoneyFrameTemplate">
+												<Anchors>
+													<Anchor point="LEFT" relativeKey="$parent.ItemReceiveText" relativePoint="RIGHT" x="15" y="0"/>
+												</Anchors>
+												<Scripts>
+													<OnLoad>
+														MoneyFrame_OnLoad(self);
+														MoneyFrame_SetType(self, "STATIC");
+													</OnLoad>
+												</Scripts>
+											</Frame>
+											<Button parentKey="SkillPointFrame" inherits="ImmersionItemButtonTemplate">
+												<Layers>
+													<Layer level="OVERLAY">
+														<Texture parentKey="CircleBackground" file="Interface\QuestFrame\SkillUp-BG">
+															<Size x="32" y="32"/>
+															<Anchors>
+																<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" x="12" y="-6"/>
+															</Anchors>
+														</Texture>
+														<Texture parentKey="CircleBackgroundGlow" file="Interface\QuestFrame\SkillUp-Glow" alphaMode="ADD" alpha="0.3">
+															<Size x="64" y="64"/>
+															<Anchors>
+																<Anchor point="CENTER" relativeKey="$parent.CircleBackground"/>
+															</Anchors>
+														</Texture>
+														<FontString parentKey="ValueText" inherits="GameFontNormalLarge" justifyH="LEFT">
+															<Anchors>
+																<Anchor point="CENTER" relativeKey="$parent.CircleBackground" relativePoint="CENTER" x="3"/>
+															</Anchors>
+														</FontString>
+													</Layer>
+												</Layers>
+												<Scripts>
+													<OnLoad>
+														-- Hacks to get this to display a little more nicely
+														self.Name:SetPoint("LEFT", self.NameFrame, 24, 0);
+														self.Name:SetWidth(81);
+													</OnLoad>
+													<OnEnter>
+														if (self.tooltip) then
+															GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+															GameTooltip:SetText(self.tooltip, HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b);
+														end
+													</OnEnter>
+													<OnLeave>
+														GameTooltip:Hide();
+													</OnLeave>
+												</Scripts>
+											</Button>
+											<Frame parentKey="XPFrame">
+												<Size x="280" y="20"/>
+												<Layers>
+													<Layer level="BACKGROUND">
+														<FontString parentKey="ReceiveText" inherits="QuestFont" text="EXPERIENCE_COLON">
+															<Anchors>
+																<Anchor point="LEFT" x="0" y="0"/>
+															</Anchors>
+														</FontString>
+														<FontString parentKey="ValueText" inherits="NumberFontNormalLarge" justifyH="LEFT">
+															<Anchors>
+																<Anchor point="LEFT" relativeKey="$parent.ReceiveText" relativePoint="RIGHT" x="15" y="0"/>
+															</Anchors>
+														</FontString>
+													</Layer>
+												</Layers>
+											</Frame>
+											<Button parentKey="ArtifactXPFrame" inherits="ImmersionItemButtonTemplate" hidden="true">
+												<Layers>
+													<Layer level="BORDER">
+														<Texture parentKey="Overlay" file="Interface\Artifacts\ArtifactPower-QuestBorder">
+															<Size x="64" y="64" />
+															<Anchors>
+																<Anchor point="CENTER" relativeKey="$parent.Icon" />
+															</Anchors>
+														</Texture>
+													</Layer>
+												</Layers>
+												<Scripts>
+													<OnEnter>
+														GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+														GameTooltip:SetText(ARTIFACT_XP_REWARD, HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b, nil, true);
+													</OnEnter>
+
+													<OnLeave function="GameTooltip_Hide" />
+												</Scripts>
+											</Button>
+											<Frame parentKey="TitleFrame">
+												<Size x="500" y="39"/>
+												<Layers>
+													<Layer level="BACKGROUND">
+														<Texture parentKey="Icon" file="Interface\Icons\INV_Misc_Note_02">
+															<Size x="39" y="39"/>
+															<Anchors>
+																<Anchor point="TOPLEFT" x="0" y="0"/>
+															</Anchors>
+														</Texture>
+														<Texture parentKey="FrameLeft" file="Interface\QuestFrame\UI-QuestItemNameFrame">
+															<Size x="4" y="40"/>
+															<Anchors>
+																<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="2" y="0"/>
+															</Anchors>
+															<TexCoords left="0.078125" right="0.1171875" top="0.15625" bottom="0.828125"/>
+														</Texture>
+														<Texture parentKey="FrameCenter" file="Interface\QuestFrame\UI-QuestItemNameFrame">
+															<Size x="200" y="40"/>
+															<Anchors>
+																<Anchor point="LEFT" relativeKey="$parent.FrameLeft" relativePoint="RIGHT" x="0" y="0"/>
+															</Anchors>
+															<TexCoords left="0.1171875" right="0.828125" top="0.15625" bottom="0.828125"/>
+														</Texture>
+														<Texture parentKey="FrameRight" file="Interface\QuestFrame\UI-QuestItemNameFrame">
+															<Size x="11" y="40"/>
+															<Anchors>
+																<Anchor point="LEFT" relativeKey="$parent.FrameCenter" relativePoint="RIGHT" x="0" y="0"/>
+															</Anchors>
+															<TexCoords left="0.828125" right="0.9140625" top="0.15625" bottom="0.828125"/>
+														</Texture>
+													</Layer>
+													<Layer level="OVERLAY">
+														<FontString parentKey="Name" inherits="GameFontHighlight" justifyH="LEFT">
+															<Size x="200" y="0"/>
+															<Anchors>
+																<Anchor point="LEFT" relativeKey="$parent.FrameLeft" x="8" y="-2"/>
+															</Anchors>
+														</FontString>
+													</Layer>
+												</Layers>
+											</Frame>
+											<Frame parentKey="ItemHighlight" hidden="true">
+												<Size x="256" y="64"/>
+												<Anchors>
+													<Anchor point="TOPLEFT"/>
+												</Anchors>
+												<Layers>
+													<Layer level="BACKGROUND">
+														<Texture file="Interface\QuestFrame\UI-QuestItemHighlight" alphaMode="ADD">
+															<Size x="256" y="64"/>
+															<Anchors>
+																<Anchor point="TOPLEFT"/>
+															</Anchors>
+														</Texture>
+													</Layer>
+												</Layers>
+												<Scripts>
+													<OnLoad function="RaiseFrameLevel"/>
+												</Scripts>
+											</Frame>
+										</Frames>
+										<Scripts>
+											<OnLoad>
+												self.buttonTemplate = "ImmersionItemButtonTemplate, ImmersionRewardItemCodeTemplate";
+												self.spellRewardPool = CreateFramePool("BUTTON", self, "QuestSpellTemplate, ImmersionRewardSpellCodeTemplate");
+												self.followerRewardPool = CreateFramePool("BUTTON", self, "LargeQuestInfoRewardFollowerTemplate");
+												self.spellHeaderPool = CreateFontStringPool(self, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate");
+											</OnLoad>
+										</Scripts>
+									</Frame>
+
+								</Frames>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString parentKey="ObjectivesHeader" inherits="QuestTitleFont" text="QUEST_OBJECTIVES"  justifyH="LEFT" hidden="true">
+											<Size x="285" y="0"/>
+										</FontString>				
+										<FontString parentKey="ObjectivesText" inherits="SystemFont_Shadow_Med2" justifyH="LEFT" hidden="true">
+											<Size x="285" y="0"/>
+										</FontString>
+										<FontString parentKey="GroupSize" inherits="SystemFont_Shadow_Med2" hidden="true"/>
+
+										<FontString parentKey="RewardText" inherits="SystemFont_Shadow_Med2" justifyH="LEFT" hidden="true">
+											<Size x="285" y="0"/>
+										</FontString>
+									</Layer>
+								</Layers>
+							</Frame>
 							<Frame parentKey="Progress" hidden="true">
 								<Size x="300" y="403"/>
 								<Anchors>

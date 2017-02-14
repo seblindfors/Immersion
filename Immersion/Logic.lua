@@ -48,6 +48,7 @@ function NPC:QUEST_PROGRESS(...) -- special case, doesn't use QuestInfo
 	elements:Show()
 	elements:SetHeight(1)
 	elements.Progress:Show()
+	QuestFrameProgressItems_Update() -- remove this later
 	elements:AdjustToChildren()
 	for _, child in pairs({elements.Progress:GetChildren()}) do
 		if child:IsVisible() then
@@ -65,7 +66,7 @@ end
 function NPC:QUEST_COMPLETE(...)
 	self:PlayIntro('QUEST_COMPLETE')
 	self:UpdateTalkingHead(GetTitleText(), GetRewardText(), 'ActiveQuest')
-	self:AddQuestInfo(TEMPLATE.QUEST_REWARD)
+	self:AddQuestInfo('QUEST_REWARD')
 end
 
 function NPC:QUEST_FINISHED(...)
@@ -83,7 +84,7 @@ function NPC:QUEST_DETAIL(...)
 	end
 	self:PlayIntro('QUEST_DETAIL')
 	self:UpdateTalkingHead(GetTitleText(), GetQuestText(), 'AvailableQuest')
-	self:AddQuestInfo(TEMPLATE.QUEST_DETAIL, QuestFrameAcceptButton)
+	self:AddQuestInfo('QUEST_DETAIL', QuestFrameAcceptButton)
 end
 
 ----------------------------------
@@ -92,24 +93,28 @@ end
 function NPC:AddQuestInfo(template, acceptButton)
 	local elements = self.TalkBox.Elements
 	local content = elements.Content
-	QuestInfo_Display(template, content, QuestFrameAcceptButton, 'Stone')
-	local elementsTable = template.elements
-	local height, lastFrame = 0
-	for i = 1, #elementsTable, 3 do -- a wonderfully confusing vanilla relic
-		local shownFrame, bottomShownFrame = elementsTable[i]()
-		if ( shownFrame ) then
-			shownFrame:SetParent(content)
-			height = height + shownFrame:GetHeight() + abs(elementsTable[i+2])
-			if ( lastFrame ) then
-				shownFrame:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', elementsTable[i+1], elementsTable[i+2])
-			else
-				shownFrame:SetPoint('TOPLEFT', content, 'TOPLEFT', elementsTable[i+1] + 32, elementsTable[i+2] - 16)	
-			end
-			shownFrame:Show()
-			elements.Active[#elements.Active + 1] = shownFrame
-			lastFrame = bottomShownFrame or shownFrame
-		end
-	end
+	local height = elements:Display(template, QuestFrameAcceptButton, 'Stone')
+
+
+	-- QuestInfo_Display(template, content, QuestFrameAcceptButton, 'Stone')
+	-- local elementsTable = template.elements
+	-- local height, lastFrame = 0
+	-- for i = 1, #elementsTable, 3 do -- a wonderfully confusing vanilla relic
+	-- 	local shownFrame, bottomShownFrame = elementsTable[i]()
+	-- 	if ( shownFrame ) then
+	-- 		shownFrame:SetParent(content)
+	-- 		height = height + shownFrame:GetHeight() + abs(elementsTable[i+2])
+	-- 		if ( lastFrame ) then
+	-- 			shownFrame:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', elementsTable[i+1], elementsTable[i+2])
+	-- 		else
+	-- 			shownFrame:SetPoint('TOPLEFT', content, 'TOPLEFT', elementsTable[i+1] + 32, elementsTable[i+2] - 16)	
+	-- 		end
+	-- 		shownFrame:Show()
+	-- 		elements.Active[#elements.Active + 1] = shownFrame
+	-- 		lastFrame = bottomShownFrame or shownFrame
+	-- 	end
+	-- end
+
 	-- hacky fix to stop a content frame that only contains a spacer from showing.
 	if height > 20 then
 		elements:SetSize(570, height + 32)
@@ -136,6 +141,24 @@ function NPC:IsGossipAvailable()
 		end
 	end
 	return true
+end
+
+function NPC:SelectBestOption()
+	local titles = self.TitleButtons.Buttons
+	local numActive = self.TitleButtons.numActive
+	if numActive > 1 then
+		local button = titles[1]
+		if button then
+			for i=2, numActive do
+				local title = titles[i]
+				button = button:ComparePriority(title)
+			end
+			button.Hilite:SetAlpha(1)
+			button:Click()
+			button:OnLeave()
+			PlaySound("igQuestListSelect")
+		end
+	end
 end
 
 function NPC:ResetElements()
@@ -216,6 +239,8 @@ local inputs = {
 			CloseGossip()
 		elseif self.lastEvent == 'GOSSIP_SHOW' and numActive == 1 then
 			SelectGossipOption(1)
+		elseif (self.lastEvent == 'GOSSIP_SHOW' or self.lastEvent == 'QUEST_GREETING') and numActive > 1 then
+			self:SelectBestOption()
 		else
 			self.TalkBox:Click('LeftButton')
 		end
@@ -308,7 +333,7 @@ function TalkBox:OnEnter()
 	if 	( ( self.lastEvent == 'QUEST_COMPLETE' ) and
 		not (QuestInfoFrame.itemChoice == 0 and GetNumQuestChoices() > 1) ) or
 		( self.lastEvent == 'QUEST_DETAIL' ) or
-		( IsQuestCompletable() ) then
+		( self.lastEvent ~= 'GOSSIP_SHOW' and IsQuestCompletable() ) then
 		L.UIFrameFadeIn(self.Hilite, 0.15, self.Hilite:GetAlpha(), 1)
 	end
 end
