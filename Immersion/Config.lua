@@ -53,6 +53,10 @@ L.defaults = {
 	boxoffsetY = 150,
 	boxpoint = 'Bottom',
 
+	disableprogression = false,
+	flipshortcuts = false,
+	delaydivisor = 15,
+
 	accept = 'SPACE',
 	reset = 'BACKSPACE',
 }---------------------------------
@@ -117,11 +121,39 @@ L.options = {
 					min = 0.5,
 					max = 1.5,
 					step = 0.1,
+					order = 4,
 					get = L.GetFromDefaultOrSV,
 					set = function(self, val) 
 						L.cfg.scale = val
 						L.frame:SetScale(val)
 					end,
+				},
+				delaydivisor = {
+					type = 'range',
+					name = 'Text speed',
+					min = 5,
+					max = 40,
+					step = 5,
+					order = 3,
+					get = L.GetFromDefaultOrSV,
+					set = function(self, val) 
+						L.cfg.delaydivisor = val
+					end,
+				},
+				disableprogression = {
+					type = 'toggle',
+					name = 'Disable automatic text progress',
+					order = 1,
+					get = L.GetFromSV,
+					set = function(_, val) L.cfg.disableprogression = val end,
+				},
+				flipshortcuts = {
+					type = 'toggle',
+					name = 'Flip mouse functions',
+					desc = L.GetListString('Left click is used to handle text.', 'Right click is used to accept/hand in quests.'),
+					order = 2,
+					get = L.GetFromSV,
+					set = function(_, val) L.cfg.flipshortcuts = val end,
 				},
 				titles = {
 					type = 'group',

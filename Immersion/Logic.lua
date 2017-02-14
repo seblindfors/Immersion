@@ -95,26 +95,6 @@ function NPC:AddQuestInfo(template, acceptButton)
 	local content = elements.Content
 	local height = elements:Display(template, QuestFrameAcceptButton, 'Stone')
 
-
-	-- QuestInfo_Display(template, content, QuestFrameAcceptButton, 'Stone')
-	-- local elementsTable = template.elements
-	-- local height, lastFrame = 0
-	-- for i = 1, #elementsTable, 3 do -- a wonderfully confusing vanilla relic
-	-- 	local shownFrame, bottomShownFrame = elementsTable[i]()
-	-- 	if ( shownFrame ) then
-	-- 		shownFrame:SetParent(content)
-	-- 		height = height + shownFrame:GetHeight() + abs(elementsTable[i+2])
-	-- 		if ( lastFrame ) then
-	-- 			shownFrame:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', elementsTable[i+1], elementsTable[i+2])
-	-- 		else
-	-- 			shownFrame:SetPoint('TOPLEFT', content, 'TOPLEFT', elementsTable[i+1] + 32, elementsTable[i+2] - 16)	
-	-- 		end
-	-- 		shownFrame:Show()
-	-- 		elements.Active[#elements.Active + 1] = shownFrame
-	-- 		lastFrame = bottomShownFrame or shownFrame
-	-- 	end
-	-- end
-
 	-- hacky fix to stop a content frame that only contains a spacer from showing.
 	if height > 20 then
 		elements:SetSize(570, height + 32)
@@ -242,7 +222,7 @@ local inputs = {
 		elseif (self.lastEvent == 'GOSSIP_SHOW' or self.lastEvent == 'QUEST_GREETING') and numActive > 1 then
 			self:SelectBestOption()
 		else
-			self.TalkBox:Click('LeftButton')
+			self.TalkBox:Click(L.Get('flipshortcuts') and 'RightButton' or 'LeftButton')
 		end
 	end,
 	reset = function(self)
@@ -331,7 +311,7 @@ end
 function TalkBox:OnEnter()
 	-- Highlight the button when it can be clicked
 	if 	( ( self.lastEvent == 'QUEST_COMPLETE' ) and
-		not (QuestInfoFrame.itemChoice == 0 and GetNumQuestChoices() > 1) ) or
+		not (self.Elements.itemChoice == 0 and GetNumQuestChoices() > 1) ) or
 		( self.lastEvent == 'QUEST_DETAIL' ) or
 		( self.lastEvent ~= 'GOSSIP_SHOW' and IsQuestCompletable() ) then
 		L.UIFrameFadeIn(self.Hilite, 0.15, self.Hilite:GetAlpha(), 1)
@@ -343,17 +323,17 @@ function TalkBox:OnLeave()
 end
 
 function TalkBox:OnClick(button)
+	if L.Get('flipshortcuts') then
+		button = button == 'LeftButton' and 'RightButton' or 'LeftButton'
+	end
 	if button == 'LeftButton' then
 		-- Complete quest
 		if self.lastEvent == 'QUEST_COMPLETE' then
-			-- check if multiple items to choose between and none chosen
-			if not (QuestInfoFrame.itemChoice == 0 and GetNumQuestChoices() > 1) then
-				QuestFrameCompleteQuestButton:Click()
-			end
+			self.Elements:CompleteQuest()
 		-- Accept quest
 		elseif self.lastEvent == 'QUEST_DETAIL' then
 			QuestFrameAcceptButton:Click()
-		-- Progress quest (why are these functions named like this?)
+		-- Progress quest to completion
 		elseif IsQuestCompletable() then
 			CompleteQuest()
 		end

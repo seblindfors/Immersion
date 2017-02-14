@@ -37,8 +37,10 @@
 				if ( IsModifiedClick() and self.objectType == "item") then
 					HandleModifiedItemClick(GetQuestItemLink(self.type, self:GetID()));
 				else
-					if ( ImmersionContentFrame.chooseItems ) then
-						QuestInfoItem_OnClick(self);
+					if ( self.container.chooseItems ) then
+						self.container.itemChoice = self:GetID();
+						self.highlight:SetPoint('TOPLEFT', self, 0, 0);
+						self.highlight:Show();
 					end
 				end
 			</OnClick>
@@ -317,17 +319,25 @@
 												</Layers>
 											</Frame>
 											<Frame parentKey="ItemHighlight" hidden="true">
-												<Size x="256" y="64"/>
+												<Size x="202" y="48"/>
 												<Anchors>
 													<Anchor point="TOPLEFT"/>
 												</Anchors>
 												<Layers>
 													<Layer level="BACKGROUND">
-														<Texture file="Interface\QuestFrame\UI-QuestItemHighlight" alphaMode="ADD">
-															<Size x="256" y="64"/>
+														<Texture file="Interface\QuestFrame\UI-QuestItemHighlight" alphaMode="ADD" parentKey="Icon">
+															<Size x="46" y="46"/>
 															<Anchors>
 																<Anchor point="TOPLEFT"/>
 															</Anchors>
+															<TexCoords left="0.03515625" right="0.171875" top="0.140625" bottom="0.6875"/>
+														</Texture>
+														<Texture file="Interface\QuestFrame\UI-QuestItemHighlight" alphaMode="ADD" parentKey="NameTag" alpha="0.5">
+															<Size x="150" y="48"/>
+															<Anchors>
+																<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="2" y="0"/>
+															</Anchors>
+															<TexCoords left="0.19140625" right="0.59375" top="0.109375" bottom="0.703125"/>
 														</Texture>
 													</Layer>
 												</Layers>
@@ -342,6 +352,9 @@
 												self.spellRewardPool = CreateFramePool("BUTTON", self, "QuestSpellTemplate, ImmersionRewardSpellCodeTemplate");
 												self.followerRewardPool = CreateFramePool("BUTTON", self, "LargeQuestInfoRewardFollowerTemplate");
 												self.spellHeaderPool = CreateFontStringPool(self, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate");
+
+												ImmersionQuestInfoItem1.container = self:GetParent():GetParent()
+												ImmersionQuestInfoItem1.highlight = self.ItemHighlight
 											</OnLoad>
 										</Scripts>
 									</Frame>

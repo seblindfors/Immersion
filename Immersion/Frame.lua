@@ -172,6 +172,9 @@ hooksecurefunc(text, 'SetNext', function(self, ...)
 				counter:SetText(self:GetProgress())
 			end
 		end
+		if L.Get('disableprogression') then
+			self:StopProgression()
+		end
 	end
 end)
 

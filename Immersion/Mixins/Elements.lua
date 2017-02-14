@@ -27,6 +27,8 @@ local function GetRewardButton(rewardsFrame, index)
 	if ( not rewardButtons[index] ) then
 		local button = CreateFrame('BUTTON', _..'QuestInfoItem'..index, rewardsFrame, rewardsFrame.buttonTemplate)
 		rewardButtons[index] = button
+		button.container = rewardsFrame:GetParent():GetParent()
+		button.highlight = rewardsFrame.ItemHighlight
 	end
 	return rewardButtons[index]
 end
@@ -623,6 +625,25 @@ function Elements:ShowRewards()
 	return self, lastFrame
 end
 
+
+function Elements:CompleteQuest()
+	local numQuestChoices = GetNumQuestChoices()
+	self.itemChoice = (numQuestChoices == 1 and 1) or self.itemChoice
+
+	if ( self.itemChoice == 0 and numQuestChoices > 0 ) then
+		QuestChooseRewardError()
+	else
+		local money = GetQuestMoneyToGet()
+		if ( money and money > 0 ) then
+			self.dialog = StaticPopup_Show('CONFIRM_COMPLETE_EXPENSIVE_QUEST')
+			if ( self.dialog ) then
+				MoneyFrame_Update(self.dialog:GetName()..'MoneyFrame', money)
+			end
+		else
+			GetQuestReward(self.itemChoice)
+		end
+	end
+end
 ----------------------------------
 -- Quest templates
 ----------------------------------
