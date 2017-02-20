@@ -1,21 +1,21 @@
 ## Interface: 70100
 ## Title: Immersion
 ## Notes: Immersive replacement for quest & gossip
-## Version: 0.0.8
+## Version: 0.1.0
 ## SavedVariables: ImmersionSetup
 
--- Libs
+# Libs
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
 Libs\Animation.lua
 
--- Extra stuff & config
+# Extra stuff & config
 Extras.lua
 Config.lua
 
--- Mixins
+# Mixins
 Mixins\Scaler.lua
 Mixins\Titles.lua
 Mixins\Text.lua
@@ -23,9 +23,9 @@ Mixins\Model.lua
 Mixins\Button.lua
 Mixins\Elements.lua
 
--- Display layer
+# Display layer
 Frame.xml
 Frame.lua
 
--- Logic layer
+# Logic layer
 Logic.lua

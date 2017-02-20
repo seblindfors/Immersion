@@ -55,17 +55,17 @@
 	</Button>
 
 	<Button name="ImmersionItemButtonTemplate" virtual="true">
-		<Size x="202" y="48" />
+		<Size x="250" y="54" />
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture name="$parentIconTexture" parentKey="Icon">
-					<Size x="46" y="46" />
+					<Size x="52" y="52" />
 					<Anchors>
 						<Anchor point="TOPLEFT" />
 					</Anchors>
 				</Texture>
 				<Texture name="$parentNameFrame" file="Interface\QuestFrame\UI-QuestItemNameFrame" parentKey="NameFrame">
-					<Size x="180" y="70" />
+					<Size x="220" y="70" />
 					<Anchors>
 						<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="-14" y="0" />
 					</Anchors>
@@ -73,9 +73,9 @@
 			</Layer>
 			<Layer level="BORDER">
 				<FontString name="$parentName" inherits="GameFontHighlight" justifyH="LEFT" parentKey="Name">
-					<Size x="140" y="36" />
+					<Size x="170" y="36" />
 					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.NameFrame" x="20" y="0" />
+						<Anchor point="LEFT" relativeKey="$parent.NameFrame" x="24" y="0" />
 					</Anchors>
 				</FontString>
 			</Layer>
@@ -85,8 +85,19 @@
 						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" x="-1" y="1" />
 					</Anchors>
 				</FontString>
+				<Texture name="$parentBorderexture" parentKey="Border" file="Interface\AddOns\Immersion\Textures\Button_Normal">
+					<Size x="52" y="52" />
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+					</Anchors>
+				</Texture>
 			</Layer>
 		</Layers>
+		<Scripts>
+			<OnLoad>
+				self.Icon:SetMask("Interface\\Minimap\\UI-Minimap-Background");
+			</OnLoad>
+		</Scripts>
 	</Button>
 
 
@@ -325,19 +336,18 @@
 												</Anchors>
 												<Layers>
 													<Layer level="BACKGROUND">
-														<Texture file="Interface\QuestFrame\UI-QuestItemHighlight" alphaMode="ADD" parentKey="Icon">
-															<Size x="46" y="46"/>
+														<Texture file="Interface\AddOns\Immersion\Textures\Button_Hilite" alphaMode="ADD" parentKey="Icon">
+															<Size x="52" y="52"/>
 															<Anchors>
 																<Anchor point="TOPLEFT"/>
 															</Anchors>
-															<TexCoords left="0.03515625" right="0.171875" top="0.140625" bottom="0.6875"/>
 														</Texture>
-														<Texture file="Interface\QuestFrame\UI-QuestItemHighlight" alphaMode="ADD" parentKey="NameTag" alpha="0.5">
-															<Size x="150" y="48"/>
+														<Texture file="Interface\PVPFrame\PvPMegaQueue" alphaMode="ADD" parentKey="NameTag">
+															<Size x="182" y="46"/>
 															<Anchors>
-																<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="2" y="0"/>
+																<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="4" y="0"/>
 															</Anchors>
-															<TexCoords left="0.19140625" right="0.59375" top="0.109375" bottom="0.703125"/>
+															<TexCoords left="0.00195313" right="0.63867188" top="0.70703125" bottom="0.76757813"/>
 														</Texture>
 													</Layer>
 												</Layers>

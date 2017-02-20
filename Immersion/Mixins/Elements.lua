@@ -33,6 +33,49 @@ local function GetRewardButton(rewardsFrame, index)
 	return rewardButtons[index]
 end
 
+local function UpdateItemInfo(self, queryNum)
+	assert(self.type)
+	assert(self:GetID())
+	if self.objectType == 'item' then
+		local name, texture, numItems, quality, isUsable = GetQuestItemInfo(self.type, self:GetID())
+		-- For the tooltip
+		self.Name:SetText(name)
+		SetItemButtonCount(self, numItems)
+		SetItemButtonTexture(self, texture)
+		if ( isUsable ) then
+			SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0)
+			SetItemButtonNameFrameVertexColor(self, 1.0, 1.0, 1.0)
+		else
+			SetItemButtonTextureVertexColor(self, 0.9, 0, 0)
+			SetItemButtonNameFrameVertexColor(self, 0.9, 0, 0)
+		end
+		-- Fix when item isn't getting populated properly because it isn't cached yet.
+		if ( not name or name:trim():len() == 0 ) and (not queryNum or queryNum < 5)  then
+			C_Timer.After(0.1, function()
+				-- Recurse 5 times before giving up
+				UpdateItemInfo(self, (queryNum and queryNum + 1) or 1)
+			end)
+			return self:Hide()
+		else
+			self:Show()
+			return true
+		end
+	elseif self.objectType == 'currency' then
+		local name, texture, numItems = GetQuestCurrencyInfo(self.type, self:GetID())
+		if (name and texture and numItems) then
+			-- For the tooltip
+			self.Name:SetText(name)
+			SetItemButtonCount(self, numItems, true)
+			SetItemButtonTexture(self, texture)
+			SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0)
+			SetItemButtonNameFrameVertexColor(self, 1.0, 1.0, 1.0)
+			return true
+		else
+			return self:Hide()
+		end
+	end
+end
+
 local function ToggleRewardElement(frame, value, anchor)
 	if ( value and tonumber(value) ~= 0 ) then
 		frame:SetPoint('TOPLEFT', anchor, 'BOTTOMLEFT', 0, -REWARDS_OFFSET)
@@ -299,20 +342,11 @@ function Elements:ShowRewards()
 				questItem.type = 'choice'
 				questItem.objectType = 'item'
 				numItems = 1
-				name, texture, numItems, quality, isUsable = GetQuestItemInfo(questItem.type, i)
 				questItem:SetID(i)
 				questItem:Show()
-				-- For the tooltip
-				questItem.Name:SetText(name)
-				SetItemButtonCount(questItem, numItems)
-				SetItemButtonTexture(questItem, texture)
-				if ( isUsable ) then
-					SetItemButtonTextureVertexColor(questItem, 1.0, 1.0, 1.0)
-					SetItemButtonNameFrameVertexColor(questItem, 1.0, 1.0, 1.0)
-				else
-					SetItemButtonTextureVertexColor(questItem, 0.9, 0, 0)
-					SetItemButtonNameFrameVertexColor(questItem, 0.9, 0, 0)
-				end
+
+				UpdateItemInfo(questItem)
+
 				if ( i > 1 ) then
 					if ( mod(i, ITEMS_PER_ROW) == 1 ) then
 						questItem:SetPoint('TOPLEFT', rewardButtons[index - 2], 'BOTTOMLEFT', 0, -2)
@@ -338,6 +372,7 @@ function Elements:ShowRewards()
 			end
 			totalHeight = totalHeight + self.ItemChooseText:GetHeight() + REWARDS_OFFSET
 		else
+			elements.chooseItems = nil
 			self.ItemChooseText:Hide()
 		end
 	end
@@ -496,34 +531,10 @@ function Elements:ShowRewards()
 					questItem = GetRewardButton(self, index)
 					questItem.type = 'reward'
 					questItem.objectType = 'item'
-					name, texture, numItems, quality, isUsable = GetQuestItemInfo(questItem.type, i)
 					questItem:SetID(i)
 					questItem:Show()
-					-- For the tooltip
-					----------------------------------
-					if ( not name or name:trim():len() == 0 ) then -- blizz bug fix?
-						C_Timer.After(0.1, function() -- postpone query to assert data is populated.
-							-- assert the questItem in question still belongs here after 100 ms
-							if ( questItem:IsShown() and questItem.type == 'reward' and questItem:GetID() == i ) then
-								local name, texture, numItems, quality, isUsable = GetQuestItemInfo(questItem.type, i)
-								questItem.Name:SetText(name)
-								SetItemButtonCount(questItem, numItems)
-								SetItemButtonTexture(questItem, texture)
-							end
-						end)
-					----------------------------------
-					else
-						questItem.Name:SetText(name)
-						SetItemButtonCount(questItem, numItems)
-						SetItemButtonTexture(questItem, texture)
-					end
-					if ( isUsable ) then
-						SetItemButtonTextureVertexColor(questItem, 1.0, 1.0, 1.0)
-						SetItemButtonNameFrameVertexColor(questItem, 1.0, 1.0, 1.0)
-					else
-						SetItemButtonTextureVertexColor(questItem, 0.9, 0, 0)
-						SetItemButtonNameFrameVertexColor(questItem, 0.9, 0, 0)
-					end
+
+					UpdateItemInfo(questItem)
 
 					if ( buttonIndex > 1 ) then
 						if ( mod(buttonIndex, ITEMS_PER_ROW) == 1 ) then
@@ -552,16 +563,10 @@ function Elements:ShowRewards()
 					questItem = GetRewardButton(self, index)
 					questItem.type = 'reward'
 					questItem.objectType = 'currency'
-					name, texture, numItems = GetQuestCurrencyInfo(questItem.type, i)
-					if (name and texture and numItems) then
-						questItem:SetID(i)
-						questItem:Show()
-						-- For the tooltip
-						questItem.Name:SetText(name)
-						SetItemButtonCount(questItem, numItems, true)
-						SetItemButtonTexture(questItem, texture)
-						SetItemButtonTextureVertexColor(questItem, 1.0, 1.0, 1.0)
-						SetItemButtonNameFrameVertexColor(questItem, 1.0, 1.0, 1.0)
+					questItem:SetID(i)
+					questItem:Show()
+
+					if (UpdateItemInfo(questItem)) then
 
 						if ( buttonIndex > 1 ) then
 							if ( mod(buttonIndex, ITEMS_PER_ROW) == 1 ) then
