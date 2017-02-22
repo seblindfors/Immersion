@@ -30,6 +30,7 @@ for _, event in pairs({
 	'QUEST_GREETING',	-- Multiple quests to choose from, but no gossip options
 	'QUEST_IGNORED',	-- Ignore the currently shown quest
 	'QUEST_PROGRESS',	-- Fires when you click on a quest you're currently on
+	'QUEST_ITEM_UPDATE', -- Item update while in convo, refresh frames.
 }) do frame:RegisterEvent(event) end
 
 ----------------------------------
@@ -70,12 +71,15 @@ frame.ADDON_LOADED = function(self, name)
 		L.cfg = _G[svref] or L.GetDefaultConfig()
 		_G[svref] = L.cfg
 
-		talkbox:SetScale(L.Get('boxscale'))
-		titles:SetScale(L.Get('titlescale'))
-		self:SetScale(L.Get('scale'))
+		talkbox:SetScale(L('boxscale'))
+		titles:SetScale(L('titlescale'))
+		self:SetScale(L('scale'))
 
-		talkbox:SetPoint(L.Get('boxpoint'), UIParent, L.Get('boxoffsetX'), L.Get('boxoffsetY'))
-		titles:SetPoint('CENTER', UIParent, 'CENTER', L.Get('titleoffset'), 0)
+		talkbox:SetPoint(L('boxpoint'), UIParent, L('boxoffsetX'), L('boxoffsetY'))
+		titles:SetPoint('CENTER', UIParent, 'CENTER', L('titleoffset'), 0)
+
+		self:SetFrameStrata(L('strata'))
+		talkbox:SetFrameStrata(L('strata'))
 
 		-- Register options table
 		LibStub('AceConfigRegistry-3.0'):RegisterOptionsTable(_, L.options)
@@ -172,7 +176,7 @@ hooksecurefunc(text, 'SetNext', function(self, ...)
 				counter:SetText(self:GetProgress())
 			end
 		end
-		if L.Get('disableprogression') then
+		if L('disableprogression') then
 			self:StopProgression()
 		end
 	end
@@ -190,6 +194,22 @@ L.Mixin(talkbox.Elements.Progress, L.AdjustToChildren)
 ----------------------------------
 -- Animation things
 ----------------------------------
+local ignoreFrames = {
+	[frame] = true,
+	[talkbox] = true,
+	[GameTooltip] = true,
+}
+
+local function GetUIFrames()
+	local frames = {}
+	for i, child in pairs({UIParent:GetChildren()}) do
+		if not child:IsForbidden() and not ignoreFrames[child] then
+			frames[child] = child:GetAlpha()
+		end
+	end
+	return frames
+end
+
 frame.FadeIns = {
 	talkbox.MainFrame.InAnim,
 	talkbox.NameFrame.FadeIn,
@@ -204,6 +224,33 @@ frame.FadeIn = function(self, fadeTime, stopPlay)
 			Fader:Play()
 		end
 	end
+	if L('hideui') and not self.fadeFrames then
+		local frames = GetUIFrames()
+		for frame, origAlpha in pairs(frames) do
+			L.UIFrameFadeOut(frame, fadeTime or 0.2, origAlpha, 0)
+		end
+		self.fadeFrames = frames
+
+		-- Track hidden frames and fade them back in if moused over.
+		local time = 0
+		self:SetScript('OnUpdate', function(self, elapsed)
+			time = time + elapsed
+			if time > 0.5 then
+				if self.fadeFrames then
+					for frame, origAlpha in pairs(self.fadeFrames) do
+						if frame:IsMouseOver() then
+							L.UIFrameFadeIn(frame, 0.2, frame:GetAlpha(), origAlpha)
+						elseif frame:GetAlpha() > 0.1 then
+							L.UIFrameFadeOut(frame, 0.2, frame:GetAlpha(), 0) 
+						end
+					end
+				else
+					self:SetScript('OnUpdate', nil)
+				end
+				time = 0
+			end
+		end)
+	end
 end
 
 frame.FadeOut = function(self, fadeTime)
@@ -211,6 +258,12 @@ frame.FadeOut = function(self, fadeTime)
 		finishedFunc = self.Hide,
 		finishedArg1 = self,
 	})
+	if self.fadeFrames then
+		for frame, origAlpha in pairs(self.fadeFrames) do
+			L.UIFrameFadeIn(frame, fadeTime or 0.5, frame:GetAlpha(), origAlpha)
+		end
+		self.fadeFrames = nil
+	end
 end
 
 ----------------------------------
@@ -221,16 +274,16 @@ end
 ----------------------------------
 hooksecurefunc('TalkingHead_LoadUI', function()
 	local thf = TalkingHeadFrame
-	if L.Get('boxpoint') == 'Bottom' and thf:IsVisible() then
+	if L('boxpoint') == 'Bottom' and thf:IsVisible() then
 		talkbox:SetOffset(nil, thf:GetTop() + 8)
 	end
 	thf:HookScript('OnShow', function(self)
-		if L.Get('boxpoint') == 'Bottom' then
+		if L('boxpoint') == 'Bottom' then
 			talkbox:SetOffset(nil, self:GetTop() + 8)
 		end
 	end)
 	thf:HookScript('OnHide', function(self)
-		if L.Get('boxpoint') == 'Bottom' then
+		if L('boxpoint') == 'Bottom' then
 			talkbox:SetOffset()
 		end
 	end)

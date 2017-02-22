@@ -15,7 +15,7 @@ function Button:OnClick(button, down)
 end
 
 function Button:OnShow()
-	self.Counter:SetShown(L.Get('enablenumbers'))
+	self.Counter:SetShown(L('enablenumbers'))
  	local id = self.idx or 1
 	C_Timer.After(id * 0.025, function()
 		L.UIFrameFadeIn(self, 0.2, self:GetAlpha(), 1)

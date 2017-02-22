@@ -1,5 +1,5 @@
 local _, L = ...
-local TEMPLATE, NPC, TalkBox = {}, {}, {}
+local NPC, TalkBox = {}, {}
 local frame, GetTime = L.frame, GetTime
 
 ----------------------------------
@@ -11,7 +11,7 @@ function NPC:OnEvent(event, ...)
 		if event:match('QUEST') then
 			CloseGossip()
 		end
-		self[event](self, ...)
+		event = self[event](self, ...) or event
 	end
 	self.TalkBox.lastEvent = event
 	self.lastEvent = event
@@ -87,13 +87,24 @@ function NPC:QUEST_DETAIL(...)
 	self:AddQuestInfo('QUEST_DETAIL', QuestFrameAcceptButton)
 end
 
+
+function NPC:QUEST_ITEM_UPDATE()
+	local questEvent = (self.lastEvent ~= 'QUEST_ITEM_UPDATE') and self.lastEvent or self.questEvent
+	self.questEvent = questEvent
+
+	if questEvent and self[questEvent] then
+		self[questEvent](self)
+		return questEvent
+	end
+end
+
 ----------------------------------
 -- Content handlers
 ----------------------------------
 function NPC:AddQuestInfo(template, acceptButton)
 	local elements = self.TalkBox.Elements
 	local content = elements.Content
-	local height = elements:Display(template, QuestFrameAcceptButton, 'Stone')
+	local height = elements:Display(template, acceptButton, 'Stone')
 
 	-- hacky fix to stop a content frame that only contains a spacer from showing.
 	if height > 20 then
@@ -182,8 +193,8 @@ function NPC:PlayIntro(event)
 		self:EnableKeyboard(true)
 		local box = self.TalkBox
 		self:FadeIn(nil, isShown)
-		local point = L.Get('boxpoint')
-		local x, y = L.Get('boxoffsetX'), L.Get('boxoffsetY')
+		local point = L('boxpoint')
+		local x, y = L('boxoffsetX'), L('boxoffsetY')
 		box:ClearAllPoints()
 		if not isShown then
 			box:SetPoint(point, UIParent, point, -x, -y)
@@ -222,7 +233,7 @@ local inputs = {
 		elseif (self.lastEvent == 'GOSSIP_SHOW' or self.lastEvent == 'QUEST_GREETING') and numActive > 1 then
 			self:SelectBestOption()
 		else
-			self.TalkBox:Click(L.Get('flipshortcuts') and 'RightButton' or 'LeftButton')
+			self.TalkBox:Click(L('flipshortcuts') and 'RightButton' or 'LeftButton')
 		end
 	end,
 	reset = function(self)
@@ -277,9 +288,9 @@ end
 -- TalkBox button
 ----------------------------------
 function TalkBox:SetOffset(x, y)
-	local point = L.Get('boxpoint')
-	x = x or L.Get('boxoffsetX')
-	y = y or L.Get('boxoffsetY')
+	local point = L('boxpoint')
+	x = x or L('boxoffsetX')
+	y = y or L('boxoffsetY')
 
 	self.offsetX = x
 	self.offsetY = y
@@ -293,6 +304,11 @@ function TalkBox:SetOffset(x, y)
 	local parent = UIParent
 	local comp = isVert and y or x
 	local func = self[point]
+
+	if not evaluator then
+		self:SetPoint(point, parent, x, y)
+		return
+	end
 
 	self:SetScript('OnUpdate', function(self)
 		local offset = (evaluator(self) or 0) - (evaluator(parent) or 0)
@@ -323,7 +339,7 @@ function TalkBox:OnLeave()
 end
 
 function TalkBox:OnClick(button)
-	if L.Get('flipshortcuts') then
+	if L('flipshortcuts') then
 		button = button == 'LeftButton' and 'RightButton' or 'LeftButton'
 	end
 	if button == 'LeftButton' then
@@ -348,8 +364,8 @@ function TalkBox:OnClick(button)
 end
 
 function TalkBox:SetExtraOffset(newOffset)
-	local currX = ( self.offsetX or L.Get('boxoffsetX') )
-	local currY = ( self.offsetY or L.Get('boxoffsetY') )
+	local currX = ( self.offsetX or L('boxoffsetX') )
+	local currY = ( self.offsetY or L('boxoffsetY') )
 	self.extraY = newOffset
 	self:SetOffset(currX, currY)
 end
@@ -359,28 +375,3 @@ end
 ----------------------------------
 L.Mixin(frame, NPC)
 L.Mixin(frame.TalkBox, TalkBox)
-
-----------------------------------
--- Quest templates
-----------------------------------
-TEMPLATE.QUEST_DETAIL = { questLog = nil, chooseItems = nil, contentWidth = 450,
-	canHaveSealMaterial = nil, sealXOffset = 160, sealYOffset = -6,
-	elements = {
-		QuestInfo_ShowObjectivesHeader, 0, -15,	
-		QuestInfo_ShowObjectivesText, 0, -5,
-		QuestInfo_ShowSpecialObjectives, 0, -10,
-		QuestInfo_ShowGroupSize, 0, -10,
-		QuestInfo_ShowRewards, 0, -15,
-		QuestInfo_ShowSpacer, 0, -15,
-	}
-}
-
-TEMPLATE.QUEST_REWARD = { questLog = nil, chooseItems = true, contentWidth = 450,
-	canHaveSealMaterial = nil, sealXOffset = 160, sealYOffset = -6,
-	elements = {
-	--	QuestInfo_ShowTitle, 5, -10,
-	--	QuestInfo_ShowRewardText, 0, -5,
-		QuestInfo_ShowRewards, 0, -10,
-		QuestInfo_ShowSpacer, 0, -10
-	}
-}

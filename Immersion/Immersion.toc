@@ -1,8 +1,11 @@
 ## Interface: 70100
 ## Title: Immersion
 ## Notes: Immersive replacement for quest & gossip
-## Version: 0.1.0
+## Version: 0.1.1
 ## SavedVariables: ImmersionSetup
+
+# Locale
+Locale\Locale.xml
 
 # Libs
 Libs\LibStub\LibStub.lua

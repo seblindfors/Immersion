@@ -33,7 +33,7 @@ local function GetRewardButton(rewardsFrame, index)
 	return rewardButtons[index]
 end
 
-local function UpdateItemInfo(self, queryNum)
+local function UpdateItemInfo(self)
 	assert(self.type)
 	assert(self:GetID())
 	if self.objectType == 'item' then
@@ -49,17 +49,8 @@ local function UpdateItemInfo(self, queryNum)
 			SetItemButtonTextureVertexColor(self, 0.9, 0, 0)
 			SetItemButtonNameFrameVertexColor(self, 0.9, 0, 0)
 		end
-		-- Fix when item isn't getting populated properly because it isn't cached yet.
-		if ( not name or name:trim():len() == 0 ) and (not queryNum or queryNum < 5)  then
-			C_Timer.After(0.1, function()
-				-- Recurse 5 times before giving up
-				UpdateItemInfo(self, (queryNum and queryNum + 1) or 1)
-			end)
-			return self:Hide()
-		else
-			self:Show()
-			return true
-		end
+		self:Show()
+		return true
 	elseif self.objectType == 'currency' then
 		local name, texture, numItems = GetQuestCurrencyInfo(self.type, self:GetID())
 		if (name and texture and numItems) then

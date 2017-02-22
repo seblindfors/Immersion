@@ -15,7 +15,7 @@ L.TextMixin = {}
 local Text = L.TextMixin
 
 function Text:SetText(text)
-	DELAY_DIVISOR = L.Get('delaydivisor')
+	DELAY_DIVISOR = L('delaydivisor')
 	self:StopTexts()
 	self.storedText = text
 	if text then

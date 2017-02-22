@@ -37,7 +37,7 @@
 				if ( IsModifiedClick() and self.objectType == "item") then
 					HandleModifiedItemClick(GetQuestItemLink(self.type, self:GetID()));
 				else
-					if ( self.container.chooseItems ) then
+					if ( self.container.chooseItems and self.type == "choice" ) then
 						self.container.itemChoice = self:GetID();
 						self.highlight:SetPoint('TOPLEFT', self, 0, 0);
 						self.highlight:Show();
