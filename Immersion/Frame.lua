@@ -198,13 +198,19 @@ local ignoreFrames = {
 	[frame] = true,
 	[talkbox] = true,
 	[GameTooltip] = true,
+	[StaticPopup1] = true,
+	[StaticPopup2] = true,
+	[StaticPopup3] = true,
+	[StaticPopup4] = true,
+	[ShoppingTooltip1] = true,
+	[ShoppingTooltip2] = true,
 }
 
 local function GetUIFrames()
 	local frames = {}
 	for i, child in pairs({UIParent:GetChildren()}) do
 		if not child:IsForbidden() and not ignoreFrames[child] then
-			frames[child] = child:GetAlpha()
+			frames[child] = child.fadeInfo and child.fadeInfo.endAlpha or child:GetAlpha()
 		end
 	end
 	return frames
@@ -226,8 +232,8 @@ frame.FadeIn = function(self, fadeTime, stopPlay)
 	end
 	if L('hideui') and not self.fadeFrames then
 		local frames = GetUIFrames()
-		for frame, origAlpha in pairs(frames) do
-			L.UIFrameFadeOut(frame, fadeTime or 0.2, origAlpha, 0)
+		for frame in pairs(frames) do
+			L.UIFrameFadeOut(frame, fadeTime or 0.2, frame:GetAlpha(), 0)
 		end
 		self.fadeFrames = frames
 
@@ -238,7 +244,7 @@ frame.FadeIn = function(self, fadeTime, stopPlay)
 			if time > 0.5 then
 				if self.fadeFrames then
 					for frame, origAlpha in pairs(self.fadeFrames) do
-						if frame:IsMouseOver() then
+						if frame:IsMouseOver() and frame:IsMouseEnabled() then
 							L.UIFrameFadeIn(frame, 0.2, frame:GetAlpha(), origAlpha)
 						elseif frame:GetAlpha() > 0.1 then
 							L.UIFrameFadeOut(frame, 0.2, frame:GetAlpha(), 0) 

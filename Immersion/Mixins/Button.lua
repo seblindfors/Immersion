@@ -26,6 +26,11 @@ function Button:OnHide()
 	self:SetAlpha(0)
 end
 
+function Button:OnScaleFinished()
+	-- Force a text/height update after scaling
+	self:SetText(self:GetText())
+end
+
 function Button:SetFormattedText(...)
 	local __index = getmetatable(self).__index
 	__index.SetFormattedText(self, ...)

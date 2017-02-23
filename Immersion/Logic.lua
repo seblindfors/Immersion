@@ -42,23 +42,13 @@ function NPC:QUEST_PROGRESS(...) -- special case, doesn't use QuestInfo
 	self:PlayIntro('QUEST_PROGRESS')
 	self:UpdateTalkingHead(GetTitleText(), GetProgressText(), IsQuestCompletable() and 'ActiveQuest' or 'IncompleteQuest')
 	local elements = self.TalkBox.Elements
-	local textColor, titleTextColor = GetMaterialTextColors('Stone')
-	elements.Progress.ReqText:SetTextColor(unpack(titleTextColor))
-	elements.Progress.MoneyText:SetTextColor(unpack(textColor))
-	elements:Show()
-	elements:SetHeight(1)
-	elements.Progress:Show()
-	QuestFrameProgressItems_Update() -- remove this later
-	elements:AdjustToChildren()
-	for _, child in pairs({elements.Progress:GetChildren()}) do
-		if child:IsVisible() then
-			-- add some padding to get the backdrop to wrap the frame properly.
-			local height = elements.Progress:GetHeight() + 90
-			elements:SetSize(364, height)
-			elements.Progress:SetHeight(height)
-			self.TalkBox:SetExtraOffset(height - 16)
-			return -- something was visible, break out.
-		end
+	local hasItems = elements:ShowProgress('Stone')
+	elements:UpdateBoundaries()
+	if hasItems then
+		local width, height = elements.Progress:GetSize()
+		-- Extra: 32 padding + 8 offset from talkbox + 8 px bottom offset
+		self.TalkBox:SetExtraOffset(height + 48) 
+		return
 	end
 	self:ResetElements()
 end
@@ -108,14 +98,15 @@ function NPC:AddQuestInfo(template, acceptButton)
 
 	-- hacky fix to stop a content frame that only contains a spacer from showing.
 	if height > 20 then
-		elements:SetSize(570, height + 32)
 		elements:Show()
 		content:Show()
+		elements:UpdateBoundaries()
 	else
 		elements:Hide()
 		content:Hide()
-	end
-	self.TalkBox:SetExtraOffset(height)
+	end 
+	-- Extra: 32 px padding 
+	self.TalkBox:SetExtraOffset(height + 32)
 	self.TalkBox.NameFrame.FadeIn:Play()
 end
 
@@ -170,7 +161,7 @@ function NPC:UpdateTalkingHead(title, text, npcType)
 	elseif ( UnitExists('npc') and not UnitIsUnit('npc', 'player') and not UnitIsDead('npc') ) then
 		unit = 'npc'
 	else
-		unit = 'player'
+		unit = npcType
 	end
 	local talkBox = self.TalkBox
 	talkBox:SetExtraOffset(0)

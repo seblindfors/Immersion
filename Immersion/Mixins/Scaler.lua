@@ -8,6 +8,9 @@ L.ScalerMixin = {
 		if abs(current - scale) < 0.05 then
 			self:SetScale(scale)
 			self:SetScript('OnUpdate', self.oldScript)
+			if self.OnScaleFinished then
+				self:OnScaleFinished()
+			end
 		else
 			self:SetScale( current + delta )
 		end
@@ -44,9 +47,13 @@ L.ScalerMixin = {
 	end,
 }
 
-L.AdjustToChildren = {
+L.AdjustToChildren = {		
 	IterateChildren = function(self)
-		return pairs({self:GetChildren()})
+		local regions = {self:GetChildren()}
+		for _, v in pairs({self:GetRegions()}) do
+			regions[#regions + 1] = v
+		end
+		return pairs(regions)
 	end,
 	GetAdjustableChildren = function(self)
 		local adjustable = {}
@@ -58,6 +65,7 @@ L.AdjustToChildren = {
 		return pairs(adjustable)
 	end,
 	AdjustToChildren = function(self)
+		self:SetSize(1, 1)
 		for _, child in self:GetAdjustableChildren() do
 			child:AdjustToChildren()
 		end
@@ -66,29 +74,26 @@ L.AdjustToChildren = {
 			if child:IsVisible() then
 				local childTop, childBottom = child:GetTop(), child:GetBottom()
 				local childLeft, childRight = child:GetLeft(), child:GetRight()
-				if not top or childTop > top then
+				if (childTop) and (not top or childTop > top) then
 					top = childTop
 				end
-				if not bottom or childBottom < bottom then
+				if (childBottom) and (not bottom or childBottom < bottom) then
 					bottom = childBottom
 				end
-				if not left or childLeft < left then
+				if (childLeft) and (not left or childLeft < left) then
 					left = childLeft
 				end
-				if not right or childRight > right then
+				if (childRight) and (not right or childRight > right) then
 					right = childRight
 				end
 			end
 		end
 		if top and bottom then
 			self:SetHeight(abs( top - bottom ))
-		else
-			self:SetHeight(1)
 		end
 		if left and right then
 			self:SetWidth(abs( right - left ))
-		else
-			self:SetWidth(1)
 		end
+		return self:GetSize()
 	end,
 }

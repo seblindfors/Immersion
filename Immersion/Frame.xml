@@ -37,7 +37,7 @@
 				if ( IsModifiedClick() and self.objectType == "item") then
 					HandleModifiedItemClick(GetQuestItemLink(self.type, self:GetID()));
 				else
-					if ( self.container.chooseItems and self.type == "choice" ) then
+					if ( self.container and self.container.chooseItems and self.type == "choice" ) then
 						self.container.itemChoice = self:GetID();
 						self.highlight:SetPoint('TOPLEFT', self, 0, 0);
 						self.highlight:Show();
@@ -137,7 +137,11 @@
 							</OnLoad>
 						</Scripts>
 						<Frames>
-							<Frame parentKey="Content" name="ImmersionContentFrame" setAllPoints="true">
+							<Frame parentKey="Content" name="ImmersionContentFrame">
+								<Size x="570" y="403"/>
+								<Anchors>
+									<Anchor point="TOPLEFT" x="32" y="-32"/>
+								</Anchors>
 								<Frames>
 
 									<Frame parentKey="SpacerFrame">
@@ -199,7 +203,7 @@
 										</Layers>
 										<Frames>
 											<Button parentKey="HonorFrame" inherits="ImmersionItemButtonTemplate" hidden="true"/>
-											<Button parentArray="RewardButtons" name="ImmersionQuestInfoItem1" inherits="ImmersionItemButtonTemplate, ImmersionRewardItemCodeTemplate" hidden="true"/>
+											<Button parentArray="Buttons" name="ImmersionQuestInfoItem1" inherits="ImmersionItemButtonTemplate, ImmersionRewardItemCodeTemplate" hidden="true"/>
 											<Frame parentKey="MoneyFrame" name="$parentMoneyFrame" inherits="MoneyFrameTemplate">
 												<Anchors>
 													<Anchor point="LEFT" relativeKey="$parent.ItemReceiveText" relativePoint="RIGHT" x="15" y="0"/>
@@ -387,47 +391,42 @@
 								</Layers>
 							</Frame>
 							<Frame parentKey="Progress" hidden="true">
-								<Size x="300" y="403"/>
+								<Size x="570" y="403"/>
 								<Anchors>
 									<Anchor point="TOPLEFT" x="32" y="-32"/>
 								</Anchors>
+								<Layers>
+									<Layer level="BACKGROUND">
+										<FontString parentKey="ReqText" inherits="QuestTitleFont" text="TURN_IN_ITEMS" justifyH="LEFT">
+											<Anchors>
+												<Anchor point="TOPLEFT" x="0" y="0"/>
+											</Anchors>
+										</FontString>
+										<FontString parentKey="MoneyText" inherits="QuestFontNormalSmall" text="REQUIRED_MONEY" justifyH="LEFT">
+											<Anchors>
+												<Anchor point="TOPLEFT" relativeKey="$parent.ReqText" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+											</Anchors>
+										</FontString>
+									</Layer>
+								</Layers>
+								<Frames>
+									<Frame parentKey="MoneyFrame" name="$parentMoneyFrame" inherits="MoneyFrameTemplate">
+										<Anchors>
+											<Anchor point="LEFT" relativeKey="$parent.MoneyText" relativePoint="RIGHT" x="10" y="0"/>
+										</Anchors>
+										<Scripts>
+											<OnLoad>
+												SmallMoneyFrame_OnLoad(self);
+												MoneyFrame_SetType(self, "STATIC");
+											</OnLoad>
+										</Scripts>
+									</Frame>
+									<Button parentArray="Buttons" name="ImmersionProgressItem1" inherits="ImmersionItemButtonTemplate, ImmersionRewardItemCodeTemplate" hidden="true"/>
+								</Frames>
 								<Scripts>
 									<OnLoad>
-										self.Items = {					
-											QuestProgressItem1,
-											QuestProgressItem2,
-											QuestProgressItem3,
-											QuestProgressItem4,
-											QuestProgressItem5,
-											QuestProgressItem6,
-										}
-
-										self.TitleText = QuestProgressTitleText;
-										self.TitleText:ClearAllPoints();
-										self.TitleText:Hide();
-										self.TitleText:SetParent(self);
-
-										self.ProgressText = QuestProgressText;
-										self.ProgressText:ClearAllPoints();
-										self.ProgressText:Hide();
-										self.ProgressText:SetParent(self);
-
-										self.ReqText = QuestProgressRequiredItemsText;
-										self.ReqText:ClearAllPoints();
-										self.ReqText:SetParent(self);
-										self.ReqText:SetPoint("TOPLEFT", 0, 0);
-
-										self.MoneyText = QuestProgressRequiredMoneyText;
-										self.MoneyText:SetParent(self);
-
-										self.MoneyFrame = QuestProgressRequiredMoneyFrame;
-										self.MoneyFrame:SetParent(self);
-
-										for i, item in pairs(self.Items) do
-											self["Item" .. i] = item;
-											item:SetParent(self);
-										end
-
+										self.buttonTemplate = "ImmersionItemButtonTemplate, ImmersionRewardItemCodeTemplate";
+										ImmersionProgressItem1.container = self:GetParent():GetParent()
 									</OnLoad>
 								</Scripts>
 							</Frame>

@@ -15,6 +15,7 @@ local P_INCOMPLETE_QUEST = 4
 -- Display
 ----------------------------------
 function Titles:AdjustHeight(newHeight)
+	self.offset = 0
 	self:SetScript('OnUpdate', function(self)
 		local height = self:GetHeight()
 		local diff = newHeight - height
@@ -24,7 +25,32 @@ function Titles:AdjustHeight(newHeight)
 		else
 			self:SetHeight(height + ( diff / 10 ) )
 		end
+		self:OnUpdateOffset()
 	end)
+end
+
+function Titles:OnUpdateOffset()
+	local anchor, relativeRegion, relativeKey, x, y = self:GetPoint()
+	local offset = self.offset or 0
+	local diff = ( y - offset )
+	if (offset == 0) or abs( y - offset ) < 0.3 then
+		self:SetPoint(anchor, relativeRegion, relativeKey, x, offset)
+		if self:GetScript('OnUpdate') == self.OnUpdateOffset then
+			self:SetScript('OnUpdate', nil)
+		end
+	else
+		self:SetPoint(anchor, relativeRegion, relativeKey, x, offset + (diff / 10))
+	end
+end
+
+function Titles:OnMouseWheel(delta)
+	self.offset = self.offset and self.offset + (-delta * 40) or (-delta * 40)
+	self:SetScript('OnUpdate', self.OnUpdateOffset)
+end
+
+function Titles:ResetPosition()
+	self.offset = 0
+	self:SetScript('OnUpdate', self.OnUpdateOffset)
 end
 
 function Titles:OnEvent(event, ...)
@@ -40,6 +66,7 @@ function Titles:OnHide()
 		button:UnlockHighlight()
 		button:Hide()
 	end
+	self:ResetPosition()
 	self.numActive = 0
 	self.idx = 1
 end
