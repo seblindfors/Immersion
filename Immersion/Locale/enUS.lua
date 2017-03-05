@@ -1,4 +1,5 @@
 local _, L = ...
+L.locale = GetLocale()
 
 L["Anchor point"] = "Anchor point"
 L["Bottom"] = "Bottom"

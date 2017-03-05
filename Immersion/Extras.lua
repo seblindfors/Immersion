@@ -28,6 +28,7 @@ function L.Mixin(t, ...)
 end
 
 function L.HideFrame(frame)
+	frame:UnregisterAllEvents()
 	frame:SetSize(0, 0)
 	frame:EnableMouse(false)
 	frame:EnableKeyboard(false)

@@ -45,8 +45,10 @@ for _, event in pairs({
 	'QUEST_GREETING',	-- Show quest options, why is this a thing again?
 	'QUEST_IGNORED',	-- Hide when using ignore binding?
 	'QUEST_PROGRESS',	-- Hide when going from gossip -> active quest
-	'QUEST_LOG_UPDATE',	-- If quest changes while interacting
+--	'QUEST_LOG_UPDATE',	-- If quest changes while interacting
 }) do titles:RegisterEvent(event) end
+
+titles:RegisterUnitEvent('UNIT_QUEST_LOG_CHANGED', 'player')
 
 ----------------------------------
 -- Load SavedVaribles
@@ -100,8 +102,8 @@ end
 ----------------------------------
 -- Hide regular frames
 ----------------------------------
-L.HideFrame(GossipFrame) GossipFrame:UnregisterAllEvents()
-L.HideFrame(QuestFrame) QuestFrame:UnregisterAllEvents()
+L.HideFrame(GossipFrame)
+L.HideFrame(QuestFrame)
 ----------------------------------
 
 ----------------------------------
@@ -119,6 +121,14 @@ L.Mixin(titles, L.TitlesMixin)
 -- Initiate elements
 ----------------------------------
 L.Mixin(talkbox.Elements, L.ElementsMixin)
+
+----------------------------------
+-- Set up dynamically sized frames
+----------------------------------
+L.Mixin(talkbox.Elements, L.AdjustToChildren)
+L.Mixin(talkbox.Elements.Content, L.AdjustToChildren)
+L.Mixin(talkbox.Elements.Progress, L.AdjustToChildren)
+L.Mixin(talkbox.Elements.Content.RewardsFrame, L.AdjustToChildren)
 
 ----------------------------------
 -- Set this point here
@@ -187,9 +197,6 @@ end)
 ----------------------------------
 talkbox:RegisterForClicks('LeftButtonUp', 'RightButtonUp')
 talkbox.TextFrame.SpeechProgress:SetFont('Fonts\\MORPHEUS.ttf', 16, '')
-L.Mixin(talkbox.Elements, L.AdjustToChildren)
-L.Mixin(talkbox.Elements.Content, L.AdjustToChildren)
-L.Mixin(talkbox.Elements.Progress, L.AdjustToChildren)
 
 ----------------------------------
 -- Animation things

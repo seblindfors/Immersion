@@ -95,6 +95,11 @@ L.options = {
 			name = GENERAL,
 			order = 1,
 			args = {
+				header = {
+					type = 'header',
+					name = GENERAL,
+					order = 0,
+				},
 				disableprogression = {
 					type = 'toggle',
 					name = L['Disable automatic text progress'],

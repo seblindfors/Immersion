@@ -57,27 +57,27 @@
 	<Button name="ImmersionItemButtonTemplate" virtual="true">
 		<Size x="250" y="54" />
 		<Layers>
-			<Layer level="BACKGROUND">
+			<Layer level="BORDER">
 				<Texture name="$parentIconTexture" parentKey="Icon">
 					<Size x="52" y="52" />
 					<Anchors>
 						<Anchor point="TOPLEFT" />
 					</Anchors>
 				</Texture>
-				<Texture name="$parentNameFrame" file="Interface\QuestFrame\UI-QuestItemNameFrame" parentKey="NameFrame">
-					<Size x="220" y="70" />
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="-14" y="0" />
-					</Anchors>
-				</Texture>
-			</Layer>
-			<Layer level="BORDER">
 				<FontString name="$parentName" inherits="GameFontHighlight" justifyH="LEFT" parentKey="Name">
 					<Size x="170" y="36" />
 					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.NameFrame" x="24" y="0" />
+						<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="8" y="0" />
 					</Anchors>
 				</FontString>
+			</Layer>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentNameFrame" file="Interface\QuestFrame\UI-QuestItemNameFrame" parentKey="NameFrame">
+					<Size x="254" y="70" />
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="CENTER" x="-20" y="0" />
+					</Anchors>
+				</Texture>
 			</Layer>
 			<Layer level="ARTWORK">
 				<FontString name="$parentCount" inherits="NumberFontNormal" justifyH="RIGHT" parentKey="Count">
@@ -347,9 +347,9 @@
 															</Anchors>
 														</Texture>
 														<Texture file="Interface\PVPFrame\PvPMegaQueue" alphaMode="ADD" parentKey="NameTag">
-															<Size x="182" y="46"/>
+															<Size x="182" y="44"/>
 															<Anchors>
-																<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="4" y="0"/>
+																<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="-8" y="0"/>
 															</Anchors>
 															<TexCoords left="0.00195313" right="0.63867188" top="0.70703125" bottom="0.76757813"/>
 														</Texture>

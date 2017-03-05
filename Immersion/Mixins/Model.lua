@@ -121,9 +121,9 @@ ani = {
 
 m2 = {
 	AvailableQuest	= 'interface\\buttons\\talktome.m2',
-	ActiveQuest		= 'interface\\buttons\\talktoMequestion.m2',
-	IncompleteQuest = 'interface\\buttons\\talktoMequestion_grey.m2',
-	GossipGossip	= 'interface\\buttons\\talktome.m2',
+	ActiveQuest		= 'interface\\buttons\\talktomequestionmark.m2',
+	IncompleteQuest = 'interface\\buttons\\talktomequestion_grey.m2',
+	GossipGossip	= 'interface\\buttons\\talktome_chat.m2',
 }
 
 Model.LightValues = {

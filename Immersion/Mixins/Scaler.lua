@@ -71,7 +71,7 @@ L.AdjustToChildren = {
 		end
 		local top, bottom, left, right
 		for _, child in self:IterateChildren() do
-			if child:IsVisible() then
+			if child:IsShown() then
 				local childTop, childBottom = child:GetTop(), child:GetBottom()
 				local childLeft, childRight = child:GetLeft(), child:GetRight()
 				if (childTop) and (not top or childTop > top) then
