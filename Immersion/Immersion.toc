@@ -1,7 +1,7 @@
-## Interface: 70100
+## Interface: 70200
 ## Title: Immersion
 ## Notes: Immersive replacement for quest & gossip
-## Version: 0.1.4
+## Version: 0.3.0
 ## SavedVariables: ImmersionSetup
 
 # Locale
@@ -24,6 +24,7 @@ Mixins\Titles.lua
 Mixins\Text.lua
 Mixins\Model.lua
 Mixins\Button.lua
+Mixins\Tooltip.lua
 Mixins\Elements.lua
 
 # Display layer

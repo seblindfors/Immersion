@@ -1,0 +1,64 @@
+local _, L = ...
+local Tooltip = {}
+L.TooltipMixin = Tooltip
+
+function Tooltip:OnShow()
+	L.UIFrameFadeIn(self, 0.2, 0, 1)
+	self:SetAllPoints()
+end
+
+function Tooltip:OnHide()
+	self:ClearAllPoints()
+	self:OnLeave()
+end
+
+function Tooltip:OnEnter()
+	local parent = self:GetParent()
+	L.UIFrameFadeIn(parent.Hilite, 0.2, parent.Hilite:GetAlpha(), 1)
+	GameTooltip_ShowCompareItem(parent)
+	if self.pool then
+		for tooltip in self.pool:EnumerateActive() do
+			if tooltip ~= parent then
+				L.UIFrameFadeOut(tooltip, 0.2, tooltip:GetAlpha(), 0.1)
+			end
+		end
+	end
+end
+
+function Tooltip:OnLeave()
+	local parent = self:GetParent()
+	L.UIFrameFadeOut(parent.Hilite, 0.2, parent.Hilite:GetAlpha(), 0)
+	if self.pool then
+		for tooltip in self.pool:EnumerateActive() do
+			if tooltip ~= parent then
+				L.UIFrameFadeIn(tooltip, 0.2, tooltip:GetAlpha(), 1)
+			end
+		end
+	end
+	for _, sTooltip in pairs(parent.shoppingTooltips) do
+		sTooltip:Hide()
+	end
+end
+
+function Tooltip:SetReferences(item, inspector)
+	self.item = item
+	self.inspector = inspector
+	self.pool = inspector and inspector.tooltipFramePool
+end
+
+function Tooltip:OnClick()
+	local item = self.item
+	local inspector = self.inspector
+	if item then
+		if ( item.container and item.container.chooseItems and item.type == "choice" ) then
+			item.container.itemChoice = item:GetID()
+			item.highlight:SetPoint('TOPLEFT', item, 0, 0)
+			item.highlight:Show()
+			item.highlight.InAnim:Stop()
+			item.highlight.InAnim:Play()
+			item.InAnim:Stop()
+			item.InAnim:Play()
+			inspector:Hide()
+		end
+	end
+end

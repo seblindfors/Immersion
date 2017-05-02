@@ -24,7 +24,7 @@
 	<Button name="ImmersionRewardItemCodeTemplate" virtual="true">
 		<Scripts>
 			<OnEnter>
-				GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+				GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0);
 				if (self.objectType == "item") then
 					GameTooltip:SetQuestItem(self.type, self:GetID());
 					GameTooltip_ShowCompareItem(GameTooltip);
@@ -41,6 +41,10 @@
 						self.container.itemChoice = self:GetID();
 						self.highlight:SetPoint('TOPLEFT', self, 0, 0);
 						self.highlight:Show();
+						self.highlight.InAnim:Stop();
+						self.highlight.InAnim:Play();
+						self.InAnim:Stop();
+						self.InAnim:Play();
 					end
 				end
 			</OnClick>
@@ -92,7 +96,21 @@
 					</Anchors>
 				</Texture>
 			</Layer>
-		</Layers>
+		</Layers>									
+		<Animations>
+			<AnimationGroup parentKey="InAnim" setToFinalAlpha="true">
+				<Scale childKey="Icon" startDelay="0" duration="0.35" order="1" fromScaleX="1.15" fromScaleY="1.15" toScaleX="1" toScaleY="1">
+					<Origin point="CENTER">
+						<Offset x="0" y="0"/>
+					</Origin>
+				</Scale>
+				<Scale childKey="Border" startDelay="0" duration="0.35" order="1" fromScaleX="1.15" fromScaleY="1.15" toScaleX="1" toScaleY="1">
+					<Origin point="CENTER">
+						<Offset x="0" y="0"/>
+					</Origin>
+				</Scale>
+			</AnimationGroup>
+		</Animations>
 		<Scripts>
 			<OnLoad>
 				self.Icon:SetMask("Interface\\Minimap\\UI-Minimap-Background");
@@ -100,10 +118,229 @@
 		</Scripts>
 	</Button>
 
+	<Button name="ImmersionTitleButtonTemplate" virtual="true">
+		<Size x="310" y="64" />
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="Icon" name="$parentGossipIcon">
+					<Size x="20" y="20"/>
+					<Anchors>
+						<Anchor point="LEFT" x="16" y="0"/> 
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString parentKey="Label" inherits="DialogButtonHighlightText" justifyH="LEFT">
+					<Size x="250" y="0"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="42" y="-16"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="Counter" inherits="GameTooltipTextSmall">
+					<Anchors>
+						<Anchor point="LEFT" x="8" y="0"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame parentKey="Overlay" alpha="1" setAllPoints="true">
+				<Backdrop edgeFile="Interface\AddOns\Immersion\Textures\Edge_Gossip_Normal.blp">
+					<EdgeSize>
+						<AbsValue val="8"/>
+					</EdgeSize>
+					<BackgroundInsets>
+						<AbsInset left="5" right="5" top="-10" bottom="7"/>
+					</BackgroundInsets>
+				</Backdrop>
+			</Frame>
+			<Frame parentKey="Hilite" alpha="0.01" setAllPoints="true">
+				<Backdrop edgeFile="Interface\AddOns\Immersion\Textures\Edge_Gossip_Hilite.blp">
+					<EdgeSize>
+						<AbsValue val="8"/>
+					</EdgeSize>
+					<BackgroundInsets>
+						<AbsInset left="5" right="5" top="5" bottom="6"/>
+					</BackgroundInsets>
+				</Backdrop>
+			</Frame>
+		</Frames>
+		<HighlightTexture parentKey="HighlightTexture" file="Interface\PVPFrame\PvPMegaQueue" alphaMode="ADD">
+			<TexCoords left="0.00195313" right="0.63867188" top="0.70703125" bottom="0.76757813"/>
+			<Anchors>
+				<Anchor point="TOPLEFT" x="0" y="-4"/>
+				<Anchor point="BOTTOMRIGHT" x="0" y="4"/>
+			</Anchors>
+		</HighlightTexture>
+		<Backdrop bgFile="Interface\AddOns\Immersion\Textures\Backdrop_Gossip.blp" edgeFile="Interface\AddOns\Immersion\Textures\Edge_Gossip_BG.blp">
+			<EdgeSize>
+				<AbsValue val="8"/>
+			</EdgeSize>
+			<BackgroundInsets>
+				<AbsInset left="2" right="2" top="8" bottom="8"/>
+			</BackgroundInsets>
+		</Backdrop>
+		<Scripts>
+			<OnLoad>
+				self:SetFontString(self.Label);
+			</OnLoad>
+		</Scripts>
+	</Button>
+
+	<GameTooltip name="ImmersionItemTooltipTemplate" inherits="GameTooltipTemplate" virtual="true" hidden="true">
+		<Frames>
+			<Frame parentKey="Hilite" alpha="0.01" setAllPoints="true">
+				<Backdrop edgeFile="Interface\AddOns\Immersion\Textures\Edge_Gossip_Hilite.blp">
+					<EdgeSize>
+						<AbsValue val="8"/>
+					</EdgeSize>
+					<BackgroundInsets>
+						<AbsInset left="5" right="5" top="5" bottom="6"/>
+					</BackgroundInsets>
+				</Backdrop>
+			</Frame>
+			<Frame parentKey="Icon">
+				<Size x="70" y="65"/>
+				<Anchors>
+					<Anchor point="TOPRIGHT" x="16" y="10"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="Texture">
+							<Size x="34" y="34"/>
+							<Anchors>
+								<Anchor point="CENTER" x="2" y="0"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+					<Layer level="OVERLAY">
+						<Texture parentKey="Border" file="Interface\Spellbook\Spellbook-Parts" setAllPoints="true">
+							<TexCoords left="0.27734375" right="0.0039062" top="0.44140625" bottom="0.69531250"/>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>
+						self:SetFrameLevel(10);
+						self:SetScale(0.75);
+					</OnLoad>
+				</Scripts>
+			</Frame>
+			<Button parentKey="Button">
+				<HighlightTexture parentKey="HighlightTexture" file="Interface\PVPFrame\PvPMegaQueue" alphaMode="ADD" alpha="0.25">
+					<TexCoords left="0.00195313" right="0.63867188" top="0.70703125" bottom="0.76757813"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="0" y="-4"/>
+						<Anchor point="BOTTOMRIGHT" x="0" y="4"/>
+					</Anchors>
+				</HighlightTexture>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				self.shoppingTooltips = GameTooltip.shoppingTooltips;	self:SetBackdropBorderColor(TOOLTIP_DEFAULT_COLOR.r, TOOLTIP_DEFAULT_COLOR.g, TOOLTIP_DEFAULT_COLOR.b);
+				self:SetBackdropColor(TOOLTIP_DEFAULT_BACKGROUND_COLOR.r, TOOLTIP_DEFAULT_BACKGROUND_COLOR.g, TOOLTIP_DEFAULT_BACKGROUND_COLOR.b);
+
+			</OnLoad>
+		</Scripts>
+	</GameTooltip>
 
 	<!-- Main frame -->
-	<Frame name="ImmersionFrame" parent="UIParent" hidden="true">
+	<Frame name="ImmersionFrame" parent="UIParent" hidden="true" frameStrata="HIGH">
 		<Frames>
+			<Frame parentKey="Inspector" hidden="true" frameStrata="FULLSCREEN_DIALOG">
+				<Size x="1" y="1"/>
+				<Anchors>
+					<Anchor point="CENTER" relativeTo="UIParent" x="0" y="0"/>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture parentKey="Background">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeTo="UIParent" />
+								<Anchor point="BOTTOMRIGHT" relativeTo="UIParent" />
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Frame parentKey="Choices">
+						<Size x="1" y="1"/>
+						<Anchors>
+							<Anchor point="TOP"/>
+						</Anchors>						
+						<Layers>
+							<Layer level="ARTWORK">
+								<FontString parentKey="Text" inherits="Fancy22Font" justifyH="LEFT" hidden="true">
+									<Anchors>
+										<Anchor point="TOPLEFT" x="0" y="0"/>
+									</Anchors>
+									<Color r="1" g=".82" b="0"/>
+								</FontString>
+							</Layer>
+						</Layers>
+					</Frame>
+					<Frame parentKey="Extras">
+						<Size x="1" y="1"/>
+						<Anchors>
+							<Anchor point="TOP" relativeKey="$parent.Choices" relativePoint="BOTTOM" x="0" y="-8"/>
+						</Anchors>						
+						<Layers>
+							<Layer level="ARTWORK">
+								<FontString parentKey="Text" inherits="Fancy22Font" justifyH="LEFT" hidden="true">
+									<Anchors>
+										<Anchor point="TOPLEFT" x="0" y="0"/>
+									</Anchors>
+									<Color r="1" g=".82" b="0"/>
+								</FontString>
+							</Layer>
+						</Layers>
+					</Frame>
+				</Frames>
+				<Scripts>
+					<OnLoad>
+						self.Choices.Columns = {};
+						self.Extras.Columns = {};
+
+						self.parent = self:GetParent();
+						self.ignoreRegions = true;
+						self:EnableMouse(true);
+
+						self.Items = {};
+						self:SetScale(1.1);
+
+						local r, g, b = GetClassColor(select(2, UnitClass("player")));
+						self.Background:SetColorTexture(1, 1, 1);
+						self.Background:SetGradientAlpha("VERTICAL", 0, 0, 0, 0.75, r / 5, g / 5, b / 5, 0.75);
+
+						self.tooltipFramePool = CreateFramePool("GameTooltip", self, "ImmersionItemTooltipTemplate", function(self, obj) obj:Hide(); end);
+						self.tooltipFramePool.creationFunc = function(framePool)
+							local index = #framePool.inactiveObjects + framePool.numActiveObjects + 1
+							return CreateFrame(framePool.frameType, "$parent"..framePool.frameType..index, framePool.parent, framePool.frameTemplate);
+						end;
+					</OnLoad>
+					<OnShow>
+						self.parent.TalkBox:Dim();
+						self.tooltipFramePool:ReleaseAll();
+					</OnShow>
+					<OnHide>
+						self.parent.TalkBox:Undim();
+						self.tooltipFramePool:ReleaseAll();
+
+						-- Reset columns
+						for _, column in pairs(self.Choices.Columns) do
+							column.lastItem = nil
+							column:SetSize(1, 1)
+							column:Hide()
+						end
+						for _, column in pairs(self.Extras.Columns) do
+							column.lastItem = nil
+							column:SetSize(1, 1)
+							column:Hide()
+						end
+					</OnHide>
+				</Scripts>
+			</Frame>
 			<Frame parentKey="TitleButtons" useParentLevel="true">
 				<Size x="300" y="0"/>
 				<Scripts>
@@ -133,7 +370,7 @@
 						</Anchors>
 						<Scripts>
 							<OnLoad>
-								self.Active = {}
+								self.Active = {};
 							</OnLoad>
 						</Scripts>
 						<Frames>
@@ -333,6 +570,17 @@
 													</Layer>
 												</Layers>
 											</Frame>
+											<Frame parentKey="MoneyIcon" hidden="true">
+												<Size x="20" y="18"/>
+												<Layers>
+													<Layer level="ARTWORK">
+														<Texture parentKey="MoneyIcon" atlas="bags-junkcoin" setAllPoints="true"/>
+													</Layer>
+												</Layers>
+												<Scripts>
+													<OnLoad function="RaiseFrameLevel"/>
+												</Scripts>
+											</Frame>
 											<Frame parentKey="ItemHighlight" hidden="true">
 												<Size x="202" y="48"/>
 												<Anchors>
@@ -354,10 +602,34 @@
 															<TexCoords left="0.00195313" right="0.63867188" top="0.70703125" bottom="0.76757813"/>
 														</Texture>
 													</Layer>
+													<Layer level="ARTWORK">
+														<Texture parentKey="TextSheen" hidden="false" alpha="0.01" alphaMode="ADD" atlas="TalkingHeads-Glow-TextSheen">
+															<Size x="180" y="50"/>
+															<Anchors>
+																<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="-4" y="0"/>
+															</Anchors>
+														</Texture>
+													</Layer>
 												</Layers>
 												<Scripts>
 													<OnLoad function="RaiseFrameLevel"/>
 												</Scripts>
+												<Animations>
+													<AnimationGroup parentKey="InAnim" setToFinalAlpha="true">
+														<Alpha childKey="TextSheen" startDelay="0" duration="0.35" order="1" fromAlpha="0" toAlpha="0.7"/>
+														<Scale childKey="TextSheen" startDelay="0" duration="0.35" order="1" fromScaleX="0.25" fromScaleY="1" toScaleX="1" toScaleY="1">
+															<Origin point="LEFT">
+																<Offset x="0" y="0"/>
+															</Origin>
+														</Scale>
+														<Alpha childKey="TextSheen" startDelay="0.5" duration="0.35" order="1" fromAlpha="0.7" toAlpha="0"/>
+														<Scale childKey="Icon" startDelay="0" duration="0.35" order="1" fromScaleX="1.15" fromScaleY="1.15" toScaleX="1" toScaleY="1">
+															<Origin point="CENTER">
+																<Offset x="0" y="0"/>
+															</Origin>
+														</Scale>
+													</AnimationGroup>
+												</Animations>
 											</Frame>
 										</Frames>
 										<Scripts>

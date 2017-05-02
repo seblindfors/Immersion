@@ -27,18 +27,17 @@ function Model:IsEther() return (self.unit == 'ether') end
 function Model:GetUnit() return self.unit end
 
 function Model:SetUnit(unit)
+	self:ClearModel()
 	if m2[unit] then
+		self:SetModel(m2[unit])
 		self:SetCamDistanceScale(.4)
 		self:SetPortraitZoom(0)
 		self:SetPosition(0, 0, .25)
-		self:ClearModel()
-		self:SetModel(m2[unit])
 		self.unit = 'ether'
 	else
 		self:SetCamDistanceScale(1)
 		self:SetPortraitZoom(.85)
 		self:SetPosition(0, 0, 0)
-		self:ClearModel()
 		getmetatable(self).__index.SetUnit(self, unit)
 		self.unit = unit
 	end

@@ -40,17 +40,6 @@ end
 -- Shared media / mixins
 ----------------------------------
 L.Backdrops = {
-	GOSSIP_BG = {
-		bgFile = PT..'Backdrop_Gossip.blp',
-		edgeFile = PT..'Edge_Gossip_BG.blp',
-		edgeSize = 8,
-		insets = {left = 2, right = 2, top = 8, bottom = 8}
-	},
-	GOSSIP_NORMAL = {
-		edgeFile = PT..'Edge_Gossip_Normal.blp',
-		edgeSize = 8,
-		insets = {left = 5, right = 5, top = -10, bottom = 7}
-	},
 	GOSSIP_HILITE = {
 		edgeFile = PT..'Edge_Gossip_Hilite.blp',
 		edgeSize = 8,

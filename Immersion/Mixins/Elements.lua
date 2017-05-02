@@ -40,6 +40,7 @@ local function UpdateItemInfo(self)
 		local name, texture, numItems, quality, isUsable = GetQuestItemInfo(self.type, self:GetID())
 		-- For the tooltip
 		self.Name:SetText(name)
+		self.itemTexture = texture
 		SetItemButtonCount(self, numItems)
 		SetItemButtonTexture(self, texture)
 		if ( isUsable ) then
@@ -56,6 +57,7 @@ local function UpdateItemInfo(self)
 		if (name and texture and numItems) then
 			-- For the tooltip
 			self.Name:SetText(name)
+			self.itemTexture = texture
 			SetItemButtonCount(self, numItems, true)
 			SetItemButtonTexture(self, texture)
 			SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0)
@@ -86,7 +88,7 @@ end
 ----------------------------------
 -- Quest elements display
 ----------------------------------
-function Elements:Display(template, acceptButton, material)
+function Elements:Display(template, material)
 	local template = TEMPLATE[template]
 	if not template then
 		return 0
@@ -95,7 +97,6 @@ function Elements:Display(template, acceptButton, material)
 	ACTIVE_TEMPLATE = template
 
 	self.chooseItems = template.chooseItems
-	self.acceptButton = acceptButton
 
 	self:SetMaterial(material)
 	self.Progress:Hide()
@@ -300,8 +301,9 @@ function Elements:ShowRewards()
 
 	do -- Hide unused rewards
 		for i = totalRewards + 1, #rewardButtons do
-			rewardButtons[i]:ClearAllPoints()
-			rewardButtons[i]:Hide()
+			local rewardButton = rewardButtons[i]
+			rewardButton:ClearAllPoints()
+			rewardButton:Hide()
 		end
 	end
 
@@ -331,10 +333,12 @@ function Elements:ShowRewards()
 
 	do -- Setup choosable rewards
 		self.ItemChooseText:ClearAllPoints()
+		self.MoneyIcon:Hide()
 		if ( numQuestChoices > 0 ) then
 			self.ItemChooseText:Show()
 			self.ItemChooseText:SetPoint('TOPLEFT', lastFrame, 'BOTTOMLEFT', 0, -5)
 
+			local highestValue, moneyItem
 			local index
 			local baseIndex = rewardsCount
 			for i = 1, numQuestChoices do
@@ -347,6 +351,16 @@ function Elements:ShowRewards()
 				questItem:Show()
 
 				UpdateItemInfo(questItem)
+
+				local link = GetQuestItemLink(questItem.type, i)
+				local vendorValue = link and select(11, GetItemInfo(link))
+				
+				if vendorValue and ( not highestValue or vendorValue > highestValue ) then
+					highestValue = vendorValue
+					if vendorValue > 0 and numQuestChoices > 1 then
+						moneyItem = questItem
+					end
+				end
 
 				if ( i > 1 ) then
 					if ( mod(i, ITEMS_PER_ROW) == 1 ) then
@@ -363,6 +377,12 @@ function Elements:ShowRewards()
 				end
 				rewardsCount = rewardsCount + 1
 			end
+
+			if moneyItem then
+				self.MoneyIcon:SetPoint('BOTTOMRIGHT', moneyItem, -13, 6)
+				self.MoneyIcon:Show()
+			end
+
 			if ( numQuestChoices == 1 ) then
 				elements.chooseItems = nil
 				self.ItemChooseText:SetText(REWARD_ITEMS_ONLY)
@@ -639,6 +659,20 @@ function Elements:CompleteQuest()
 	else
 		GetQuestReward(self.itemChoice)
 	end
+end
+
+
+function Elements:AcceptQuest()
+	if ( QuestFlagsPVP() ) then
+		StaticPopup_Show("CONFIRM_ACCEPT_PVP_QUEST")
+	else
+		if ( QuestGetAutoAccept() ) then
+			AcknowledgeAutoAcceptQuest()
+		else
+			AcceptQuest()
+		end
+	end
+	PlaySound("igQuestListOpen")
 end
 
 function Elements:ShowProgress(material)

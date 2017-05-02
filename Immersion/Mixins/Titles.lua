@@ -1,9 +1,11 @@
 local Titles, _, L = {}, ...
 L.TitlesMixin = Titles
 
+-- Upvalue for update scripts
+local GetScaledCursorPosition, UIParent = GetScaledCursorPosition, UIParent
+
 local NORMAL_QUEST_DISPLAY = NORMAL_QUEST_DISPLAY:gsub(0, 'f')
 local TRIVIAL_QUEST_DISPLAY = TRIVIAL_QUEST_DISPLAY:gsub(0, 'f')
-local IGNORED_QUEST_DISPLAY = IGNORED_QUEST_DISPLAY:gsub(0, 'f')
 
 -- Priority
 local P_COMPLETE_QUEST = 1
@@ -30,8 +32,17 @@ function Titles:AdjustHeight(newHeight)
 end
 
 function Titles:OnUpdateOffset()
-	local anchor, relativeRegion, relativeKey, x, y = self:GetPoint()
-	local offset = self.offset or 0
+	local anchor, relativeRegion, relativeKey, x, y, offset
+	if not self.ignoreAtCursor and L('gossipatcursor') then
+		local posX, posY = GetScaledCursorPosition()
+		local uiX, uiY = UIParent:GetCenter()
+		x, y = (posX - uiX), (posY - uiY)
+		anchor, relativeRegion, relativeKey, offset = 
+			'CENTER', UIParent, 'CENTER', 0
+	else
+		anchor, relativeRegion, relativeKey, x, y = self:GetPoint()
+		offset = (self.offset or 0) + L('titleoffsetY')
+	end
 	local diff = ( y - offset )
 	if (offset == 0) or abs( y - offset ) < 0.3 then
 		self:SetPoint(anchor, relativeRegion, relativeKey, x, offset)
@@ -43,13 +54,38 @@ function Titles:OnUpdateOffset()
 	end
 end
 
+function Titles:StopMoving()
+	self:StopMovingOrSizing()
+	local centerX, centerY = self:GetCenter()
+	local uiX, uiY = UIParent:GetCenter()
+	local newHorzVal, newVertVal = (centerX - uiX), (centerY - uiY)
+	-- Horizontal clip fix
+	if self:GetLeft() < 0 then
+		newHorzVal = (self:GetWidth() / 2) - (GetScreenWidth() / 2) + 16
+	elseif ( GetScreenWidth() - self:GetRight() ) < 0 then
+		newHorzVal = (GetScreenWidth() / 2) - (self:GetWidth() / 2) - 16
+	end
+	-- Vertical clip fix
+	if self:GetBottom() < 0 then
+		newVertVal = (self:GetHeight() / 2) - (GetScreenHeight() / 2) + 16
+	elseif ( GetScreenHeight() - self:GetTop() ) < 0 then
+		newVertVal = (GetScreenHeight() / 2) - (self:GetHeight() / 2) - 16
+	end
+	self:ClearAllPoints()
+	self:SetPoint('CENTER', UIParent, newHorzVal, newVertVal)
+	L.Set('titleoffset', newHorzVal)
+	L.Set('titleoffsetY', newVertVal)
+end
+
 function Titles:OnMouseWheel(delta)
 	self.offset = self.offset and self.offset + (-delta * 40) or (-delta * 40)
+	self.ignoreAtCursor = true
 	self:SetScript('OnUpdate', self.OnUpdateOffset)
 end
 
 function Titles:ResetPosition()
 	self.offset = 0
+	self.ignoreAtCursor = false
 	self:SetScript('OnUpdate', self.OnUpdateOffset)
 end
 
@@ -78,7 +114,7 @@ end
 function Titles:GetButton(index)
 	local button = self.Buttons[index]
 	if not button then
-		button = CreateFrame('Button', _ .. 'TitleButton' .. index, self)
+		button = CreateFrame('Button', _ .. 'TitleButton' .. index, self, 'ImmersionTitleButtonTemplate')
 		L.Mixin(button, L.ButtonMixin, L.ScalerMixin)
 		button:Init(index)
 		self.Buttons[index] = button
@@ -95,6 +131,7 @@ function Titles:UpdateActive()
 			numActive = numActive + 1
 		end
 	end
+	self.ignoreAtCursor = false
 	self.numActive = numActive
 	self:AdjustHeight(newHeight)
 end
@@ -120,10 +157,9 @@ function Titles:UpdateAvailableQuests(...)
 	for i = 1, select('#', ...), 7 do
 		local button = self:GetButton(self.idx)
 		local 	titleText, level, isTrivial, frequency, 
-				isRepeatable, isLegendary, isIgnored = select(i, ...)
+				isRepeatable, isLegendary = select(i, ...)
 		----------------------------------
-		local qType = ( isIgnored and IGNORED_QUEST_DISPLAY) or
-					( isTrivial and TRIVIAL_QUEST_DISPLAY )
+		local qType = ( isTrivial and TRIVIAL_QUEST_DISPLAY )
 		button:SetFormattedText(qType or NORMAL_QUEST_DISPLAY, titleText)
 		----------------------------------
 		local icon = ( isLegendary and 'AvailableLegendaryQuestIcon' ) or
@@ -149,10 +185,9 @@ function Titles:UpdateActiveQuests(...)
 	for i = 1, numActiveQuestData, 6 do
 		local button = self:GetButton(self.idx)
 		local 	titleText, level, isTrivial, 
-				isComplete, isLegendary, isIgnored = select(i, ...)
+				isComplete, isLegendary = select(i, ...)
 		----------------------------------
-		local qType = ( isIgnored and IGNORED_QUEST_DISPLAY) or
-					( isTrivial and TRIVIAL_QUEST_DISPLAY )
+		local qType = ( isTrivial and TRIVIAL_QUEST_DISPLAY )
 		button:SetFormattedText(qType or NORMAL_QUEST_DISPLAY, titleText)
 		----------------------------------
 		local icon = ( isComplete and isLegendary and 'ActiveLegendaryQuestIcon') or
@@ -220,8 +255,7 @@ function Titles:UpdateActiveGreetingQuests(numActiveQuests)
 		local button = self:GetButton(self.idx)
 		local title, isComplete = GetActiveTitle(i)
 		----------------------------------
-		local qType = ( IsActiveQuestIgnored(i) and IGNORED_QUEST_DISPLAY ) or
-					( IsActiveQuestTrivial(i) and TRIVIAL_QUEST_DISPLAY )
+		local qType = ( IsActiveQuestTrivial(i) and TRIVIAL_QUEST_DISPLAY )
 		button:SetFormattedText(qType or NORMAL_QUEST_DISPLAY, title)
 		----------------------------------
 		local icon = ( isComplete and IsActiveQuestLegendary(i) and 'ActiveLegendaryQuestIcon' ) or
@@ -241,10 +275,9 @@ function Titles:UpdateAvailableGreetingQuests(numAvailableQuests)
 	for i=1, numAvailableQuests do
 		local button = self:GetButton(self.idx)
 		local title = GetAvailableTitle(i)
-		local isTrivial, frequency, isRepeatable, isLegendary, isIgnored = GetAvailableQuestInfo(i)
+		local isTrivial, frequency, isRepeatable, isLegendary = GetAvailableQuestInfo(i)
 		----------------------------------
-		local qType = ( isIgnored and IGNORED_QUEST_DISPLAY) or
-					( isTrivial and TRIVIAL_QUEST_DISPLAY )
+		local qType = ( isTrivial and TRIVIAL_QUEST_DISPLAY )
 		button:SetFormattedText(qType or NORMAL_QUEST_DISPLAY, title)
 		----------------------------------
 		local icon = ( isLegendary and 'AvailableLegendaryQuestIcon' ) or

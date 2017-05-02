@@ -22,8 +22,13 @@ function L.GetDefaultConfig()
 	return t
 end
 
-function L.Get(val)
-	return ( L.cfg and L.cfg[val] or L.defaults[val] )
+function L.Get(key)
+	return ( L.cfg and L.cfg[key] or L.defaults[key] )
+end
+
+function L.Set(key, val)
+	L.cfg = L.cfg or {}
+	L.cfg[key] = val
 end
 
 function L.GetFromSV(tbl)
@@ -38,7 +43,7 @@ end
 
 
 setmetatable(L, {
-	__call = function(self, input)
+	__call = function(self, input, newValue)
 		return L.Get(input) or self[input]
 	end,
 })
@@ -55,7 +60,8 @@ L.defaults = {
 	hideui = false,
 
 	titlescale = 1,
-	titleoffset = -500,
+	titleoffset = 500,
+	titleoffsetY = 0,
 
 	boxscale = 1,
 	boxoffsetX = 0,
@@ -66,6 +72,7 @@ L.defaults = {
 	flipshortcuts = false,
 	delaydivisor = 15,
 
+	inspect = 'SHIFT',
 	accept = 'SPACE',
 	reset = 'BACKSPACE',
 }---------------------------------
@@ -87,6 +94,13 @@ local stratas = {
 	TOOLTIP 	= L['Tooltip'],
 }
 
+local modifiers = {
+	SHIFT = SHIFT_KEY_TEXT,
+	CTRL = CTRL_KEY_TEXT,
+	ALT = ALT_KEY_TEXT,
+	NOMOD = NONE,
+}
+
 L.options = {
 	type = 'group',
 	args = {		
@@ -95,43 +109,111 @@ L.options = {
 			name = GENERAL,
 			order = 1,
 			args = {
-				header = {
-					type = 'header',
-					name = GENERAL,
-					order = 0,
+				text = {
+					type = 'group',
+					name = L['Behavior'],
+					inline = true,
+					args = {
+						mouseheader = {
+							type = 'header',
+							name = TEXT_LABEL,
+							order = 0,
+						},
+						delaydivisor = {
+						type = 'range',
+						name = 'Text speed',
+						desc = L['Change the speed of text delivery.'] .. '\n\n' ..
+							MINIMUM .. '\n"' ..  L['How are you doing today?'] .. '"\n  -> ' .. 
+							format(D_SECONDS, (strlen(L['How are you doing today?']) / 5) + 2)  .. '\n\n' .. 
+							MAXIMUM .. '\n"' .. L['How are you doing today?'] .. '"\n  -> ' .. 
+							format(D_SECONDS, (strlen(L['How are you doing today?']) / 40) + 2),
+						min = 5,
+						max = 40,
+						step = 5,
+						order = 1,
+						get = L.GetFromDefaultOrSV,
+						set = function(self, val) 
+							L.cfg.delaydivisor = val
+						end,
+						},
+						disableprogression = {
+							type = 'toggle',
+							name = L['Disable automatic text progress'],
+							desc = L['Stop NPCs from automatically proceeding to the next line of dialogue.'],
+							order = 2,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.disableprogression = val end,
+						},
+						onthefly = {
+							type = 'toggle',
+							name = L["On the fly"],
+							desc = L["The quest/gossip text doesn't vanish when you stop interacting with the NPC or when accepting a new quest. Instead, it vanishes at the end of the text sequence. This allows you to maintain your immersive experience when speed leveling."],
+							order = 3,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.onthefly = val end,
+						},
+						mouseheader = {
+							type = 'header',
+							name = MOUSE_LABEL,
+							order = 4,
+						},
+						flipshortcuts = {
+							type = 'toggle',
+							name = L['Flip mouse functions'],
+							desc = L.GetListString(
+								L['Left click is used to handle text.'], 
+								L['Right click is used to accept/hand in quests.']),
+							order = 5,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.flipshortcuts = val end,
+						},
+						immersivemode = {
+							type = 'toggle',
+							name = L['Immersive mode'],
+							desc = L['Use your primary mouse button to read through text, accept/turn in quests and select the best available gossip option.'],
+							order = 6,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.immersivemode = val end,
+						},
+					},
 				},
-				disableprogression = {
-					type = 'toggle',
-					name = L['Disable automatic text progress'],
-					desc = L['Stop NPCs from automatically proceeding to the next line of dialogue.'],
-					order = 1,
-					get = L.GetFromSV,
-					set = function(_, val) L.cfg.disableprogression = val end,
-				},
-				delaydivisor = {
-					type = 'range',
-					name = 'Text speed',
-					desc = L['Change the speed of text delivery.'] .. '\n\n' ..
-						MINIMUM .. '\n"' ..  L['How are you doing today?'] .. '"\n  -> ' .. 
-						format(D_SECONDS, (strlen(L['How are you doing today?']) / 5) + 2)  .. '\n\n' .. 
-						MAXIMUM .. '\n"' .. L['How are you doing today?'] .. '"\n  -> ' .. 
-						format(D_SECONDS, (strlen(L['How are you doing today?']) / 40) + 2),
-					min = 5,
-					max = 40,
-					step = 5,
-					order = 3,
-					get = L.GetFromDefaultOrSV,
-					set = function(self, val) 
-						L.cfg.delaydivisor = val
-					end,
-				},
-				hideui = {
-					type = 'toggle',
+				hide = {
+					type = 'group',
 					name = L['Hide interface'],
-					desc = L['Hide my user interface when interacting with an NPC.'],
-					order = 2,
-					get = L.GetFromSV,
-					set = function(_, val) L.cfg.hideui = val end,
+					inline = true,
+					args = {
+						hideui = {
+							type = 'toggle',
+							name = L['Hide interface'],
+							desc = L['Hide my user interface when interacting with an NPC.'],
+							order = 0,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.hideui = val end,
+						},
+						hideminimap = {
+							type = 'toggle',
+							name = L['Hide minimap'],
+							disabled = function() return not L('hideui') end,
+							order = 1,
+							get = L.GetFromSV,
+							set = function(_, val) 
+								L.cfg.hideminimap = val
+								L.ToggleIgnoreFrame(Minimap, not val)
+								L.ToggleIgnoreFrame(MinimapCluster, not val)
+							end,
+						},
+						hidetracker = {
+							type = 'toggle',
+							name = L['Hide objective tracker'],
+							disabled = function() return not L('hideui') end,
+							order = 1,
+							get = L.GetFromSV,
+							set = function(_, val) 
+								L.cfg.hidetracker = val 
+								L.ToggleIgnoreFrame(ObjectiveTrackerFrame, not val)
+							end,
+						},
+					},
 				},
 			},
 		},
@@ -148,18 +230,21 @@ L.options = {
 				accept = {
 					type = 'keybinding',
 					name = ACCEPT,
-					desc = L.GetListString(ACCEPT, NEXT, CONTINUE, COMPLETE_QUEST, GOODBYE),
+					desc = L.GetListString(ACCEPT, NEXT, CONTINUE, COMPLETE_QUEST),
 					get = L.GetFromSV,
 					set = function(_, val) L.cfg.accept = L.ValidateKey(val) end,
 					order = 1,
 				},
-				ignore = {
-					type = 'keybinding',
-					name = IGNORE .. '/' .. UNIGNORE_QUEST,
-					desc = L.GetListString(QUESTS_LABEL, IGNORE_QUEST, UNIGNORE_QUEST),
-					get = L.GetFromSV,
-					set = function(_, val) L.cfg.ignore = L.ValidateKey(val) end,
+				inspect = {
+					type = 'select',
+					name = INSPECT .. ' ('..ITEMS..')',
 					order = 3,
+					values = modifiers,
+					get = L.GetFromDefaultOrSV,
+					set = function(_, val)
+						L.cfg.inspect = val
+					end,
+					style = 'dropdown',
 				},
 				reset = {
 					type = 'keybinding',
@@ -184,17 +269,6 @@ L.options = {
 					set = function(_, val) L.cfg.enablenumbers = val end,
 					order = 5,
 				},
-				flipshortcuts = {
-					type = 'toggle',
-					name = L['Flip mouse functions'],
-					desc = L.GetListString(
-						L['Left click is used to handle text.'], 
-						L['Right click is used to accept/hand in quests.']),
-					order = 2,
-					get = L.GetFromSV,
-					set = function(_, val) L.cfg.flipshortcuts = val end,
-					order = 6,
-				},
 			},
 		},
 		display = {
@@ -205,19 +279,7 @@ L.options = {
 				header = {
 					type = 'header',
 					name = DISPLAY,
-				},
-				strata = {
-					type = 'select',
-					name = L['Frame strata'],
-					order = 2,
-					values = stratas,
-					get = L.GetFromDefaultOrSV,
-					set = function(_, val) local f = L.frame
-						L.cfg.strata = val
-						f:SetFrameStrata(val)
-						f.TalkBox:SetFrameStrata(val)
-					end,
-					style = 'dropdown',
+					order = 3,
 				},
 				scale = {
 					type = 'range',
@@ -232,47 +294,67 @@ L.options = {
 						L.frame:SetScale(val)
 					end,
 				},
+				strata = {
+					type = 'select',
+					name = L['Frame strata'],
+					order = 2,
+					values = stratas,
+					get = L.GetFromDefaultOrSV,
+					set = function(_, val) local f = L.frame
+						L.cfg.strata = val
+						f:SetFrameStrata(val)
+						f.TalkBox:SetFrameStrata(val)
+					end,
+					style = 'dropdown',
+				},
 				description = {
 					type = 'description',
 					fontSize = 'medium',
 					name = L['In this category, you can customize the placement and size of the individual parts of Immersion.'] ..'\n\n' .. 
 							L.GetListString(
-								MODEL ..' / '..DESCRIPTION ..': '..L['Customize the talking head frame.'],
-								QUESTS_LABEL..' / '..GOSSIP_OPTIONS..': '..L['Change the placement and scale of your dialogue options.']),
+								MODEL ..' / '.. LOCALE_TEXT_LABEL ..': '..L['Customize the talking head frame.'],
+								QUESTS_LABEL..' / '..GOSSIP_OPTIONS..': '..L['Change the placement and scale of your dialogue options.']) .. '\n',
 				},
 				titles = {
 					type = 'group',
 					name = QUESTS_LABEL .. ' / ' .. GOSSIP_OPTIONS,
+					inline = true,
 					args = {
+						gossipatcursor = {
+							type = 'toggle',
+							name = L['Show at mouse location'],
+							order = 2,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.gossipatcursor = val end,
+							order = 0,
+						},
+						titlelock = {
+							type = 'toggle',
+							name = LOCK,
+							order = 2,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.titlelock = val end,
+							order = 1,
+						},
 						titlescale = {
 							type = 'range',
 							name = 'Scale',
 							min = 0.5,
 							max = 1.5,
 							step = 0.1,
+							order = 2,
 							get = L.GetFromDefaultOrSV,
 							set = function(self, val) 
 								L.cfg.titlescale = val
 								L.frame.TitleButtons:SetScale(val)
 							end,
 						},
-						titleoffset = {
-							type = 'range',
-							name = L['Offset from center'],
-							min = -10,
-							max = 10,
-							step = 1,
-							get = function() return ( L('titleoffset') ) / 100 end,
-							set = function(self, val)
-								L.cfg.titleoffset = val * 100
-								L.frame.TitleButtons:SetPoint('CENTER', UIParent, 'CENTER', val * 100, 0)
-							end,
-						},
 					},
 				},
 				box = {
 					type = 'group',
-					name = MODEL .. ' / ' .. DESCRIPTION,
+					name = MODEL .. ' / ' .. LOCALE_TEXT_LABEL,
+					inline = true,
 					args = {
 						boxscale = {
 							type = 'range',
@@ -293,7 +375,7 @@ L.options = {
 							order = 4,
 							min = -600,
 							max = 600,
-							step = 50,
+							step = 10,
 							get = L.GetFromDefaultOrSV,
 							set = function(_, val) local b = L.frame.TalkBox
 								L.cfg.boxoffsetY = val
@@ -307,7 +389,7 @@ L.options = {
 							order = 3,
 							min = -600,
 							max = 600,
-							step = 50,
+							step = 10,
 							get = L.GetFromDefaultOrSV,
 							set = function(_, val) local b = L.frame.TalkBox
 								L.cfg.boxoffsetX = val
@@ -327,6 +409,13 @@ L.options = {
 								b:SetOffset()
 							end,
 							style = 'dropdown',
+						},
+						disableflyin = {
+							type = 'toggle',
+							name = L['Disable fly-in animation'],
+							order = 5,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.disableflyin = val end,
 						},
 					},
 				},

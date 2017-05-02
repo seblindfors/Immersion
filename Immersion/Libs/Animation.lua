@@ -122,6 +122,11 @@ L.UIFrameFadeOut = function (frame, timeToFade, startAlpha, endAlpha, info)
 	FadeFrame(frame, fadeInfo)
 end
 
+-- Expose removal of frame from fader
+L.UIFrameStopFading = function(frame)
+	FadeRemoveFrame(frame)
+end
+
 
 ---------------------------------------------------------------
 -- Flash: Taint-free flash functions

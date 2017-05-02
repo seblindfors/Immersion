@@ -2,17 +2,21 @@ local Button, _, L = {}, ...
 L.ButtonMixin = Button
 
 function Button:OnClick(button, down)
-	local _type = self.type
-	----------------------------------
-	local call = ( _type == 'Available' and SelectGossipAvailableQuest ) or
-				( _type == 'Active' and SelectGossipActiveQuest ) or
-				( _type == 'ActiveQuest' and SelectActiveQuest ) or
-				( _type == 'AvailableQuest' and SelectAvailableQuest ) or
-				( SelectGossipOption )
-	----------------------------------
-	call(self:GetID())
-	PlaySound('igQuestListSelect')
+	local func = self[self.type]
+	if func then
+		func(self)
+		PlaySound('igQuestListSelect')
+	end
 end
+
+----------------------------------
+function Button:ActiveQuest() SelectActiveQuest(self:GetID()) end
+function Button:AvailableQuest() SelectAvailableQuest(self:GetID()) end
+----------------------------------
+function Button:Gossip() SelectGossipOption(self:GetID()) end
+function Button:Active() SelectGossipActiveQuest(self:GetID()) end
+function Button:Available() SelectGossipAvailableQuest(self:GetID()) end
+----------------------------------
 
 function Button:OnShow()
 	self.Counter:SetShown(L('enablenumbers'))
@@ -20,6 +24,16 @@ function Button:OnShow()
 	C_Timer.After(id * 0.025, function()
 		L.UIFrameFadeIn(self, 0.2, self:GetAlpha(), 1)
 	end)
+end
+
+function Button:OnDragStart(button)
+	if not L('titlelock') then
+		self.Container:StartMoving()
+	end
+end
+
+function Button:OnDragStop()
+	self.Container:StopMoving()
 end
 
 function Button:OnHide()
@@ -90,41 +104,10 @@ function Button:Init(id)
 	end
 
 	self:SetPoint(unpack(self.anchor))
-
 	----------------------------------
-	self.HighlightTexture = self:CreateTexture(nil, 'BORDER', nil, 7)
-	self.HighlightTexture:SetTexture('Interface\\PVPFrame\\PvPMegaQueue')
-	self.HighlightTexture:SetPoint('TOPLEFT', 0, -4)
-	self.HighlightTexture:SetPoint('BOTTOMRIGHT', 0, 4)
-	self.HighlightTexture:SetTexCoord(0.00195313, 0.63867188, 0.70703125, 0.76757813)
-	self:SetHighlightTexture(self.HighlightTexture)
-	----------------------------------
-	self.Icon = self:CreateTexture('$parentGossipIcon', 'OVERLAY')
-	self.Icon:SetSize(20, 20)
-	self.Icon:SetPoint('LEFT', 16, 0)
-	----------------------------------
-	self.Label = self:CreateFontString(nil, 'ARTWORK', 'DialogButtonHighlightText')
-	----------------------------------
-	self.Label:SetJustifyH('LEFT')
-	self.Label:SetPoint('TOPLEFT', 42, -16)
-	self.Label:SetWidth(250)
-	self:SetFontString(self.Label)
-	----------------------------------
-	self.Overlay = CreateFrame('Frame', nil, self)
-	self.Overlay:SetAllPoints()
-	self.Overlay:SetBackdrop(L.Backdrops.GOSSIP_NORMAL)
-	----------------------------------
-	self.Hilite = CreateFrame('Frame', nil, self)
-	self.Hilite:SetAllPoints()
-	self.Hilite:SetAlpha(0)
-	self.Hilite:SetBackdrop(L.Backdrops.GOSSIP_HILITE)
-	----------------------------------
-	self.Counter = self:CreateFontString(nil, 'ARTWORK', 'GameTooltipTextSmall')
 	self.Counter:SetText(id < 10 and id or '')
-	self.Counter:SetPoint('LEFT', 8, 0)
 	----------------------------------
-	self:SetSize(310, 64)
-	self:SetBackdrop(L.Backdrops.GOSSIP_BG)
+	self:RegisterForDrag('LeftButton', 'RightButton')
 	self:OnShow()
 	----------------------------------
 	self.Init = nil

@@ -8,6 +8,8 @@ local _, L = ...
 local frame = _G[ _ .. 'Frame' ]
 local talkbox = frame.TalkBox
 local titles = frame.TitleButtons
+local inspector = frame.Inspector
+local _Mixin = L.Mixin
 L.frame = frame
 
 ----------------------------------
@@ -24,6 +26,7 @@ for _, event in pairs({
 	'ADDON_LOADED',
 	'GOSSIP_CLOSED',	-- Close gossip frame
 	'GOSSIP_SHOW',		-- Show gossip options, can be a mix of gossip/quests
+	'QUEST_ACCEPTED', 	-- Use this event for on-the-fly quest text tracking.
 	'QUEST_COMPLETE',	-- Quest completed
 	'QUEST_DETAIL',		-- Quest details/objectives/accept frame
 	'QUEST_FINISHED',	-- Fires when quest frame is closed
@@ -31,6 +34,7 @@ for _, event in pairs({
 	'QUEST_IGNORED',	-- Ignore the currently shown quest
 	'QUEST_PROGRESS',	-- Fires when you click on a quest you're currently on
 	'QUEST_ITEM_UPDATE', -- Item update while in convo, refresh frames.
+--	'MERCHANT_SHOW', 	-- Force close gossip on merchant interaction.
 }) do frame:RegisterEvent(event) end
 
 ----------------------------------
@@ -51,24 +55,40 @@ for _, event in pairs({
 titles:RegisterUnitEvent('UNIT_QUEST_LOG_CHANGED', 'player')
 
 ----------------------------------
+-- Compatibility list
+----------------------------------
+local compatibility = {
+----------------------------------
+	['NomiCakes'] = function(self)
+		NomiCakesGossipButtonName = _ .. 'TitleButton'
+	end,
+----------------------------------
+	['!KalielsTracker'] = function(self)
+		local KTF = _G['!KalielsTrackerFrame']
+		L.ToggleIgnoreFrame(KTF, not L('hidetracker'))
+		L.options.args.general.args.hide.args.hidetracker.set = function(_, val)
+			L.cfg.hidetracker = val 
+			L.ToggleIgnoreFrame(ObjectiveTrackerFrame, not val)
+			L.ToggleIgnoreFrame(KTF, not val)
+		end
+
+		-- this override keeps the tracker from popping back up due to events when faded
+		function KTF:SetAlpha(...)
+			local newAlpha = ...
+			if newAlpha and self.fadeInfo and abs(self:GetAlpha() - newAlpha) > 0.5 then
+				return
+			end
+			getmetatable(self).__index.SetAlpha(self, ...)
+		end
+	end,
+----------------------------------
+}
+
+----------------------------------
 -- Load SavedVaribles
 ----------------------------------
 frame.ADDON_LOADED = function(self, name)
 	if name == _ then
-		-- NomiCakes fix
-		if select(4, GetAddOnInfo('NomiCakes')) then
-			function self:ADDON_LOADED(name)
-				if name == 'NomiCakes' then
-					NomiCakesGossipButtonName = _ .. 'TitleButton'
-					self.ADDON_LOADED = nil
-					self:UnregisterEvent('ADDON_LOADED')
-				end
-			end
-		else
-			self.ADDON_LOADED = nil
-			self:UnregisterEvent('ADDON_LOADED')
-		end
-
 		local svref = _ .. 'Setup'
 		L.cfg = _G[svref] or L.GetDefaultConfig()
 		_G[svref] = L.cfg
@@ -79,9 +99,15 @@ frame.ADDON_LOADED = function(self, name)
 
 		talkbox:SetPoint(L('boxpoint'), UIParent, L('boxoffsetX'), L('boxoffsetY'))
 		titles:SetPoint('CENTER', UIParent, 'CENTER', L('titleoffset'), 0)
+		titles:SetMovable(true)
 
 		self:SetFrameStrata(L('strata'))
 		talkbox:SetFrameStrata(L('strata'))
+
+		-- Set frame ignore for hideUI features on load.
+		L.ToggleIgnoreFrame(Minimap, not L('hideminimap'))
+		L.ToggleIgnoreFrame(MinimapCluster, not L('hideminimap'))
+		L.ToggleIgnoreFrame(ObjectiveTrackerFrame, not L('hidetracker'))
 
 		-- Register options table
 		LibStub('AceConfigRegistry-3.0'):RegisterOptionsTable(_, L.options)
@@ -91,11 +117,41 @@ frame.ADDON_LOADED = function(self, name)
 		_G['SLASH_' .. _:upper() .. '1'] = '/' .. _:lower()
 		SlashCmdList[_:upper()] = function() LibStub('AceConfigDialog-3.0'):Open(_) end
 
+		-- Add some sexiness to the config frame.
 		local logo = CreateFrame('Frame', nil, L.config)
 		logo:SetFrameLevel(4)
-		logo:SetSize(100, 100)
+		logo:SetSize(64, 64)
 		logo:SetPoint('BOTTOMRIGHT', -16, 16)
 		logo:SetBackdrop({bgFile = ('Interface\\AddOns\\%s\\Textures\\Logo'):format(_)})
+
+		-- Run functions for compatibility with other addons on load.
+		-- If the addon in question is already loaded, run the function and remove from list.
+		for addOn, func in pairs(compatibility) do
+			if select(4, GetAddOnInfo(addOn)) then
+				if IsAddOnLoaded(addOn) then
+					func(self)
+					compatibility[addOn] = nil
+				end
+			else -- the addon is not going to load, remove it from table.
+				compatibility[addOn] = nil
+			end
+		end
+	-- If the compatibility addon loads after Immersion, run the function and remove from list.
+	elseif compatibility and compatibility[name] then
+		compatibility[name](self)
+		compatibility[name] = nil
+	end
+
+	-- The compatibility table is empty -> all addons are loaded, disabled or missing.
+	-- Garbage collect the table. 
+	if not next(compatibility) then
+		compatibility = nil
+	end
+
+	-- Immersion is loaded, no more addons to track. Garbage collect this function.
+	if not compatibility and IsAddOnLoaded(_) then
+		self:UnregisterEvent('ADDON_LOADED')
+		self.ADDON_LOADED = nil
 	end
 end
 
@@ -115,25 +171,31 @@ talkbox.Hilite:SetBackdrop(L.Backdrops.GOSSIP_HILITE)
 ----------------------------------
 -- Initiate titlebuttons
 ----------------------------------
-L.Mixin(titles, L.TitlesMixin)
+_Mixin(titles, L.TitlesMixin)
 
 ----------------------------------
 -- Initiate elements
 ----------------------------------
-L.Mixin(talkbox.Elements, L.ElementsMixin)
+_Mixin(talkbox.Elements, L.ElementsMixin)
 
 ----------------------------------
 -- Set up dynamically sized frames
 ----------------------------------
-L.Mixin(talkbox.Elements, L.AdjustToChildren)
-L.Mixin(talkbox.Elements.Content, L.AdjustToChildren)
-L.Mixin(talkbox.Elements.Progress, L.AdjustToChildren)
-L.Mixin(talkbox.Elements.Content.RewardsFrame, L.AdjustToChildren)
+do
+	local AdjustToChildren = L.AdjustToChildren
+	_Mixin(talkbox.Elements, AdjustToChildren)
+	_Mixin(talkbox.Elements.Content, AdjustToChildren)
+	_Mixin(talkbox.Elements.Progress, AdjustToChildren)
+	_Mixin(talkbox.Elements.Content.RewardsFrame, AdjustToChildren)
+	_Mixin(inspector, AdjustToChildren)
+	_Mixin(inspector.Extras, AdjustToChildren)
+	_Mixin(inspector.Choices, AdjustToChildren)
+end
 
 ----------------------------------
 -- Set this point here
 -- since the anchorpoint didn't
--- exist on load.
+-- exist on load. XML sucks.
 ----------------------------------
 local name = talkbox.NameFrame.Name
 name:SetPoint('TOPLEFT', talkbox.PortraitFrame.Portrait, 'TOPRIGHT', 2, -19)
@@ -144,7 +206,7 @@ name:SetPoint('TOPLEFT', talkbox.PortraitFrame.Portrait, 'TOPRIGHT', 2, -19)
 ----------------------------------
 local model = talkbox.MainFrame.Model
 model:SetLight(unpack(L.ModelMixin.LightValues))
-L.Mixin(model, L.ModelMixin)
+_Mixin(model, L.ModelMixin)
 
 ----------------------------------
 -- Main text things
@@ -161,7 +223,10 @@ hooksecurefunc(text, 'SetNext', function(self, ...)
 	if text then
 		model:PrepareAnimation(model:GetUnit(), text)
 		if model:IsNPC() then
-			if not text:match('%b<>') then
+			-- Suggests that this phrase is an emote description
+			if text:match('%b<>') then
+				self:SetVertexColor(1, 0.5, 0)
+			else
 				self:SetVertexColor(1, 1, 1)
 				model:SetRemainingTime(GetTime(), ( self.delays and self.delays[1]))
 				if model.asking and not self:IsSequence() then
@@ -170,27 +235,32 @@ hooksecurefunc(text, 'SetNext', function(self, ...)
 					local yell = model.yelling and random(2) == 2
 					if yell then model:Yell() else model:Talk() end
 				end
-			else
-				self:SetVertexColor(1, 0.5, 0)
 			end
 		elseif model:IsPlayer() then
 			model:Read()
 		end
 	end
+	
+	counter:Hide()
+	if self:IsSequence() then
+		if not self:IsFinished() then
+			counter:Show()
+			counter:SetText(self:GetProgress())
+		end
+	end
 
 	if self:IsVisible() then
-		counter:Hide()
-		if self:IsSequence() then
-			if not self:IsFinished() then
-				counter:Show()
-				counter:SetText(self:GetProgress())
-			end
-		end
 		if L('disableprogression') then
 			self:StopProgression()
 		end
 	end
 end)
+
+text.OnFinishedCallback = function(self)
+	if frame.lastEvent == 'GOSSIP_ONTHEFLY' then
+		frame:FadeOut()
+	end
+end
 
 ----------------------------------
 -- Misc fixes
@@ -204,20 +274,35 @@ talkbox.TextFrame.SpeechProgress:SetFont('Fonts\\MORPHEUS.ttf', 16, '')
 local ignoreFrames = {
 	[frame] = true,
 	[talkbox] = true,
+	[inspector] = true,
 	[GameTooltip] = true,
 	[StaticPopup1] = true,
 	[StaticPopup2] = true,
 	[StaticPopup3] = true,
 	[StaticPopup4] = true,
+	[SubZoneTextFrame] = true,
+	[OverrideActionBar] = true,
 	[ShoppingTooltip1] = true,
 	[ShoppingTooltip2] = true,
 }
+
+local hideFrames = {
+	[Minimap] = true,
+	[MinimapCluster] = true,
+}
+
+function L.ToggleIgnoreFrame(frame, ignore)
+	ignoreFrames[frame] = ignore
+end
 
 local function GetUIFrames()
 	local frames = {}
 	for i, child in pairs({UIParent:GetChildren()}) do
 		if not child:IsForbidden() and not ignoreFrames[child] then
-			frames[child] = child.fadeInfo and child.fadeInfo.endAlpha or child:GetAlpha()
+			frames[child] = {
+				origAlpha = child.fadeInfo and child.fadeInfo.endAlpha or child:GetAlpha(),
+				throttle = 0,
+			}
 		end
 	end
 	return frames
@@ -230,17 +315,20 @@ frame.FadeIns = {
 	talkbox.PortraitFrame.FadeIn,
 }
 
-frame.FadeIn = function(self, fadeTime, stopPlay)
+frame.FadeIn = function(self, fadeTime, stopPlay, ignoreFrameFade)
 	L.UIFrameFadeIn(self, fadeTime or 0.2, self:GetAlpha(), 1)
 	if ( not stopPlay ) and ( self.timeStamp ~= GetTime() ) then
 		for _, Fader in pairs(self.FadeIns) do
 			Fader:Play()
 		end
 	end
-	if L('hideui') and not self.fadeFrames then
+	if not ignoreFrameFade and L('hideui') and not self.fadeFrames then
 		local frames = GetUIFrames()
 		for frame in pairs(frames) do
-			L.UIFrameFadeOut(frame, fadeTime or 0.2, frame:GetAlpha(), 0)
+			L.UIFrameFadeOut(frame, fadeTime or 0.2, frame:GetAlpha(), 0, hideFrames[frame] and {
+				finishedFunc = frame.Hide,
+				finishedArg1 = frame,
+			})
 		end
 		self.fadeFrames = frames
 
@@ -250,11 +338,28 @@ frame.FadeIn = function(self, fadeTime, stopPlay)
 			time = time + elapsed
 			if time > 0.5 then
 				if self.fadeFrames then
-					for frame, origAlpha in pairs(self.fadeFrames) do
+					for frame, info in pairs(self.fadeFrames) do
 						if frame:IsMouseOver() and frame:IsMouseEnabled() then
-							L.UIFrameFadeIn(frame, 0.2, frame:GetAlpha(), origAlpha)
+							if hideFrames[frame] then
+								frame:Show()
+							end
+							L.UIFrameFadeIn(frame, 0.2, frame:GetAlpha(), info.origAlpha)
+							info.throttle = 0
 						elseif frame:GetAlpha() > 0.1 then
-							L.UIFrameFadeOut(frame, 0.2, frame:GetAlpha(), 0) 
+							-- If this frame keeps fading back in then something else is
+							-- affecting the alpha change. Stop manipulating the alpha value
+							-- of the frame and remove it from the table.
+							info.throttle = info.throttle + 1
+							if info.throttle > 2 then
+								self.fadeFrames[frame] = nil
+								L.ToggleIgnoreFrame(frame, true)
+								L.UIFrameStopFading(frame)
+							else
+								L.UIFrameFadeOut(frame, 0.2, frame:GetAlpha(), 0, hideFrames[frame] and {
+									finishedFunc = frame.Hide,
+									finishedArg1 = frame,
+								}) 
+							end
 						end
 					end
 				else
@@ -266,17 +371,24 @@ frame.FadeIn = function(self, fadeTime, stopPlay)
 	end
 end
 
-frame.FadeOut = function(self, fadeTime)
+frame.RestoreFadedFrames = function(self)
+	if self.fadeFrames then
+		for frame, info in pairs(self.fadeFrames) do
+			if hideFrames[frame] then
+				frame:Show()
+			end
+			L.UIFrameFadeIn(frame, fadeTime or 0.5, frame:GetAlpha(), info.origAlpha)
+		end
+		self.fadeFrames = nil
+	end
+end
+
+frame.FadeOut = function(self, fadeTime, ignoreOnTheFly)
 	L.UIFrameFadeOut(self, fadeTime or 1, self:GetAlpha(), 0, {
 		finishedFunc = self.Hide,
 		finishedArg1 = self,
 	})
-	if self.fadeFrames then
-		for frame, origAlpha in pairs(self.fadeFrames) do
-			L.UIFrameFadeIn(frame, fadeTime or 0.5, frame:GetAlpha(), origAlpha)
-		end
-		self.fadeFrames = nil
-	end
+	self:RestoreFadedFrames()
 end
 
 ----------------------------------

@@ -50,8 +50,10 @@ L.ScalerMixin = {
 L.AdjustToChildren = {		
 	IterateChildren = function(self)
 		local regions = {self:GetChildren()}
-		for _, v in pairs({self:GetRegions()}) do
-			regions[#regions + 1] = v
+		if not self.ignoreRegions then
+			for _, v in pairs({self:GetRegions()}) do
+				regions[#regions + 1] = v
+			end
 		end
 		return pairs(regions)
 	end,
