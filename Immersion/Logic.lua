@@ -8,7 +8,7 @@ local frame, GetTime = L.frame, GetTime
 function NPC:OnEvent(event, ...)
 	self:ResetElements(event)
 	if self[event] then
-		if event:match('QUEST') then
+		if event ~= 'QUEST_ACCEPTED' and event:match('QUEST') then
 			CloseGossip()
 		end
 		event = self[event](self, ...) or event
@@ -58,7 +58,7 @@ function NPC:QUEST_PROGRESS(...) -- special case, doesn't use QuestInfo
 	if hasItems then
 		local width, height = elements.Progress:GetSize()
 		-- Extra: 32 padding + 8 offset from talkbox + 8 px bottom offset
-		self.TalkBox:SetExtraOffset(height + 48) 
+		self.TalkBox:SetExtraOffset((height + 48) * L('elementscale')) 
 		return
 	end
 	self:ResetElements()
@@ -82,10 +82,10 @@ function NPC:QUEST_FINISHED(...)
 end
 
 function NPC:QUEST_DETAIL(...)
---	if self:IsQuestAutoAccept(...) then
---		self:PlayOutro()
----		return
---	end
+	if self:IsQuestAutoAccept(...) then
+		self:PlayOutro()
+		return
+	end
 	self:PlayIntro('QUEST_DETAIL')
 	self:UpdateTalkingHead(GetTitleText(), GetQuestText(), 'AvailableQuest')
 	self:AddQuestInfo('QUEST_DETAIL')
@@ -100,6 +100,49 @@ function NPC:QUEST_ITEM_UPDATE()
 		self[questEvent](self)
 		return questEvent
 	end
+end
+
+function NPC:ITEM_TEXT_BEGIN()
+	local title = ItemTextGetItem()
+	local creator = ItemTextGetCreator()
+	if creator then
+		title = title .. ' (' .. FROM .. ' ' .. creator .. ')'
+	end
+	DoEmote('read')
+	self:RegisterEvent('PLAYER_STARTED_MOVING')
+	self:PlayIntro('ITEM_TEXT_BEGIN')
+	self:UpdateTalkingHead(title, '', 'TrainerGossip', 'player')
+	-- add book model? (75431)
+end
+
+function NPC:ITEM_TEXT_READY()
+	-- special case: pages need to be concatened together before displaying them.
+	-- each new page re-triggers this event, so keep changing page until we run out.
+	self.itemText = (self.itemText or '') .. '\n' .. (ItemTextGetText() or '')
+	if ItemTextHasNextPage() then
+		ItemTextNextPage()
+		return
+	end
+	-- set text directly instead of updating talking head
+	self.TalkBox.TextFrame.Text:SetText(self.itemText)
+end
+
+
+function NPC:ITEM_TEXT_CLOSED()
+	local time = GetTime()
+	if not self.readEmoteCancelled and ( self.lastTextClosed ~= time ) then
+		DoEmote('read')
+	end
+	self.lastTextClosed = time
+	self.readEmoteCancelled = nil
+	self.itemText = nil
+	self:UnregisterEvent('PLAYER_STARTED_MOVING')
+	self:PlayOutro()
+end
+
+function NPC:PLAYER_STARTED_MOVING()
+	self.readEmoteCancelled = true
+	return 'ITEM_TEXT_READY'
 end
 
 ----------------------------------
@@ -120,7 +163,7 @@ function NPC:AddQuestInfo(template)
 		content:Hide()
 	end 
 	-- Extra: 32 px padding 
-	self.TalkBox:SetExtraOffset(height + 32)
+	self.TalkBox:SetExtraOffset((height + 32) * L('elementscale'))
 	self.TalkBox.NameFrame.FadeIn:Play()
 end
 
@@ -140,7 +183,6 @@ function NPC:IsGossipAvailable()
 end
 
 function NPC:IsQuestAutoAccept(...)
-	local questStartItemID = ...
 	return ( QuestIsFromAdventureMap() ) or
 		( QuestGetAutoAccept() and QuestIsFromAreaTrigger() ) or
 		( questStartItemID ~= nil and questStartItemID ~= 0 )
@@ -192,14 +234,16 @@ function NPC:ResetElements(event)
 	elements.Progress:Hide()
 end
 
-function NPC:UpdateTalkingHead(title, text, npcType)
-	local unit
-	if ( UnitExists('questnpc') and not UnitIsUnit('questnpc', 'player') and not UnitIsDead('questnpc') ) then
-		unit = 'questnpc'
-	elseif ( UnitExists('npc') and not UnitIsUnit('npc', 'player') and not UnitIsDead('npc') ) then
-		unit = 'npc'
-	else
-		unit = npcType
+function NPC:UpdateTalkingHead(title, text, npcType, explicitUnit)
+	local unit = explicitUnit
+	if not unit then
+		if ( UnitExists('questnpc') and not UnitIsUnit('questnpc', 'player') and not UnitIsDead('questnpc') ) then
+			unit = 'questnpc'
+		elseif ( UnitExists('npc') and not UnitIsUnit('npc', 'player') and not UnitIsDead('npc') ) then
+			unit = 'npc'
+		else
+			unit = npcType
+		end
 	end
 	local talkBox = self.TalkBox
 	talkBox:SetExtraOffset(0)
@@ -304,11 +348,6 @@ function NPC:ShowItems()
 end
 
 function NPC:UpdateItems()
-	local items, numItems = self:GetItems()
-	self.hasItems = numItems > 0
-end
-
-function NPC:GetItems()
 	local items = self.Inspector.Items
 	wipe(items)
 	for _, item in pairs(self.TalkBox.Elements.Content.RewardsFrame.Buttons) do
@@ -321,6 +360,7 @@ function NPC:GetItems()
 			items[#items + 1] = item
 		end
 	end
+	self.hasItems = #items > 0
 	return items, #items
 end
 
@@ -329,17 +369,18 @@ end
 ----------------------------------
 function NPC:PlayIntro(event, ignoreFrameFade)
 	local isShown = self:IsVisible()
+	local shouldAnimate = isShown and not L('disableglowani')
 	self:Show()
 	if IsOptionFrameOpen() then
 		self:ForceClose()
 	else
 		self:EnableKeyboard(true)
-		self:FadeIn(nil, isShown, ignoreFrameFade)
+		self:FadeIn(nil, shouldAnimate, ignoreFrameFade)
 		local box = self.TalkBox
 		local point = L('boxpoint')
 		local x, y = L('boxoffsetX'), L('boxoffsetY')
 		box:ClearAllPoints()
-		if not isShown and not L('disableflyin') then
+		if not isShown then
 			box:SetPoint(point, UIParent, point, -x, -y)
 		end
 		box:SetOffset(box.offsetX or x, box.offsetY or y)
@@ -355,6 +396,7 @@ end
 function NPC:ForceClose()
 	CloseGossip()
 	CloseQuest()
+	CloseItemText()
 	self:PlayOutro()
 end
 
@@ -437,6 +479,7 @@ end
 ----------------------------------
 function TalkBox:SetOffset(x, y)
 	local point = L('boxpoint')
+	local anidivisor = L('anidivisor')
 	x = x or L('boxoffsetX')
 	y = y or L('boxoffsetY')
 
@@ -446,28 +489,28 @@ function TalkBox:SetOffset(x, y)
 	local isBottom = ( point == 'Bottom' )
 	local isVert = ( isBottom or point == 'Top' )
 
-	y = y +  ( isBottom and self.extraY or 0 )
+	y = y + ( isBottom and self.extraY or 0 )
 
 	local evaluator = self[ 'Get' .. point ]
-	local parent = UIParent
 	local comp = isVert and y or x
-	local func = self[point]
 
-	if not evaluator then
-		self:SetPoint(point, parent, x, y)
+	if ( not evaluator ) or ( anidivisor <= 1 ) then
+		self:SetPoint(point, UIParent, x, y)
 		return
 	end
 
 	self:SetScript('OnUpdate', function(self)
-		local offset = (evaluator(self) or 0) - (evaluator(parent) or 0)
+		self.isOffsetting = true
+		local offset = (evaluator(self) or 0) - (evaluator(UIParent) or 0)
 		local diff = ( comp - offset )
 		if (offset == 0) or abs( comp - offset ) < 0.3 then
-			self:SetPoint(point, parent, x, y)
+			self:SetPoint(point, UIParent, x, y)
+			self.isOffsetting = false
 			self:SetScript('OnUpdate', nil)
 		elseif isVert then
-			self:SetPoint(point, parent, x, offset + ( diff / 10 ))
+			self:SetPoint(point, UIParent, x, offset + ( diff / anidivisor ))
 		else
-			self:SetPoint(point, parent, offset + (diff / 10), y)
+			self:SetPoint(point, UIParent, offset + (diff / anidivisor), y)
 		end
 	end)
 end
@@ -478,6 +521,7 @@ function TalkBox:OnEnter()
 		not (self.Elements.itemChoice == 0 and GetNumQuestChoices() > 1) ) or
 		( self.lastEvent == 'QUEST_ACCEPTED' ) or
 		( self.lastEvent == 'QUEST_DETAIL' ) or
+		( self.lastEvent == 'ITEM_TEXT_READY' ) or
 		( self.lastEvent ~= 'GOSSIP_SHOW' and IsQuestCompletable() ) ) then
 		L.UIFrameFadeIn(self.Hilite, 0.15, self.Hilite:GetAlpha(), 1)
 	end
@@ -487,6 +531,44 @@ function TalkBox:OnLeave()
 	L.UIFrameFadeOut(self.Hilite, 0.15, self.Hilite:GetAlpha(), 0)
 end
 
+function TalkBox:OnDragStart()
+	if ( L('boxlock') or self.isOffsetting ) then return end
+	self:StartMoving()
+end
+
+function TalkBox:OnDragStop()
+	if ( L('boxlock') or self.isOffsetting ) then return end
+	self:StopMovingOrSizing()
+	local maxX, maxY = UIParent:GetSize()
+	local uiX, uiY = UIParent:GetCenter()
+	local centerX, centerY = self:GetCenter()
+	local offsets = {
+		Left 	= self:GetLeft(),
+		Right 	= maxX - self:GetRight(),
+		Top 	= maxY - self:GetTop(),
+		Bottom 	= self:GetBottom() - (self.extraY or 0),
+	}
+	local lowestVal, newPoint
+	for anchorPoint, offsetVal in pairs(offsets) do
+		if not lowestVal or offsetVal < lowestVal then
+			newPoint = anchorPoint
+			lowestVal = offsetVal
+		end
+	end
+	if ( newPoint == 'Left' or newPoint == 'Right' ) then self.extraY = 0
+		L.Set('boxoffsetX', newPoint == 'Right' and -lowestVal or lowestVal)
+		L.Set('boxoffsetY', centerY - uiY)
+	else if newPoint == 'Top' then self.extraY = 0 end
+		L.Set('boxoffsetY', newPoint == 'Top' and -lowestVal or lowestVal)
+		L.Set('boxoffsetX', centerX - uiX)
+	end
+	L.Set('boxpoint', newPoint)
+	self:ClearAllPoints()
+	self.offsetX = L('boxoffsetX')
+	self.offsetY = L('boxoffsetY')
+	self:SetPoint(L('boxpoint'), UIParent, L('boxoffsetX'), L('boxoffsetY') + (self.extraY or 0))
+end
+
 function TalkBox:OnLeftClick()
 	-- Complete quest
 	if self.lastEvent == 'QUEST_COMPLETE' then
@@ -494,11 +576,22 @@ function TalkBox:OnLeftClick()
 	-- Accept quest
 	elseif self.lastEvent == 'QUEST_DETAIL' or self.lastEvent == 'QUEST_ACCEPTED' then
 		self.Elements:AcceptQuest()
+	elseif self.lastEvent == 'ITEM_TEXT_READY' then
+		local text = self.TextFrame.Text
+		if text:GetNumRemaining() > 1 and text:IsSequence() then
+			text:ForceNext()
+		else
+			CloseItemText()
+		end
 	elseif self.lastEvent == 'GOSSIP_ONTHEFLY' then
 		ImmersionFrame:FadeOut(0.5, true)
 	-- Progress quest to completion
-	elseif IsQuestCompletable() then
-		CompleteQuest()
+	elseif self.lastEvent == 'QUEST_PROGRESS' then
+		if IsQuestCompletable() then
+			CompleteQuest()
+		else
+			ImmersionFrame:ForceClose()
+		end
 	end
 end
 
@@ -533,7 +626,8 @@ end
 function TalkBox:SetExtraOffset(newOffset)
 	local currX = ( self.offsetX or L('boxoffsetX') )
 	local currY = ( self.offsetY or L('boxoffsetY') )
-	self.extraY = newOffset
+	local allowExtra = L('anidivisor') > 0
+	self.extraY = allowExtra and newOffset or 0
 	self:SetOffset(currX, currY)
 end
 

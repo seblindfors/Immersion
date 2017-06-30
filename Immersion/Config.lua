@@ -23,7 +23,11 @@ function L.GetDefaultConfig()
 end
 
 function L.Get(key)
-	return ( L.cfg and L.cfg[key] or L.defaults[key] )
+	if L.cfg and L.cfg[key] ~= nil then
+		return L.cfg[key]
+	else
+		return L.defaults[key]
+	end
 end
 
 function L.Set(key, val)
@@ -63,26 +67,23 @@ L.defaults = {
 	titleoffset = 500,
 	titleoffsetY = 0,
 
+	elementscale = 1,
+
 	boxscale = 1,
 	boxoffsetX = 0,
 	boxoffsetY = 150,
+	boxlock = true,
 	boxpoint = 'Bottom',
 
 	disableprogression = false,
 	flipshortcuts = false,
 	delaydivisor = 15,
+	anidivisor = 10,
 
 	inspect = 'SHIFT',
 	accept = 'SPACE',
 	reset = 'BACKSPACE',
 }---------------------------------
-
-local anchors = {
-	Top 	= L['Top'],
-	Bottom 	= L['Bottom'],
-	Right 	= L['Right'],
-	Left 	= L['Left'],
-}
 
 local stratas = {
 	LOW 		= L['Low'],
@@ -99,6 +100,13 @@ local modifiers = {
 	CTRL = CTRL_KEY_TEXT,
 	ALT = ALT_KEY_TEXT,
 	NOMOD = NONE,
+}
+
+local titleanis = {
+	[0] = OFF,
+	[1] = SPELL_CAST_TIME_INSTANT,
+	[5] = FAST,
+	[10] = SLOW,
 }
 
 L.options = {
@@ -235,17 +243,6 @@ L.options = {
 					set = function(_, val) L.cfg.accept = L.ValidateKey(val) end,
 					order = 1,
 				},
-				inspect = {
-					type = 'select',
-					name = INSPECT .. ' ('..ITEMS..')',
-					order = 3,
-					values = modifiers,
-					get = L.GetFromDefaultOrSV,
-					set = function(_, val)
-						L.cfg.inspect = val
-					end,
-					style = 'dropdown',
-				},
 				reset = {
 					type = 'keybinding',
 					name = RESET,
@@ -276,18 +273,13 @@ L.options = {
 			name = DISPLAY,
 			order = 3,
 			args = {
-				header = {
-					type = 'header',
-					name = DISPLAY,
-					order = 3,
-				},
 				scale = {
 					type = 'range',
-					name = 'Global scale',
+					name = L['Global scale'],
 					min = 0.5,
 					max = 1.5,
 					step = 0.1,
-					order = 1,
+					order = 2,
 					get = L.GetFromDefaultOrSV,
 					set = function(self, val) 
 						L.cfg.scale = val
@@ -297,7 +289,7 @@ L.options = {
 				strata = {
 					type = 'select',
 					name = L['Frame strata'],
-					order = 2,
+					order = 1,
 					values = stratas,
 					get = L.GetFromDefaultOrSV,
 					set = function(_, val) local f = L.frame
@@ -307,11 +299,25 @@ L.options = {
 					end,
 					style = 'dropdown',
 				},
+				anidivisor = {
+					type = 'select',
+					name = L['Dynamic offset'],
+					order = 0,
+					values = titleanis,
+					get = L.GetFromDefaultOrSV,
+					set = function(_, val) L.cfg.anidivisor = val end,
+					style = 'dropdown',
+				},
+				header = {
+					type = 'header',
+					name = DISPLAY,
+					order = 3,
+				},
 				description = {
 					type = 'description',
 					fontSize = 'medium',
-					name = L['In this category, you can customize the placement and size of the individual parts of Immersion.'] ..'\n\n' .. 
-							L.GetListString(
+					order = 4,
+					name = L.GetListString(
 								MODEL ..' / '.. LOCALE_TEXT_LABEL ..': '..L['Customize the talking head frame.'],
 								QUESTS_LABEL..' / '..GOSSIP_OPTIONS..': '..L['Change the placement and scale of your dialogue options.']) .. '\n',
 				},
@@ -319,11 +325,11 @@ L.options = {
 					type = 'group',
 					name = QUESTS_LABEL .. ' / ' .. GOSSIP_OPTIONS,
 					inline = true,
+					order = 6,
 					args = {
 						gossipatcursor = {
 							type = 'toggle',
 							name = L['Show at mouse location'],
-							order = 2,
 							get = L.GetFromSV,
 							set = function(_, val) L.cfg.gossipatcursor = val end,
 							order = 0,
@@ -331,7 +337,6 @@ L.options = {
 						titlelock = {
 							type = 'toggle',
 							name = LOCK,
-							order = 2,
 							get = L.GetFromSV,
 							set = function(_, val) L.cfg.titlelock = val end,
 							order = 1,
@@ -355,6 +360,7 @@ L.options = {
 					type = 'group',
 					name = MODEL .. ' / ' .. LOCALE_TEXT_LABEL,
 					inline = true,
+					order = 5,
 					args = {
 						boxscale = {
 							type = 'range',
@@ -369,53 +375,67 @@ L.options = {
 								L.frame.TalkBox:SetScale(val)
 							end,
 						},
-						boxoffsetY = {
-							type = 'range',
-							name = L['Offset Y'],
-							order = 4,
-							min = -600,
-							max = 600,
-							step = 10,
-							get = L.GetFromDefaultOrSV,
-							set = function(_, val) local b = L.frame.TalkBox
-								L.cfg.boxoffsetY = val
-								b:ClearAllPoints()
-								b:SetOffset()
-							end,
-						},
-						boxoffsetX = {
-							type = 'range',
-							name = L['Offset X'],
-							order = 3,
-							min = -600,
-							max = 600,
-							step = 10,
-							get = L.GetFromDefaultOrSV,
-							set = function(_, val) local b = L.frame.TalkBox
-								L.cfg.boxoffsetX = val
-								b:ClearAllPoints()
-								b:SetOffset()
-							end,
-						},
-						boxpoint = {
-							type = 'select',
-							name = L['Anchor point'],
+						disableglowani = {
+							type = 'toggle',
+							name = L['Disable sheen animation'],
 							order = 1,
-							values = anchors,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.disableglowani = val end,
+						},
+						resetposition = {
+							type = 'execute',
+							name = RESET_POSITION,
+							order = 2,
+							func = function(self)
+								L.Set('boxpoint', L.defaults.boxpoint)
+								L.Set('boxoffsetX', L.defaults.boxoffsetX)
+								L.Set('boxoffsetY', L.defaults.boxoffsetY)
+								local t = L.frame.TalkBox
+								t.extraY = 0
+								t.offsetX = L('boxoffsetX')
+								t.offsetY = L('boxoffsetY')
+								t:ClearAllPoints()
+								t:SetPoint(L('boxpoint'), UIParent, L('boxoffsetX'), L('boxoffsetY'))
+							end,
+						},
+						boxlock = {
+							type = 'toggle',
+							name = LOCK,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.boxlock = val end,
+							order = 3,
+						},
+					},
+				},
+				elements = {
+					type = 'group',
+					name = QUEST_OBJECTIVES .. ' / ' .. QUEST_REWARDS,
+					inline = true,
+					order = 7,
+					args = {
+						elementscale = {
+							type = 'range',
+							name = 'Scale',
+							min = 0.5,
+							max = 1.5,
+							step = 0.1,
+							order = 2,
 							get = L.GetFromDefaultOrSV,
-							set = function(_, val) local b = L.frame.TalkBox
-								L.cfg.boxpoint = val
-								b:ClearAllPoints()
-								b:SetOffset()
+							set = function(self, val) 
+								L.cfg.elementscale = val
+								L.frame.TalkBox.Elements:SetScale(val)
+							end,
+						},
+						inspect = {
+							type = 'select',
+							name = INSPECT .. ' ('..ITEMS..')',
+							order = 3,
+							values = modifiers,
+							get = L.GetFromDefaultOrSV,
+							set = function(_, val)
+								L.cfg.inspect = val
 							end,
 							style = 'dropdown',
-						},
-						disableflyin = {
-							type = 'toggle',
-							name = L['Disable fly-in animation'],
-							order = 5,
-							get = L.GetFromSV,
-							set = function(_, val) L.cfg.disableflyin = val end,
 						},
 					},
 				},

@@ -95,6 +95,15 @@
 						<Anchor point="TOPLEFT" />
 					</Anchors>
 				</Texture>
+				<MaskTexture parentKey="Mask" file="Interface\AddOns\Immersion\Textures\Mask_Icon" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.Icon" relativePoint="TOPLEFT" x="0" y="0"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
+					</Anchors>
+					<MaskedTextures>
+						<MaskedTexture childKey="Icon"/>
+					</MaskedTextures>
+				</MaskTexture>
 			</Layer>
 		</Layers>									
 		<Animations>
@@ -111,11 +120,6 @@
 				</Scale>
 			</AnimationGroup>
 		</Animations>
-		<Scripts>
-			<OnLoad>
-				self.Icon:SetMask("Interface\\Minimap\\UI-Minimap-Background");
-			</OnLoad>
-		</Scripts>
 	</Button>
 
 	<Button name="ImmersionTitleButtonTemplate" virtual="true">
@@ -707,7 +711,7 @@
 					<Frame parentKey="NameFrame" setAllPoints="true" useParentLevel="true">
 						<Layers>
 							<Layer level="ARTWORK">
-								<FontString parentKey="Name" inherits="Fancy22Font" alpha="0.01" justifyH="LEFT">
+								<FontString parentKey="Name" inherits="Fancy22Font" alpha="1" justifyH="LEFT">
 									<Anchors>
 										<Anchor point="RIGHT" x="-60" y="0"/>
 									</Anchors>
@@ -727,7 +731,7 @@
 					<Frame parentKey="TextFrame" setAllPoints="true" useParentLevel="true">
 						<Layers>
 							<Layer level="ARTWORK">
-								<FontString parentKey="Text" inherits="GameFontHighlightLarge" alpha="0.01" justifyH="LEFT" justifyV="TOP" mixin="ShrinkUntilTruncateFontStringMixin">
+								<FontString parentKey="Text" inherits="GameFontHighlightLarge" alpha="1" justifyH="LEFT" justifyV="TOP" mixin="ShrinkUntilTruncateFontStringMixin">
 									<Anchors>
 										<Anchor point="TOPLEFT" relativeKey="$parent.$parent.NameFrame.Name" relativePoint="BOTTOMLEFT" x="0" y="-3"/>
 										<Anchor point="BOTTOMRIGHT" x="-42" y="12"/>
@@ -767,7 +771,7 @@
 					<Frame parentKey="PortraitFrame" setAllPoints="true">
 						<Layers>
 							<Layer level="OVERLAY">
-								<Texture parentKey="Portrait" hidden="false" alpha="0.01" alphaMode="BLEND" atlas="TalkingHeads-PortraitFrame" useAtlasSize="true">
+								<Texture parentKey="Portrait" hidden="false" alpha="1" alphaMode="BLEND" atlas="TalkingHeads-PortraitFrame" useAtlasSize="true">
 									<Anchors>
 										<Anchor point="TOPLEFT" x="5" y="-6"/>
 									</Anchors>
@@ -801,7 +805,7 @@
 							</Layer>
 						</Layers>
 						<Frames>
-							<PlayerModel parentKey="Model" alpha="0.01" alphaMode="BLEND" >
+							<PlayerModel parentKey="Model" alpha="1" alphaMode="BLEND" >
 								<Size x="115" y="115"/>
 								<Anchors>
 									<Anchor point="TOPLEFT" x="21" y="-21"/>

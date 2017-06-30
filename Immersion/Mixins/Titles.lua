@@ -13,11 +13,21 @@ local P_AVAILABLE_QUEST = 2
 local P_AVAILABLE_GOSSIP = 3
 local P_INCOMPLETE_QUEST = 4
 
+-- Animation divisor
+local ANI_DIVISOR = 10
+
 ----------------------------------
 -- Display
 ----------------------------------
 function Titles:AdjustHeight(newHeight)
 	self.offset = 0
+	if ( ANI_DIVISOR == 0 ) then 
+		self:SetHeight(1)
+		return
+	elseif ( ANI_DIVISOR == 1 ) then
+		self:SetHeight(newHeight)
+		return
+	end
 	self:SetScript('OnUpdate', function(self)
 		local height = self:GetHeight()
 		local diff = newHeight - height
@@ -25,7 +35,7 @@ function Titles:AdjustHeight(newHeight)
 			self:SetHeight(newHeight)
 			self:SetScript('OnUpdate', nil)
 		else
-			self:SetHeight(height + ( diff / 10 ) )
+			self:SetHeight(height + ( diff / ANI_DIVISOR ) )
 		end
 		self:OnUpdateOffset()
 	end)
@@ -44,13 +54,13 @@ function Titles:OnUpdateOffset()
 		offset = (self.offset or 0) + L('titleoffsetY')
 	end
 	local diff = ( y - offset )
-	if (offset == 0) or abs( y - offset ) < 0.3 then
+	if ( offset == 0 ) or abs( y - offset ) < 0.3 then
 		self:SetPoint(anchor, relativeRegion, relativeKey, x, offset)
 		if self:GetScript('OnUpdate') == self.OnUpdateOffset then
 			self:SetScript('OnUpdate', nil)
 		end
 	else
-		self:SetPoint(anchor, relativeRegion, relativeKey, x, offset + (diff / 10))
+		self:SetPoint(anchor, relativeRegion, relativeKey, x, offset + (diff / ANI_DIVISOR))
 	end
 end
 
@@ -131,6 +141,7 @@ function Titles:UpdateActive()
 			numActive = numActive + 1
 		end
 	end
+	ANI_DIVISOR = L('anidivisor')
 	self.ignoreAtCursor = false
 	self.numActive = numActive
 	self:AdjustHeight(newHeight)

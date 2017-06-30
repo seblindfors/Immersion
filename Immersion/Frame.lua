@@ -1,6 +1,6 @@
 ----------------------------------
 -- These are things that
--- are more easily handled in lua
+-- are more easily handled in Lua
 -- than XML, but have to do with
 -- the initial setup.
 ----------------------------------
@@ -9,6 +9,7 @@ local frame = _G[ _ .. 'Frame' ]
 local talkbox = frame.TalkBox
 local titles = frame.TitleButtons
 local inspector = frame.Inspector
+local elements = talkbox.Elements
 local _Mixin = L.Mixin
 L.frame = frame
 
@@ -24,6 +25,9 @@ frame:SetPropagateKeyboardInput(true)
 ----------------------------------
 for _, event in pairs({
 	'ADDON_LOADED',
+--	'ITEM_TEXT_BEGIN', 	-- Starting to read a book
+--	'ITEM_TEXT_READY', 	-- New book text is ready
+--	'ITEM_TEXT_CLOSED', -- Stop reading a book
 	'GOSSIP_CLOSED',	-- Close gossip frame
 	'GOSSIP_SHOW',		-- Show gossip options, can be a mix of gossip/quests
 	'QUEST_ACCEPTED', 	-- Use this event for on-the-fly quest text tracking.
@@ -31,7 +35,7 @@ for _, event in pairs({
 	'QUEST_DETAIL',		-- Quest details/objectives/accept frame
 	'QUEST_FINISHED',	-- Fires when quest frame is closed
 	'QUEST_GREETING',	-- Multiple quests to choose from, but no gossip options
-	'QUEST_IGNORED',	-- Ignore the currently shown quest
+--	'QUEST_IGNORED',	-- Ignore the currently shown quest
 	'QUEST_PROGRESS',	-- Fires when you click on a quest you're currently on
 	'QUEST_ITEM_UPDATE', -- Item update while in convo, refresh frames.
 --	'MERCHANT_SHOW', 	-- Force close gossip on merchant interaction.
@@ -47,7 +51,7 @@ for _, event in pairs({
 	'QUEST_DETAIL',		-- Hide when going from gossip -> detail
 	'QUEST_FINISHED',	-- Hide when going from gossip -> finished 
 	'QUEST_GREETING',	-- Show quest options, why is this a thing again?
-	'QUEST_IGNORED',	-- Hide when using ignore binding?
+--	'QUEST_IGNORED',	-- Hide when using ignore binding?
 	'QUEST_PROGRESS',	-- Hide when going from gossip -> active quest
 --	'QUEST_LOG_UPDATE',	-- If quest changes while interacting
 }) do titles:RegisterEvent(event) end
@@ -82,6 +86,15 @@ local compatibility = {
 		end
 	end,
 ----------------------------------
+	['ls_Toasts'] = function(self)
+		local type = _G.type
+		hooksecurefunc('CreateFrame', function(_, name)
+			if type(name) == 'string' and name:match('LSToast') then
+				L.ToggleIgnoreFrame(_G[name], true)
+			end
+		end)
+	end,
+----------------------------------
 }
 
 ----------------------------------
@@ -93,16 +106,25 @@ frame.ADDON_LOADED = function(self, name)
 		L.cfg = _G[svref] or L.GetDefaultConfig()
 		_G[svref] = L.cfg
 
+		-- Set module scales
 		talkbox:SetScale(L('boxscale'))
 		titles:SetScale(L('titlescale'))
+		elements:SetScale(L('elementscale'))
 		self:SetScale(L('scale'))
 
+		-- Set the module points
 		talkbox:SetPoint(L('boxpoint'), UIParent, L('boxoffsetX'), L('boxoffsetY'))
 		titles:SetPoint('CENTER', UIParent, 'CENTER', L('titleoffset'), 0)
 		titles:SetMovable(true)
 
 		self:SetFrameStrata(L('strata'))
 		talkbox:SetFrameStrata(L('strata'))
+
+		-- If previous version and flyins were disabled, set anidivisor to instant
+		if L.cfg.disableflyin then
+			L.cfg.disableflyin = nil
+			L.cfg.anidivisor = 1
+		end
 
 		-- Set frame ignore for hideUI features on load.
 		L.ToggleIgnoreFrame(Minimap, not L('hideminimap'))
@@ -121,7 +143,7 @@ frame.ADDON_LOADED = function(self, name)
 		local logo = CreateFrame('Frame', nil, L.config)
 		logo:SetFrameLevel(4)
 		logo:SetSize(64, 64)
-		logo:SetPoint('BOTTOMRIGHT', -16, 16)
+		logo:SetPoint('TOPRIGHT', 8, 24)
 		logo:SetBackdrop({bgFile = ('Interface\\AddOns\\%s\\Textures\\Logo'):format(_)})
 
 		-- Run functions for compatibility with other addons on load.
@@ -160,12 +182,13 @@ end
 ----------------------------------
 L.HideFrame(GossipFrame)
 L.HideFrame(QuestFrame)
+--L.HideFrame(ItemTextFrame)
 ----------------------------------
 
 ----------------------------------
 -- Set backdrops on elements
 ----------------------------------
-talkbox.Elements:SetBackdrop(L.Backdrops.TALKBOX)
+elements:SetBackdrop(L.Backdrops.TALKBOX)
 talkbox.Hilite:SetBackdrop(L.Backdrops.GOSSIP_HILITE)
 
 ----------------------------------
@@ -176,17 +199,17 @@ _Mixin(titles, L.TitlesMixin)
 ----------------------------------
 -- Initiate elements
 ----------------------------------
-_Mixin(talkbox.Elements, L.ElementsMixin)
+_Mixin(elements, L.ElementsMixin)
 
 ----------------------------------
 -- Set up dynamically sized frames
 ----------------------------------
 do
 	local AdjustToChildren = L.AdjustToChildren
-	_Mixin(talkbox.Elements, AdjustToChildren)
-	_Mixin(talkbox.Elements.Content, AdjustToChildren)
-	_Mixin(talkbox.Elements.Progress, AdjustToChildren)
-	_Mixin(talkbox.Elements.Content.RewardsFrame, AdjustToChildren)
+	_Mixin(elements, AdjustToChildren)
+	_Mixin(elements.Content, AdjustToChildren)
+	_Mixin(elements.Progress, AdjustToChildren)
+	_Mixin(elements.Content.RewardsFrame, AdjustToChildren)
 	_Mixin(inspector, AdjustToChildren)
 	_Mixin(inspector.Extras, AdjustToChildren)
 	_Mixin(inspector.Choices, AdjustToChildren)
@@ -266,6 +289,10 @@ end
 -- Misc fixes
 ----------------------------------
 talkbox:RegisterForClicks('LeftButtonUp', 'RightButtonUp')
+talkbox:RegisterForDrag('LeftButton')
+talkbox:SetMovable(true)
+talkbox:SetUserPlaced(false)
+talkbox:SetClampedToScreen(true)
 talkbox.TextFrame.SpeechProgress:SetFont('Fonts\\MORPHEUS.ttf', 16, '')
 
 ----------------------------------
@@ -315,11 +342,12 @@ frame.FadeIns = {
 	talkbox.PortraitFrame.FadeIn,
 }
 
-frame.FadeIn = function(self, fadeTime, stopPlay, ignoreFrameFade)
+function frame:FadeIn(fadeTime, playAnimations, ignoreFrameFade)
+	self.fadeState = 'in'
 	L.UIFrameFadeIn(self, fadeTime or 0.2, self:GetAlpha(), 1)
-	if ( not stopPlay ) and ( self.timeStamp ~= GetTime() ) then
-		for _, Fader in pairs(self.FadeIns) do
-			Fader:Play()
+	if ( playAnimations ) and ( self.timeStamp ~= GetTime() ) then
+		for _, animation in pairs(self.FadeIns) do
+			animation:Play()
 		end
 	end
 	if not ignoreFrameFade and L('hideui') and not self.fadeFrames then
@@ -371,7 +399,7 @@ frame.FadeIn = function(self, fadeTime, stopPlay, ignoreFrameFade)
 	end
 end
 
-frame.RestoreFadedFrames = function(self)
+function frame:RestoreFadedFrames()
 	if self.fadeFrames then
 		for frame, info in pairs(self.fadeFrames) do
 			if hideFrames[frame] then
@@ -383,7 +411,8 @@ frame.RestoreFadedFrames = function(self)
 	end
 end
 
-frame.FadeOut = function(self, fadeTime, ignoreOnTheFly)
+function frame:FadeOut(fadeTime, ignoreOnTheFly)
+	self.fadeState = 'out'
 	L.UIFrameFadeOut(self, fadeTime or 1, self:GetAlpha(), 0, {
 		finishedFunc = self.Hide,
 		finishedArg1 = self,

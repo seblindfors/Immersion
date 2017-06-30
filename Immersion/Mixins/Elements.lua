@@ -6,9 +6,10 @@ local REWARDS_OFFSET = 10 -- vertical distance between sections
 local ITEMS_PER_ROW = 2 -- modulus value for item rows
 local ACTIVE_TEMPLATE
 
-local SEAL_QUESTS = { -- Legion seal quests
+local SEAL_QUESTS = { -- Seal quests
 	[40519] = {text = '|cff04aaff'..QUEST_KING_VARIAN_WRYNN..'|r', sealAtlas = 'Quest-Alliance-WaxSeal'},
 	[43926] = {text = '|cff480404'..QUEST_WARCHIEF_VOLJIN..'|r', sealAtlas = 'Quest-Horde-WaxSeal'},
+	[46730] = {text = '|cff2f0a48'..QUEST_KHADGAR..'|r', sealAtlas = 'Quest-Legionfall-WaxSeal'},
 }
 
 ----------------------------------
