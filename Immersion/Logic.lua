@@ -1,6 +1,6 @@
 local _, L = ...
 local NPC, TalkBox = {}, {}
-local frame, GetTime = L.frame, GetTime
+local frame, GetTime, GetOffset = L.frame, GetTime, UIParent.GetBottom
 
 ----------------------------------
 -- Event handler
@@ -174,7 +174,7 @@ function NPC:IsGossipAvailable()
 		(GetNumGossipOptions() == 1) and
 		not ForceGossip() ) then
 		local text, gossipType = GetGossipOptions()
-		if ( gossipType ~= "gossip" ) then
+		if ( gossipType ~= 'gossip' ) then
 			SelectGossipOption(1)
 			return false
 		end
@@ -201,7 +201,7 @@ function NPC:SelectBestOption()
 			button.Hilite:SetAlpha(1)
 			button:Click()
 			button:OnLeave()
-			PlaySound("igQuestListSelect")
+			PlaySound(PlaySoundKitID and 'igQuestListSelect' or SOUNDKIT.IG_QUEST_LIST_SELECT)
 		end
 	end
 end
@@ -380,9 +380,6 @@ function NPC:PlayIntro(event, ignoreFrameFade)
 		local point = L('boxpoint')
 		local x, y = L('boxoffsetX'), L('boxoffsetY')
 		box:ClearAllPoints()
-		if not isShown then
-			box:SetPoint(point, UIParent, point, -x, -y)
-		end
 		box:SetOffset(box.offsetX or x, box.offsetY or y)
 	end
 end
@@ -436,7 +433,7 @@ local inputs = {
 			button.Hilite:SetAlpha(1)
 			button:Click()
 			button:OnLeave()
-			PlaySound("igQuestListSelect")
+			PlaySound(PlaySoundKitID and 'igQuestListSelect' or SOUNDKIT.IG_QUEST_LIST_SELECT)
 		end
 	end,
 }
@@ -486,31 +483,27 @@ function TalkBox:SetOffset(x, y)
 	self.offsetX = x
 	self.offsetY = y
 
-	local isBottom = ( point == 'Bottom' )
-	local isVert = ( isBottom or point == 'Top' )
+	local isBottom = ( point:match('Bottom') )
 
 	y = y + ( isBottom and self.extraY or 0 )
 
-	local evaluator = self[ 'Get' .. point ]
-	local comp = isVert and y or x
+	local comp = y
 
-	if ( not evaluator ) or ( anidivisor <= 1 ) then
+	if ( not isBottom ) or ( anidivisor <= 1 ) then
 		self:SetPoint(point, UIParent, x, y)
 		return
 	end
 
 	self:SetScript('OnUpdate', function(self)
 		self.isOffsetting = true
-		local offset = (evaluator(self) or 0) - (evaluator(UIParent) or 0)
+		local offset = (GetOffset(self) or 0) - (GetOffset(UIParent) or 0)
 		local diff = ( comp - offset )
 		if (offset == 0) or abs( comp - offset ) < 0.3 then
 			self:SetPoint(point, UIParent, x, y)
 			self.isOffsetting = false
 			self:SetScript('OnUpdate', nil)
-		elseif isVert then
-			self:SetPoint(point, UIParent, x, offset + ( diff / anidivisor ))
 		else
-			self:SetPoint(point, UIParent, offset + (diff / anidivisor), y)
+			self:SetPoint(point, UIParent, x, offset + ( diff / anidivisor ))
 		end
 	end)
 end
@@ -539,34 +532,33 @@ end
 function TalkBox:OnDragStop()
 	if ( L('boxlock') or self.isOffsetting ) then return end
 	self:StopMovingOrSizing()
-	local maxX, maxY = UIParent:GetSize()
-	local uiX, uiY = UIParent:GetCenter()
-	local centerX, centerY = self:GetCenter()
-	local offsets = {
-		Left 	= self:GetLeft(),
-		Right 	= maxX - self:GetRight(),
-		Top 	= maxY - self:GetTop(),
-		Bottom 	= self:GetBottom() - (self.extraY or 0),
-	}
-	local lowestVal, newPoint
-	for anchorPoint, offsetVal in pairs(offsets) do
-		if not lowestVal or offsetVal < lowestVal then
-			newPoint = anchorPoint
-			lowestVal = offsetVal
-		end
+	local point, _, _, x, y = self:GetPoint()
+
+	point = point:sub(1,1) .. point:sub(2):lower()
+
+	if ( point == 'Center' ) then
+		point = 'Bottom'
+
+		local cX, cY = self:GetCenter()
+
+		x = ( cX * self:GetScale() ) - ( GetScreenWidth() / 2 ) 
+		y = self:GetBottom()
+
 	end
-	if ( newPoint == 'Left' or newPoint == 'Right' ) then self.extraY = 0
-		L.Set('boxoffsetX', newPoint == 'Right' and -lowestVal or lowestVal)
-		L.Set('boxoffsetY', centerY - uiY)
-	else if newPoint == 'Top' then self.extraY = 0 end
-		L.Set('boxoffsetY', newPoint == 'Top' and -lowestVal or lowestVal)
-		L.Set('boxoffsetX', centerX - uiX)
+	local isBottom = point == 'Bottom'
+
+	if isBottom then
+		y = y - (self.extraY or 0)
 	end
-	L.Set('boxpoint', newPoint)
+
 	self:ClearAllPoints()
-	self.offsetX = L('boxoffsetX')
-	self.offsetY = L('boxoffsetY')
-	self:SetPoint(L('boxpoint'), UIParent, L('boxoffsetX'), L('boxoffsetY') + (self.extraY or 0))
+	self.offsetX = x
+	self.offsetY = y
+
+	L.Set('boxpoint', point)
+	L.Set('boxoffsetX', x)
+	L.Set('boxoffsetY', y)
+	self:SetPoint(point, UIParent, point, x, isBottom and y + (self.extraY or 0) or y)
 end
 
 function TalkBox:OnLeftClick()

@@ -23,9 +23,11 @@ function Titles:AdjustHeight(newHeight)
 	self.offset = 0
 	if ( ANI_DIVISOR == 0 ) then 
 		self:SetHeight(1)
+		self:OnUpdateOffset()
 		return
 	elseif ( ANI_DIVISOR == 1 ) then
 		self:SetHeight(newHeight)
+		self:OnUpdateOffset()
 		return
 	end
 	self:SetScript('OnUpdate', function(self)
@@ -60,14 +62,15 @@ function Titles:OnUpdateOffset()
 			self:SetScript('OnUpdate', nil)
 		end
 	else
-		self:SetPoint(anchor, relativeRegion, relativeKey, x, offset + (diff / ANI_DIVISOR))
+		self:SetPoint(anchor, relativeRegion, relativeKey, x, offset + (ANI_DIVISOR > 0 and (diff / ANI_DIVISOR) or 0))
 	end
 end
 
 function Titles:StopMoving()
 	self:StopMovingOrSizing()
 	local centerX, centerY = self:GetCenter()
-	local uiX, uiY = UIParent:GetCenter()
+	local scaleOffset = self:GetScale() * self:GetParent():GetScale()
+	local uiX, uiY = GetScreenWidth() / 2 / scaleOffset, GetScreenHeight() / 2 / scaleOffset
 	local newHorzVal, newVertVal = (centerX - uiX), (centerY - uiY)
 	-- Horizontal clip fix
 	if self:GetLeft() < 0 then
@@ -87,7 +90,7 @@ function Titles:StopMoving()
 	L.Set('titleoffsetY', newVertVal)
 end
 
-function Titles:OnMouseWheel(delta)
+function Titles:OnScroll(delta)
 	self.offset = self.offset and self.offset + (-delta * 40) or (-delta * 40)
 	self.ignoreAtCursor = true
 	self:SetScript('OnUpdate', self.OnUpdateOffset)
@@ -96,7 +99,6 @@ end
 function Titles:ResetPosition()
 	self.offset = 0
 	self.ignoreAtCursor = false
-	self:SetScript('OnUpdate', self.OnUpdateOffset)
 end
 
 function Titles:OnEvent(event, ...)
@@ -112,7 +114,6 @@ function Titles:OnHide()
 		button:UnlockHighlight()
 		button:Hide()
 	end
-	self:ResetPosition()
 	self.numActive = 0
 	self.idx = 1
 end
@@ -144,6 +145,7 @@ function Titles:UpdateActive()
 	ANI_DIVISOR = L('anidivisor')
 	self.ignoreAtCursor = false
 	self.numActive = numActive
+	self:ResetPosition()
 	self:AdjustHeight(newHeight)
 end
 

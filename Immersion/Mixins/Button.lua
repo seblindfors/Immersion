@@ -5,7 +5,7 @@ function Button:OnClick(button, down)
 	local func = self[self.type]
 	if func then
 		func(self)
-		PlaySound('igQuestListSelect')
+		PlaySound(PlaySoundKitID and 'igQuestListSelect' or SOUNDKIT.IG_QUEST_LIST_SELECT)
 	end
 end
 
@@ -30,6 +30,10 @@ function Button:OnDragStart(button)
 	if not L('titlelock') then
 		self.Container:StartMoving()
 	end
+end
+
+function Button:OnMouseWheel(delta)
+	self.Container:OnScroll(delta)
 end
 
 function Button:OnDragStop()

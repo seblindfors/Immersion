@@ -665,7 +665,7 @@ end
 
 function Elements:AcceptQuest()
 	if ( QuestFlagsPVP() ) then
-		StaticPopup_Show("CONFIRM_ACCEPT_PVP_QUEST")
+		StaticPopup_Show('CONFIRM_ACCEPT_PVP_QUEST')
 	else
 		if ( QuestGetAutoAccept() ) then
 			AcknowledgeAutoAcceptQuest()
@@ -673,7 +673,7 @@ function Elements:AcceptQuest()
 			AcceptQuest()
 		end
 	end
-	PlaySound("igQuestListOpen")
+	PlaySound(PlaySoundKitID and 'igQuestListOpen' or SOUNDKIT.IG_QUEST_LIST_OPEN)
 end
 
 function Elements:ShowProgress(material)
@@ -719,8 +719,8 @@ function Elements:ShowProgress(material)
 			local hidden = IsQuestItemHidden(i)
 			if ( hidden == 0 ) then
 				local requiredItem = GetItemButton(self, buttonIndex, 'ProgressItem')
-				requiredItem.type = "required"
-				requiredItem.objectType = "item"
+				requiredItem.type = 'required'
+				requiredItem.objectType = 'item'
 				requiredItem:SetID(i)
 				requiredItem:Show()
 
@@ -740,8 +740,8 @@ function Elements:ShowProgress(material)
 		
 		for i=1, numRequiredCurrencies do	
 			local requiredItem = GetItemButton(self, buttonIndex, 'ProgressItem')
-			requiredItem.type = "required"
-			requiredItem.objectType = "currency"
+			requiredItem.type = 'required'
+			requiredItem.objectType = 'currency'
 			requiredItem:SetID(i)
 			requiredItem:Show()
 
