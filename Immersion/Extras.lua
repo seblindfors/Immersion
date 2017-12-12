@@ -37,7 +37,7 @@ function L.HideFrame(frame)
 end
 
 ----------------------------------
--- Shared media / mixins
+-- Local backdrops
 ----------------------------------
 L.Backdrops = {
 	GOSSIP_HILITE = {
@@ -48,6 +48,12 @@ L.Backdrops = {
 	TALKBOX = {
 		bgFile = PT..'Backdrop_Talkbox.blp',
 		edgeFile = PT..'Edge_Talkbox_BG.blp',
+		edgeSize = 32,
+		insets = { left = 32, right = 32, top = 32, bottom = 32 }
+	},
+	TALKBOX_SOLID = {
+		bgFile = PT..'Backdrop_Talkbox_Solid.blp',
+		edgeFile = PT..'Edge_Talkbox_BG_Solid.blp',
 		edgeSize = 32,
 		insets = { left = 32, right = 32, top = 32, bottom = 32 }
 	},

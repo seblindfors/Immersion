@@ -78,7 +78,7 @@ L.defaults = {
 	disableprogression = false,
 	flipshortcuts = false,
 	delaydivisor = 15,
-	anidivisor = 10,
+	anidivisor = 5,
 
 	inspect = 'SHIFT',
 	accept = 'SPACE',
@@ -121,12 +121,8 @@ L.options = {
 					type = 'group',
 					name = L['Behavior'],
 					inline = true,
+					order = 1,
 					args = {
-						mouseheader = {
-							type = 'header',
-							name = TEXT_LABEL,
-							order = 0,
-						},
 						delaydivisor = {
 						type = 'range',
 						name = 'Text speed',
@@ -160,10 +156,18 @@ L.options = {
 							get = L.GetFromSV,
 							set = function(_, val) L.cfg.onthefly = val end,
 						},
+						showprogressbar = {
+							type = 'toggle',
+							name = L['Show text progress bar'],
+							order = 4,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.showprogressbar = val end,
+							disabled = function() return L('disableprogression') end,
+						},
 						mouseheader = {
 							type = 'header',
 							name = MOUSE_LABEL,
-							order = 4,
+							order = 5,
 						},
 						flipshortcuts = {
 							type = 'toggle',
@@ -171,17 +175,19 @@ L.options = {
 							desc = L.GetListString(
 								L['Left click is used to handle text.'], 
 								L['Right click is used to accept/hand in quests.']),
-							order = 5,
+							order = 6,
 							get = L.GetFromSV,
 							set = function(_, val) L.cfg.flipshortcuts = val end,
+							disabled = function() return ConsolePort end,
 						},
 						immersivemode = {
 							type = 'toggle',
 							name = L['Immersive mode'],
 							desc = L['Use your primary mouse button to read through text, accept/turn in quests and select the best available gossip option.'],
-							order = 6,
+							order = 7,
 							get = L.GetFromSV,
 							set = function(_, val) L.cfg.immersivemode = val end,
+							disabled = function() return ConsolePort end,
 						},
 					},
 				},
@@ -189,6 +195,7 @@ L.options = {
 					type = 'group',
 					name = L['Hide interface'],
 					inline = true,
+					order = 2,
 					args = {
 						hideui = {
 							type = 'toggle',
@@ -223,12 +230,33 @@ L.options = {
 						},
 					},
 				},
+				talkinghead = {
+					type = 'group',
+					name = L['Hook talking head'],
+					inline = true,
+					order = 3,
+					args = {
+						movetalkinghead = {
+							type = 'toggle',
+							name = VIDEO_OPTIONS_ENABLED,
+							order = 0,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.movetalkinghead = val end,
+						},
+						movetalkingheaddesc = {
+							type = 'description',
+							fontSize = 'medium',
+							name = L["The regular talking head frame appears in the same place as Immersion when you're not interacting with anything and on top of Immersion if they are visible at the same time."],
+						},
+					},
+				},
 			},
 		},
 		keybindings = {
 			type = 'group',
 			name = KEY_BINDINGS,
 			order = 2,
+			disabled = function() return ConsolePort end,
 			args = {
 				header = {
 					type = 'header',
@@ -273,18 +301,14 @@ L.options = {
 			name = DISPLAY,
 			order = 3,
 			args = {
-				scale = {
-					type = 'range',
-					name = L['Global scale'],
-					min = 0.5,
-					max = 1.5,
-					step = 0.1,
-					order = 2,
+				anidivisor = {
+					type = 'select',
+					name = L['Dynamic offset'],
+					order = 0,
+					values = titleanis,
 					get = L.GetFromDefaultOrSV,
-					set = function(self, val) 
-						L.cfg.scale = val
-						L.frame:SetScale(val)
-					end,
+					set = function(_, val) L.cfg.anidivisor = val end,
+					style = 'dropdown',
 				},
 				strata = {
 					type = 'select',
@@ -299,33 +323,128 @@ L.options = {
 					end,
 					style = 'dropdown',
 				},
-				anidivisor = {
-					type = 'select',
-					name = L['Dynamic offset'],
-					order = 0,
-					values = titleanis,
+				scale = {
+					type = 'range',
+					name = L['Global scale'],
+					min = 0.5,
+					max = 1.5,
+					step = 0.1,
+					order = 2,
 					get = L.GetFromDefaultOrSV,
-					set = function(_, val) L.cfg.anidivisor = val end,
-					style = 'dropdown',
+					set = function(self, val) 
+						L.cfg.scale = val
+						L.frame:SetScale(val)
+					end,
+				},
+				solidbackground = {
+					type = 'toggle',
+					name = L['Solid background'],
+					order = 3,
+					get = L.GetFromSV,
+					set = function(_, val) 
+						L.cfg.solidbackground = val
+						L.frame.TalkBox.BackgroundFrame.SolidBackground:SetShown(val)
+						L.frame.TalkBox.Elements:SetBackdrop(val and L.Backdrops.TALKBOX_SOLID or L.Backdrops.TALKBOX)
+					end,
 				},
 				header = {
 					type = 'header',
 					name = DISPLAY,
-					order = 3,
+					order = 4,
 				},
 				description = {
 					type = 'description',
 					fontSize = 'medium',
-					order = 4,
+					order = 5,
 					name = L.GetListString(
 								MODEL ..' / '.. LOCALE_TEXT_LABEL ..': '..L['Customize the talking head frame.'],
 								QUESTS_LABEL..' / '..GOSSIP_OPTIONS..': '..L['Change the placement and scale of your dialogue options.']) .. '\n',
+				},
+				box = {
+					type = 'group',
+					name = MODEL .. ' / ' .. LOCALE_TEXT_LABEL,
+					inline = true,
+					order = 6,
+					args = {
+						boxscale = {
+							type = 'range',
+							name = L['Scale'],
+							order = 0,
+							min = 0.5,
+							max = 1.5,
+							step = 0.1,
+							get = L.GetFromDefaultOrSV,
+							set = function(self, val) 
+								L.cfg.boxscale = val
+								L.frame.TalkBox:SetScale(val)
+							end,
+						},
+						disableglowani = {
+							type = 'toggle',
+							name = L['Disable sheen animation'],
+							order = 1,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.disableglowani = val end,
+						},
+						boxlock = {
+							type = 'toggle',
+							name = LOCK,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.boxlock = val end,
+							order = 2,
+						},
+						disableportrait = {
+							type = 'toggle',
+							name = L['Disable portrait border'],
+							order = 3,
+							get = L.GetFromSV,
+							set = function(_, val) 
+								L.cfg.disableportrait = val
+								L.frame.TalkBox.PortraitFrame:SetShown(not val)
+								L.frame.TalkBox.MainFrame.Model.PortraitBG:SetShown(not val)
+							end,
+						},
+						disableanisequence = {
+							type = 'toggle',
+							name = L['Disable model animations'],
+							order = 5,
+							get = L.GetFromSV,
+							set = function(_, val)
+								L.cfg.disableanisequence = val
+							end
+						},
+						disableboxhighlight = {
+							type = 'toggle',
+							name = L['Disable mouseover highlight'],
+							order = 6,
+							get = L.GetFromSV,
+							set = function(_, val)
+								L.cfg.disableboxhighlight = val
+							end,
+						},
+						resetposition = {
+							type = 'execute',
+							name = RESET_POSITION,
+							order = 7,
+							func = function(self)
+								L.Set('boxpoint', L.defaults.boxpoint)
+								L.Set('boxoffsetX', L.defaults.boxoffsetX)
+								L.Set('boxoffsetY', L.defaults.boxoffsetY)
+								local t = L.frame.TalkBox
+								t.extraY = 0
+								t.offsetX = L('boxoffsetX')
+								t.offsetY = L('boxoffsetY')
+								t:ClearAllPoints()
+								t:SetPoint(L('boxpoint'), UIParent, L('boxoffsetX'), L('boxoffsetY'))
+							end,
+						},
+					},
 				},
 				titles = {
 					type = 'group',
 					name = QUESTS_LABEL .. ' / ' .. GOSSIP_OPTIONS,
 					inline = true,
-					order = 6,
+					order = 7,
 					args = {
 						gossipatcursor = {
 							type = 'toggle',
@@ -356,62 +475,11 @@ L.options = {
 						},
 					},
 				},
-				box = {
-					type = 'group',
-					name = MODEL .. ' / ' .. LOCALE_TEXT_LABEL,
-					inline = true,
-					order = 5,
-					args = {
-						boxscale = {
-							type = 'range',
-							name = L['Scale'],
-							order = 0,
-							min = 0.5,
-							max = 1.5,
-							step = 0.1,
-							get = L.GetFromDefaultOrSV,
-							set = function(self, val) 
-								L.cfg.boxscale = val
-								L.frame.TalkBox:SetScale(val)
-							end,
-						},
-						disableglowani = {
-							type = 'toggle',
-							name = L['Disable sheen animation'],
-							order = 1,
-							get = L.GetFromSV,
-							set = function(_, val) L.cfg.disableglowani = val end,
-						},
-						resetposition = {
-							type = 'execute',
-							name = RESET_POSITION,
-							order = 2,
-							func = function(self)
-								L.Set('boxpoint', L.defaults.boxpoint)
-								L.Set('boxoffsetX', L.defaults.boxoffsetX)
-								L.Set('boxoffsetY', L.defaults.boxoffsetY)
-								local t = L.frame.TalkBox
-								t.extraY = 0
-								t.offsetX = L('boxoffsetX')
-								t.offsetY = L('boxoffsetY')
-								t:ClearAllPoints()
-								t:SetPoint(L('boxpoint'), UIParent, L('boxoffsetX'), L('boxoffsetY'))
-							end,
-						},
-						boxlock = {
-							type = 'toggle',
-							name = LOCK,
-							get = L.GetFromSV,
-							set = function(_, val) L.cfg.boxlock = val end,
-							order = 3,
-						},
-					},
-				},
 				elements = {
 					type = 'group',
 					name = QUEST_OBJECTIVES .. ' / ' .. QUEST_REWARDS,
 					inline = true,
-					order = 7,
+					order = 8,
 					args = {
 						elementscale = {
 							type = 'range',

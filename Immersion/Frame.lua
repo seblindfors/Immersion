@@ -58,47 +58,10 @@ for _, event in pairs({
 
 titles:RegisterUnitEvent('UNIT_QUEST_LOG_CHANGED', 'player')
 
-----------------------------------
--- Compatibility list
-----------------------------------
-local compatibility = {
-----------------------------------
-	['NomiCakes'] = function(self)
-		NomiCakesGossipButtonName = _ .. 'TitleButton'
-	end,
-----------------------------------
-	['!KalielsTracker'] = function(self)
-		local KTF = _G['!KalielsTrackerFrame']
-		L.ToggleIgnoreFrame(KTF, not L('hidetracker'))
-		L.options.args.general.args.hide.args.hidetracker.set = function(_, val)
-			L.cfg.hidetracker = val 
-			L.ToggleIgnoreFrame(ObjectiveTrackerFrame, not val)
-			L.ToggleIgnoreFrame(KTF, not val)
-		end
 
-		-- this override keeps the tracker from popping back up due to events when faded
-		function KTF:SetAlpha(...)
-			local newAlpha = ...
-			if newAlpha and self.fadeInfo and abs(self:GetAlpha() - newAlpha) > 0.5 then
-				return
-			end
-			getmetatable(self).__index.SetAlpha(self, ...)
-		end
-	end,
-----------------------------------
-	['ls_Toasts'] = function(self)
-		local type = _G.type
-		hooksecurefunc('CreateFrame', function(_, name)
-			if type(name) == 'string' and name:match('LSToast') then
-				L.ToggleIgnoreFrame(_G[name], true)
-			end
-		end)
-	end,
-----------------------------------
-}
 
 ----------------------------------
--- Load SavedVaribles
+-- Load SavedVaribles and related shit
 ----------------------------------
 frame.ADDON_LOADED = function(self, name)
 	if name == _ then
@@ -125,6 +88,14 @@ frame.ADDON_LOADED = function(self, name)
 			L.cfg.anidivisor = 1
 		end
 
+		-- Hide portrait 
+		talkbox.PortraitFrame:SetShown(not L('disableportrait'))
+		talkbox.MainFrame.Model.PortraitBG:SetShown(not L('disableportrait'))
+
+		-- Show solid background
+		talkbox.BackgroundFrame.SolidBackground:SetShown(L('solidbackground'))
+		elements:SetBackdrop(L('solidbackground') and L.Backdrops.TALKBOX_SOLID or L.Backdrops.TALKBOX)
+
 		-- Set frame ignore for hideUI features on load.
 		L.ToggleIgnoreFrame(Minimap, not L('hideminimap'))
 		L.ToggleIgnoreFrame(MinimapCluster, not L('hideminimap'))
@@ -144,33 +115,36 @@ frame.ADDON_LOADED = function(self, name)
 		logo:SetSize(64, 64)
 		logo:SetPoint('TOPRIGHT', 8, 24)
 		logo:SetBackdrop({bgFile = ('Interface\\AddOns\\%s\\Textures\\Logo'):format(_)})
+		L.config.logo = logo
 
 		-- Run functions for compatibility with other addons on load.
 		-- If the addon in question is already loaded, run the function and remove from list.
-		for addOn, func in pairs(compatibility) do
+		for addOn, func in pairs(L.compat) do
+			-- denotes if existing and loadable at any point
 			if select(4, GetAddOnInfo(addOn)) then
+				-- is it actually loaded at this point?
 				if IsAddOnLoaded(addOn) then
 					func(self)
-					compatibility[addOn] = nil
+					L.compat[addOn] = nil
 				end
 			else -- the addon is not going to load, remove it from table.
-				compatibility[addOn] = nil
+				L.compat[addOn] = nil
 			end
 		end
-	-- If the compatibility addon loads after Immersion, run the function and remove from list.
-	elseif compatibility and compatibility[name] then
-		compatibility[name](self)
-		compatibility[name] = nil
+	-- If the compatibile addon loads after Immersion, run the function and remove from list.
+	elseif L.compat and L.compat[name] then
+		L.compat[name](self)
+		L.compat[name] = nil
 	end
 
-	-- The compatibility table is empty -> all addons are loaded, disabled or missing.
+	-- The L.compat table is empty -> all addons are loaded, disabled or missing.
 	-- Garbage collect the table. 
-	if not next(compatibility) then
-		compatibility = nil
+	if not next(L.compat) then
+		L.compat = nil
 	end
 
 	-- Immersion is loaded, no more addons to track. Garbage collect this function.
-	if not compatibility and IsAddOnLoaded(_) then
+	if not L.compat and IsAddOnLoaded(_) then
 		self:UnregisterEvent('ADDON_LOADED')
 		self.ADDON_LOADED = nil
 	end
@@ -187,7 +161,6 @@ L.HideFrame(QuestFrame)
 ----------------------------------
 -- Set backdrops on elements
 ----------------------------------
-elements:SetBackdrop(L.Backdrops.TALKBOX)
 talkbox.Hilite:SetBackdrop(L.Backdrops.GOSSIP_HILITE)
 
 ----------------------------------
@@ -238,9 +211,9 @@ Mixin(text, L.TextMixin) -- see Text.lua
 -- Set array of fonts so the fontstring can be as big as possible without truncating the text
 text:SetFontObjectsToTry(SystemFont_Shadow_Large, SystemFont_Shadow_Med2, SystemFont_Shadow_Med1)
 -- Run a 'talk' animation on the portrait model whenever a new text is set
-hooksecurefunc(text, 'SetNext', function(self, ...)
-	local text = ...
+hooksecurefunc(text, 'SetNext', function(self, text)
 	local counter = talkbox.TextFrame.SpeechProgress
+	talkbox.TextFrame.FadeIn:Stop()
 	talkbox.TextFrame.FadeIn:Play()
 	if text then
 		model:PrepareAnimation(model:GetUnit(), text)
@@ -250,12 +223,14 @@ hooksecurefunc(text, 'SetNext', function(self, ...)
 				self:SetVertexColor(1, 0.5, 0)
 			else
 				self:SetVertexColor(1, 1, 1)
-				model:SetRemainingTime(GetTime(), ( self.delays and self.delays[1]))
-				if model.asking and not self:IsSequence() then
-					model:Ask()
-				else
-					local yell = model.yelling and random(2) == 2
-					if yell then model:Yell() else model:Talk() end
+				if not L('disableanisequence') then
+					model:SetRemainingTime(GetTime(), ( self.delays and self.delays[1]))
+					if model.asking and not self:IsSequence() then
+						model:Ask()
+					else
+						local yell = model.yelling and random(2) == 2
+						if yell then model:Yell() else model:Talk() end
+					end
 				end
 			end
 		elseif model:IsPlayer() then
@@ -269,6 +244,14 @@ hooksecurefunc(text, 'SetNext', function(self, ...)
 			counter:Show()
 			counter:SetText(self:GetProgress())
 		end
+
+		if self:GetNumRemaining() <= 1 then
+			frame:AddHint('SQUARE', RESET)
+		else
+			frame:AddHint('SQUARE', NEXT)
+		end
+	else
+		frame:RemoveHint('SQUARE')
 	end
 
 	if self:IsVisible() then
@@ -300,7 +283,6 @@ talkbox:SetClampedToScreen(true)
 
 titles:SetMovable(true)
 titles:SetUserPlaced(false)
-titles:SetClampedToScreen(true)
 
 ----------------------------------
 -- Animation things
@@ -329,7 +311,7 @@ function L.ToggleIgnoreFrame(frame, ignore)
 	ignoreFrames[frame] = ignore
 end
 
-local function GetUIFrames()
+local function GetFadeFrames()
 	local frames = {}
 	for i, child in pairs({UIParent:GetChildren()}) do
 		if not child:IsForbidden() and not ignoreFrames[child] then
@@ -345,7 +327,7 @@ end
 frame.FadeIns = {
 	talkbox.MainFrame.InAnim,
 	talkbox.NameFrame.FadeIn,
-	talkbox.TextFrame.FadeIn,
+--	talkbox.TextFrame.FadeIn,
 	talkbox.PortraitFrame.FadeIn,
 }
 
@@ -358,7 +340,7 @@ function frame:FadeIn(fadeTime, playAnimations, ignoreFrameFade)
 		end
 	end
 	if not ignoreFrameFade and L('hideui') and not self.fadeFrames then
-		local frames = GetUIFrames()
+		local frames = GetFadeFrames()
 		for frame in pairs(frames) do
 			L.UIFrameFadeOut(frame, fadeTime or 0.2, frame:GetAlpha(), 0, hideFrames[frame] and {
 				finishedFunc = frame.Hide,
@@ -412,7 +394,7 @@ function frame:RestoreFadedFrames()
 			if hideFrames[frame] then
 				frame:Show()
 			end
-			L.UIFrameFadeIn(frame, fadeTime or 0.5, frame:GetAlpha(), info.origAlpha)
+			L.UIFrameFadeIn(frame, 0.5, frame:GetAlpha(), info.origAlpha)
 		end
 		self.fadeFrames = nil
 	end
@@ -427,25 +409,93 @@ function frame:FadeOut(fadeTime, ignoreOnTheFly)
 	self:RestoreFadedFrames()
 end
 
-----------------------------------
--- Hacky hacky
--- Hook the regular talking head,
--- so that the offset is increased
--- when they are shown at the same time.
-----------------------------------
-hooksecurefunc('TalkingHead_LoadUI', function()
-	local thf = TalkingHeadFrame
-	if L('boxpoint') == 'Bottom' and thf:IsVisible() then
-		talkbox:SetOffset(nil, thf:GetTop() + 8)
+--------------------------------
+-- Anchor the real talking head to the fake talking head,
+-- make it appear IN PLACE of the fake one if the fake one isn't shown.
+--------------------------------
+do 
+	local function HookTalkingHead()
+		-- use this as assertion. if something else beat Immersion to it and manipulated the frame,
+		-- it shouldn't be moved, even if enabled by user. in essence, dummy protection.
+		if UIPARENT_MANAGED_FRAME_POSITIONS.TalkingHeadFrame then
+			local managedFramePos = UIPARENT_MANAGED_FRAME_POSITIONS.TalkingHeadFrame
+			local alertFrameIndex, alertFrameSettings
+			local isTalkingHeadMoved, isDragging
+
+			local function Drag(self)
+				if isTalkingHeadMoved and L('movetalkinghead') then
+					isDragging = true
+					talkbox:OnDragStart()
+				end
+			end
+
+			local function Drop(self)
+				if isDragging then
+					isDragging = nil
+					talkbox:OnDragStop()
+				end
+			end
+
+			local function Move(self)
+				-- if the move is allowed
+				if L('movetalkinghead') then
+					self:ClearAllPoints(self)
+					self:RegisterForDrag('LeftButton')
+					
+					if not isTalkingHeadMoved then
+						-- Need this to keep it from resetting position
+						self.ignoreFramePositionManager = true
+						UIPARENT_MANAGED_FRAME_POSITIONS.TalkingHeadFrame = nil
+
+						-- Flag for reset
+						isTalkingHeadMoved = true
+
+						-- Remove from alert system, preventing other frames from anchoring to it.
+						for index, alertFrameSubSystem in ipairs(AlertFrame.alertFrameSubSystems) do
+							if alertFrameSubSystem.anchorFrame and alertFrameSubSystem.anchorFrame == TalkingHeadFrame then
+								alertFrameIndex = index
+								alertFrameSettings = table.remove(AlertFrame.alertFrameSubSystems, index)
+							end
+						end
+					end
+
+					-- Move the frame
+					if not talkbox:IsVisible() then
+						talkbox:SetOffset() -- force update; (1) reset the offset calculation
+						talkbox:SetExtraOffset(0) -- (2) make sure it isn't offset by elements from prior quest
+						self:SetPoint('BOTTOM', talkbox, 'BOTTOM', 0, 0)
+					else
+						self:SetPoint('BOTTOM', talkbox, 'TOP', 0, 0)
+					end
+
+				-- if the setting is toggled off and the frame was manipulated, reset.
+				elseif isTalkingHeadMoved then
+					UIPARENT_MANAGED_FRAME_POSITIONS.TalkingHeadFrame = managedFramePos
+					self.ignoreFramePositionManager = nil
+					self:RegisterForDrag(nil)
+					isTalkingHeadMoved = nil
+					-- Reinsert the table into the alert system, if it existed.
+					if alertFrameIndex and alertFrameSettings then
+						table.insert(AlertFrame.alertFrameSubSystems, alertFrameIndex, alertFrameSettings)
+						alertFrameIndex = nil
+						alertFrameSettings = nil
+					end
+				end
+			end
+
+			TalkingHeadFrame:HookScript('OnShow', Move)
+			TalkingHeadFrame:HookScript('OnHide', Drop)
+			TalkingHeadFrame:HookScript('OnDragStart', Drag)
+			TalkingHeadFrame:HookScript('OnDragStop', Drop)
+			talkbox:HookScript('OnShow', function() Move(TalkingHeadFrame) end)
+			talkbox:HookScript('OnHide', function() Move(TalkingHeadFrame) end)
+		end
 	end
-	thf:HookScript('OnShow', function(self)
-		if L('boxpoint') == 'Bottom' then
-			talkbox:SetOffset(nil, self:GetTop() + 8)
-		end
-	end)
-	thf:HookScript('OnHide', function(self)
-		if L('boxpoint') == 'Bottom' then
-			talkbox:SetOffset()
-		end
-	end)
-end)
+
+	-- Run the init if the frame already exists (force loaded)
+	if TalkingHeadFrame then
+		HookTalkingHead()
+	else -- Hook to the loading function.
+		hooksecurefunc('TalkingHead_LoadUI', HookTalkingHead)
+	end
+end

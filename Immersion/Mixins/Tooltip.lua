@@ -1,5 +1,6 @@
 local _, L = ...
 local Tooltip = {}
+local isConsolePortLoaded = IsAddOnLoaded('ConsolePort')
 L.TooltipMixin = Tooltip
 
 function Tooltip:OnShow()
@@ -15,6 +16,21 @@ end
 function Tooltip:OnEnter()
 	local parent = self:GetParent()
 	L.UIFrameFadeIn(parent.Hilite, 0.2, parent.Hilite:GetAlpha(), 1)
+	if not isConsolePortLoaded then
+		self:SetFocus()
+	end
+end
+
+function Tooltip:OnLeave()
+	local parent = self:GetParent()
+	L.UIFrameFadeOut(parent.Hilite, 0.2, parent.Hilite:GetAlpha(), 0)
+	if not isConsolePortLoaded then
+		self:ClearFocus()
+	end
+end
+
+function Tooltip:SetFocus()
+	local parent = self:GetParent()
 	GameTooltip_ShowCompareItem(parent)
 	if self.pool then
 		for tooltip in self.pool:EnumerateActive() do
@@ -25,9 +41,8 @@ function Tooltip:OnEnter()
 	end
 end
 
-function Tooltip:OnLeave()
+function Tooltip:ClearFocus()
 	local parent = self:GetParent()
-	L.UIFrameFadeOut(parent.Hilite, 0.2, parent.Hilite:GetAlpha(), 0)
 	if self.pool then
 		for tooltip in self.pool:EnumerateActive() do
 			if tooltip ~= parent then

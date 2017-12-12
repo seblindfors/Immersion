@@ -48,6 +48,11 @@
 					end
 				end
 			</OnClick>
+			<OnDoubleClick>
+				if ( not IsModifiedClick() and self.container and self.container.chooseItems and self.type == "choice" ) then
+					GetQuestReward(self:GetID());
+				end
+			</OnDoubleClick>
 			<OnLeave>
 				GameTooltip:Hide();
 				ResetCursor();
@@ -176,7 +181,7 @@
 				<Anchor point="BOTTOMRIGHT" x="0" y="4"/>
 			</Anchors>
 		</HighlightTexture>
-		<Backdrop bgFile="Interface\AddOns\Immersion\Textures\Backdrop_Gossip.blp" edgeFile="Interface\AddOns\Immersion\Textures\Edge_Gossip_BG.blp">
+		<Backdrop bgFile="Interface\AddOns\Immersion\Textures\Backdrop_Gossip.tga" edgeFile="Interface\AddOns\Immersion\Textures\Edge_Gossip_BG.blp">
 			<EdgeSize>
 				<AbsValue val="8"/>
 			</EdgeSize>
@@ -252,7 +257,7 @@
 	<!-- Main frame -->
 	<Frame name="ImmersionFrame" parent="UIParent" hidden="true" frameStrata="HIGH">
 		<Frames>
-			<Frame parentKey="Inspector" hidden="true" frameStrata="FULLSCREEN_DIALOG">
+			<Frame parentKey="Inspector" hidden="true">
 				<Size x="1" y="1"/>
 				<Anchors>
 					<Anchor point="CENTER" relativeTo="UIParent" x="0" y="0"/>
@@ -305,10 +310,15 @@
 					<OnLoad>
 						self.Choices.Columns = {};
 						self.Extras.Columns = {};
+						self.Active = {};
 
 						self.parent = self:GetParent();
 						self.ignoreRegions = true;
 						self:EnableMouse(true);
+
+						-- set parent/strata on load; main frame keeps table key, strata correctly draws over everything else.
+						self:SetParent(UIParent);
+						self:SetFrameStrata('FULLSCREEN_DIALOG');
 
 						self.Items = {};
 						self:SetScale(1.1);
@@ -320,7 +330,7 @@
 						self.tooltipFramePool = CreateFramePool("GameTooltip", self, "ImmersionItemTooltipTemplate", function(self, obj) obj:Hide(); end);
 						self.tooltipFramePool.creationFunc = function(framePool)
 							local index = #framePool.inactiveObjects + framePool.numActiveObjects + 1
-							return CreateFrame(framePool.frameType, "$parent"..framePool.frameType..index, framePool.parent, framePool.frameTemplate);
+							return CreateFrame(framePool.frameType, "Immersion"..framePool.frameType..index, framePool.parent, framePool.frameTemplate);
 						end;
 					</OnLoad>
 					<OnShow>
@@ -330,6 +340,7 @@
 					<OnHide>
 						self.parent.TalkBox:Undim();
 						self.tooltipFramePool:ReleaseAll();
+						wipe(self.Active);
 
 						-- Reset columns
 						for _, column in pairs(self.Choices.Columns) do
@@ -384,10 +395,6 @@
 									<Anchor point="TOPLEFT" x="32" y="-32"/>
 								</Anchors>
 								<Frames>
-
-									<Frame parentKey="SpacerFrame">
-										<Size x="5" y="5"/>
-									</Frame>
 
 									<Frame parentKey="SealFrame">
 										<Size x="257" y="78"/>
@@ -755,16 +762,23 @@
 								<Alpha childKey="SpeechProgress" startDelay="0" duration="0.25" order="1" fromAlpha="1" toAlpha="0"/>
 							</AnimationGroup>
 						</Animations>
+						<Frames>
+							
+						</Frames>
 					</Frame>
 					<Frame parentKey="BackgroundFrame" setAllPoints="true" useParentLevel="true">
 						<Layers>
 							<Layer level="BACKGROUND">
 								<Texture parentKey="TextBackground" hidden="false" alpha="1" alphaMode="BLEND" atlas="TalkingHeads-TextBackground" useAtlasSize="true"/>
 							</Layer>
+							<Layer level="BACKGROUND">
+								<Texture parentKey="SolidBackground" hidden="true" alpha="1" alphaMode="BLEND" atlas="TalkingHeads-TextBackground" useAtlasSize="true"/>
+							</Layer>
 						</Layers>
 						<Animations>
 							<AnimationGroup parentKey="FadeIn" setToFinalAlpha="true">
 								<Alpha childKey="TextBackground" startDelay="0.4" duration="0.75" order="1" fromAlpha="0" toAlpha="1"/>
+								<Alpha childKey="SolidBackground" startDelay="0.4" duration="0.75" order="1" fromAlpha="0" toAlpha="1"/>
 							</AnimationGroup>
 						</Animations>
 					</Frame>
@@ -903,9 +917,95 @@
 								<Alpha childKey="Model.PortraitBg" duration="0.75" order="1" fromAlpha="0" toAlpha="1"/>
 								<Alpha childKey="Indicator" duration="0.75" order="1" fromAlpha="0" toAlpha="1"/>
 							</AnimationGroup>
+							<AnimationGroup parentKey="SheenOnly" setToFinalAlpha="true">
+								<Alpha childKey="Sheen" startDelay="0" duration="0.5" order="1" fromAlpha="0" toAlpha="0.7"/>
+								<Scale childKey="Sheen" startDelay="0" duration="0.25" order="1" fromScaleX="0.25" fromScaleY="1" toScaleX="1" toScaleY="1">
+									<Origin point="LEFT">
+										<Offset x="0" y="0"/>
+									</Origin>
+								</Scale>
+								<Alpha childKey="Sheen" startDelay="0.5" duration="0.5" order="1" fromAlpha="0.7" toAlpha="0"/>
+								<Alpha childKey="TextSheen" startDelay="0.25" duration="0.5" order="1" fromAlpha="0" toAlpha="0.7"/>
+								<Scale childKey="TextSheen" startDelay="0.25" duration="0.25" order="1" fromScaleX="0.25" fromScaleY="1" toScaleX="1" toScaleY="1">
+									<Origin point="LEFT">
+										<Offset x="0" y="0"/>
+									</Origin>
+								</Scale>
+								<Alpha childKey="TextSheen" startDelay="0.75" duration="0.5" order="1" fromAlpha="0.7" toAlpha="0"/>
+							</AnimationGroup>
 						</Animations>
 					</Frame>
-					<StatusBar parentKey="StatusBar" hidden="true">
+					<StatusBar parentKey="ProgressionBar" hidden="true">
+						<Size x="530" y="4"/>
+						<Anchors>
+							<Anchor point="BOTTOM" x="0" y="4"/>
+						</Anchors>
+						<Layers>
+							<Layer level="ARTWORK">
+								<Texture file="Interface\Common\friendship-parts"> <!-- left edge -->
+									<Size x="20" y="15"/>
+									<Anchors>
+										<Anchor point="LEFT" x="-1" y="2"/>
+									</Anchors>
+									<TexCoords left="0.53515625" right="0.4" top="0.01562500" bottom="0.60937500"/>
+								</Texture>
+								<Texture file="Interface\Common\friendship-parts"> <!-- right edge -->
+									<Size x="20" y="15"/>
+									<Anchors>
+										<Anchor point="RIGHT" x="1" y="2"/>
+									</Anchors>
+									<TexCoords left="0.4" right="0.53515625" top="0.01562500" bottom="0.60937500"/>
+								</Texture>
+								<Texture file="Interface\Common\friendship-parts"> <!-- middle -->
+									<Size x="0" y="15"/>
+									<Anchors>
+										<Anchor point="LEFT" x="19" y="2"/>
+										<Anchor point="RIGHT" x="-19" y="2"/>
+									</Anchors>
+									<TexCoords left="0.3" right="0.4" top="0.01562500" bottom="0.60937500"/>
+								</Texture>
+							</Layer>
+							<Layer level="BACKGROUND">
+								<Texture setAllPoints="true">  <!-- bar fill background -->
+									<Color r="0" g="0" b="0" a="0.5"/>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnShow>
+								if (not self.Text:IsSequence()) then
+									self:Hide();
+								end
+							</OnShow>
+							<OnUpdate>
+								self.throttle = self.throttle + elapsed;
+								if self.throttle > 0.015 then
+									local value = self.Text:GetCurrentProgress();
+									local modifiedValue = value or 1;
+									self:SetValue(modifiedValue);
+									if self.Text:GetNumRemaining() > 1 then
+										self:SetAlpha(1);
+									else 
+										self:SetAlpha(1 - (modifiedValue)^8);
+									end
+									if not value then
+										self:Hide();
+									end
+									self.throttle = 0;
+								end
+							</OnUpdate>
+							<OnLoad>
+								self.throttle = 0;
+								self.Text = self:GetParent().TextFrame.Text;
+								self:SetStatusBarTexture(1, 1, 1, "BORDER", -1);
+								self:GetStatusBarTexture():SetGradient("VERTICAL", 8/255, 93/255, 72/255, 11/255, 136/255, 105/255);
+								self:SetStatusBarColor(1, 0.8, 0);
+								self:SetMinMaxValues(0, 1);
+								self:SetFrameLevel(self:GetFrameLevel() - 1)
+							</OnLoad>
+						</Scripts>
+					</StatusBar>
+					<StatusBar parentKey="ReputationBar" hidden="true">
 						<Size x="230" y="14"/>
 						<Anchors>
 							<Anchor point="TOPLEFT" x="32" y="0"/>

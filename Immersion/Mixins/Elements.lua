@@ -86,6 +86,16 @@ function Elements:UpdateBoundaries()
 	return self:AdjustToChildren()
 end
 
+function Elements:Reset()
+	for _, frame in pairs(self.Active) do
+		frame:Hide()
+	end
+	wipe(self.Active)
+	self:Hide()
+	self.Content:Hide()
+	self.Progress:Hide()
+end
+
 ----------------------------------
 -- Quest elements display
 ----------------------------------
@@ -205,7 +215,6 @@ function Elements:ShowSpecialObjectives()
 	end
 end
 
-function Elements:ShowSpacer() return self.Content.SpacerFrame end
 function Elements:ShowObjectivesHeader() return self.Content.ObjectivesHeader end
 
 function Elements:ShowObjectivesText()
@@ -248,7 +257,7 @@ end
 ----------------------------------
 function Elements:ShowRewards()
 	local elements = self
-	local self = self.Content.RewardsFrame
+	local self = self.Content.RewardsFrame -- more convenient this way
 	local rewardButtons = self.Buttons
 	local 	numQuestRewards, numQuestChoices, numQuestCurrencies,
 			money,
@@ -673,7 +682,7 @@ function Elements:AcceptQuest()
 			AcceptQuest()
 		end
 	end
-	PlaySound(PlaySoundKitID and 'igQuestListOpen' or SOUNDKIT.IG_QUEST_LIST_OPEN)
+	PlaySound(SOUNDKIT.IG_QUEST_LIST_OPEN)
 end
 
 function Elements:ShowProgress(material)
@@ -781,7 +790,6 @@ TEMPLATE.QUEST_DETAIL = { chooseItems = nil, contentWidth = 507,
 		Elements.ShowGroupSize, 0, -10,
 		Elements.ShowRewards, 0, -15,
 		Elements.ShowSeal, 0, 0,
-		Elements.ShowSpacer, 0, 0,
 	}
 }
 
@@ -789,6 +797,5 @@ TEMPLATE.QUEST_REWARD = { chooseItems = true, contentWidth = 507,
 	canHaveSealMaterial = nil, sealXOffset = 300, sealYOffset = -6,
 	elements = {
 		Elements.ShowRewards, 0, -10,
-		Elements.ShowSpacer, 0, 0,
 	}
 }

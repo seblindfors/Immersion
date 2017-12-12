@@ -1,11 +1,11 @@
 local Button, _, L = {}, ...
 L.ButtonMixin = Button
 
-function Button:OnClick(button, down)
+function Button:OnClick()
 	local func = self[self.type]
 	if func then
 		func(self)
-		PlaySound(PlaySoundKitID and 'igQuestListSelect' or SOUNDKIT.IG_QUEST_LIST_SELECT)
+		PlaySound(SOUNDKIT.IG_QUEST_LIST_SELECT)
 	end
 end
 
@@ -28,16 +28,20 @@ end
 
 function Button:OnDragStart(button)
 	if not L('titlelock') then
+		self.Container:SetClampedToScreen(true)
 		self.Container:StartMoving()
 	end
 end
 
 function Button:OnMouseWheel(delta)
+	self.Container:SetClampedToScreen(false)
 	self.Container:OnScroll(delta)
 end
 
 function Button:OnDragStop()
-	self.Container:StopMoving()
+	if not L('titlelock') then
+		self.Container:StopMoving()
+	end
 end
 
 function Button:OnHide()

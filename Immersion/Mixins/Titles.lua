@@ -62,7 +62,7 @@ function Titles:OnUpdateOffset()
 			self:SetScript('OnUpdate', nil)
 		end
 	else
-		self:SetPoint(anchor, relativeRegion, relativeKey, x, offset + (ANI_DIVISOR > 0 and (diff / ANI_DIVISOR) or 0))
+		self:SetPoint(anchor, relativeRegion, relativeKey, x, offset + (ANI_DIVISOR > 1 and (diff / ANI_DIVISOR) or 0))
 	end
 end
 
@@ -114,6 +114,7 @@ function Titles:OnHide()
 		button:UnlockHighlight()
 		button:Hide()
 	end
+	wipe(self.Active)
 	self.numActive = 0
 	self.idx = 1
 end
@@ -136,10 +137,12 @@ end
 
 function Titles:UpdateActive()
 	local newHeight, numActive = 0, 0
+	wipe(self.Active)
 	for i, button in pairs(self.Buttons) do
-		if button:IsVisible() then
+		if button:IsShown() then
 			newHeight = newHeight + button:GetHeight()
 			numActive = numActive + 1
+			self.Active[i] = button
 		end
 	end
 	ANI_DIVISOR = L('anidivisor')
@@ -147,6 +150,9 @@ function Titles:UpdateActive()
 	self.numActive = numActive
 	self:ResetPosition()
 	self:AdjustHeight(newHeight)
+	if self.SetFocus then
+		self:SetFocus(1)
+	end
 end
 
 ----------------------------------

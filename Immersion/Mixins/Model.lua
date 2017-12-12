@@ -47,8 +47,8 @@ end
 -- Calculate state and remaining time
 ----------------------------------
 function Model:SetRemainingTime(start, remaining)
-	self.timestamp = start
-	self.delay = remaining
+	self.timestamp = start or GetTime()
+	self.delay = remaining or 0
 end
 
 function Model:GetRemainingTime(start, remaining)

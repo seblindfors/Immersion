@@ -29,7 +29,7 @@ L.ScalerMixin = {
 	OnEnter = function(self)
 		self:ScaleTo(self.enterScale or 1.1)
 		if self.Hilite then
-			L.UIFrameFadeIn(self.Hilite, 0.35, self.Hilite:GetAlpha(), 1)
+			L.UIFrameFadeIn(self.Hilite, 0.2, self.Hilite:GetAlpha(), 1)
 		end
 	end,
 	OnLeave = function(self)
