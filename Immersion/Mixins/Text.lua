@@ -51,8 +51,9 @@ end
 function Text:AddString(str, strings, delays)
 	local length, delay, force = str:len(), 0
 	if length > MAX_UNTIL_SPLIT then
-		local new = str -- substitute natural breaks with newline.
-			:gsub('%.%s+', '.\n') -- sentence
+        local new = str -- substitute natural breaks with newline.
+            :gsub('%.%s%.%s%.', '...') --- fix spaced ellipses
+            :gsub('%.%s+', '.\n') -- sentence
 			:gsub('%.%.%.\n', '...\n...') -- ponder
 			:gsub('%!%s+', '!\n'):gsub('%?%s+', '?\n') -- question/exclamation.
 		--[[ If the string is unchanged, this will recurse infinitely, therefore
