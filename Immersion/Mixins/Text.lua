@@ -1,6 +1,5 @@
 local _, L = ...
-local Timer = CreateFrame('Frame')
-local GetTime = GetTime
+local Timer, GetTime = CreateFrame('Frame'), GetTime
 
 -- Borrowed fixes from Storyline :)
 local LINE_FEED_REPLACE, LINE_BREAK_REPLACE
@@ -31,12 +30,22 @@ function Text:SetText(text)
 	end
 end
 
-function Text:ReplaceLinebreaks(text)
+function Text:ReplaceLinefeed(text)
 	return text:gsub(LINE_FEED_REPLACE, '\n'):gsub(LINE_BREAK_REPLACE, '\n')
 end
 
+function Text:ReplaceNatural(str)
+	local new = str -- substitute natural breaks with newline.
+	:gsub('%.%s%.%s%.', '...') 		-- ponder special case
+	:gsub('%.%s+', '.\n') 			-- sentence
+	:gsub('%.%.%.\n', '...\n...') 	-- ponder
+	:gsub('%!%s+', '!\n')			-- exclamation
+	:gsub('%?%s+', '?\n') 			-- question
+	return new, (new == str)
+end
+
 function Text:GenerateSpeech(text)
-	text = self:ReplaceLinebreaks(text)
+	text = self:ReplaceLinefeed(text)
 	local timeToFinish, strings, delays = 0, {}, {}
 	for _, paragraph in ipairs({strsplit('\n', text)}) do
 		timeToFinish = timeToFinish + self:AddString(paragraph, strings, delays)
@@ -49,25 +58,20 @@ function Text:CalculateDelay(length)
 end
 
 function Text:AddString(str, strings, delays)
-	local length, delay, force = str:len(), 0
+	local length, delay, new, forceShow = str:len(), 0
 	if length > MAX_UNTIL_SPLIT then
-		local new = str -- substitute natural breaks with newline.
-			:gsub('%.%s+', '.\n') -- sentence
-			:gsub('%.%.%.\n', '...\n...') -- ponder
-			:gsub('%!%s+', '!\n'):gsub('%?%s+', '?\n') -- question/exclamation.
+		new, forceShow = self:ReplaceNatural(str)
 		--[[ If the string is unchanged, this will recurse infinitely, therefore
 			force the long string to be shown. This safeguard is probably meaningless,
 			as it requires 200+ chars without any punctuation. ]]
-		if ( new == str ) then
-			force = true
-		else -- recursively split the altered string
+		if not forceShow then -- recursively split the altered string
 			for _, sentence in ipairs({strsplit('\n', new)}) do
 				delay = delay + self:AddString(sentence, strings, delays)
 			end
 			return delay
 		end
 	end
-	if ( length ~= 0 or force ) then
+	if ( length ~= 0 or forceShow ) then
 		delay = self:CalculateDelay(length)
 		delays[ #strings + 1] = delay
 		strings[ #strings + 1 ] = str
@@ -214,6 +218,7 @@ function Text:SetFormattedText(format, ...)
 	self:ApplyFontObjects()
 end
 
+-- Timer handle
 function Timer:AddText(fontString)
 	if fontString then
 		self.Texts[fontString] = true

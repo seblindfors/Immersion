@@ -29,7 +29,7 @@ end
 
 function L.HideFrame(frame)
 	frame:UnregisterAllEvents()
-	frame:SetSize(0, 0)
+	frame:SetSize(1, 1)
 	frame:EnableMouse(false)
 	frame:EnableKeyboard(false)
 	frame:SetAlpha(0)
