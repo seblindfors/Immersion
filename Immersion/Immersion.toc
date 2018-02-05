@@ -1,7 +1,7 @@
 ## Interface: 70300
 ## Title: Immersion
 ## Notes: Immersive replacement for quest & gossip
-## Version: 0.5.4
+## Version: 0.6.0
 ## Author: Sebastian Lindfors
 ## SavedVariables: ImmersionSetup
 ## OptionalDeps: ConsolePort
@@ -14,7 +14,6 @@ Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
-Libs\Animation.lua
 
 # Extra stuff & config
 Extras.lua
@@ -32,11 +31,13 @@ Mixins\Button.lua
 Mixins\Tooltip.lua
 Mixins\Elements.lua
 
-# Display layer
-Frame.xml
-Frame.lua
+# Display
+Display\Animation.lua
+Display\Frame.xml
+Display\Onload.lua
+Display\Fademgr.lua
 
-# Logic layer
-Logic.lua
-Events.lua
-Controller.lua
+# Logic
+Logic\Logic.lua
+Logic\Events.lua
+Logic\Controller.lua

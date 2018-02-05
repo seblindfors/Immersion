@@ -5,6 +5,7 @@ local _, L = ...
 L.compat = {
 ----------------------------------
 	['ConsolePort'] = function(self)
+		L.ToggleIgnoreFrame(ConsolePortCursor, true)
 		L.ToggleIgnoreFrame(ConsolePortMouseHandle, true)
 		L.ToggleIgnoreFrame(ConsolePortUIHandle.HintBar, true)
 

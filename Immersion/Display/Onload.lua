@@ -1,9 +1,3 @@
-----------------------------------
--- These are things that
--- are more easily handled in Lua
--- than XML, but have to do with
--- the initial setup.
-----------------------------------
 local _, L = ...
 local frame = _G[ _ .. 'Frame' ]
 local talkbox = frame.TalkBox
@@ -19,6 +13,14 @@ L.frame = frame
 -- but propagate the event otherwise.
 ----------------------------------
 frame:SetPropagateKeyboardInput(true)
+
+----------------------------------
+-- In the case of hide UI option,
+-- frames needs to ignore the
+-- alpha change of UIParent.
+----------------------------------
+frame:SetIgnoreParentAlpha(true)
+inspector:SetIgnoreParentAlpha(true)
 
 ----------------------------------
 -- Register events for main frame
@@ -283,131 +285,6 @@ talkbox:SetClampedToScreen(true)
 
 titles:SetMovable(true)
 titles:SetUserPlaced(false)
-
-----------------------------------
--- Animation things
-----------------------------------
-local ignoreFrames = {
-	[frame] = true,
-	[talkbox] = true,
-	[inspector] = true,
-	[GameTooltip] = true,
-	[StaticPopup1] = true,
-	[StaticPopup2] = true,
-	[StaticPopup3] = true,
-	[StaticPopup4] = true,
-	[SubZoneTextFrame] = true,
-	[OverrideActionBar] = true,
-	[ShoppingTooltip1] = true,
-	[ShoppingTooltip2] = true,
-}
-
-local hideFrames = {
-	[Minimap] = true,
-	[MinimapCluster] = true,
-}
-
-function L.ToggleIgnoreFrame(frame, ignore)
-	ignoreFrames[frame] = ignore
-end
-
-local function GetFadeFrames()
-	local frames = {}
-	for i, child in pairs({UIParent:GetChildren()}) do
-		if not child:IsForbidden() and not ignoreFrames[child] then
-			frames[child] = {
-				origAlpha = child.fadeInfo and child.fadeInfo.endAlpha or child:GetAlpha(),
-				throttle = 0,
-			}
-		end
-	end
-	return frames
-end
-
-frame.FadeIns = {
-	talkbox.MainFrame.InAnim,
-	talkbox.NameFrame.FadeIn,
---	talkbox.TextFrame.FadeIn,
-	talkbox.PortraitFrame.FadeIn,
-}
-
-function frame:FadeIn(fadeTime, playAnimations, ignoreFrameFade)
-	self.fadeState = 'in'
-	L.UIFrameFadeIn(self, fadeTime or 0.2, self:GetAlpha(), 1)
-	if ( playAnimations ) and ( self.timeStamp ~= GetTime() ) then
-		for _, animation in pairs(self.FadeIns) do
-			animation:Play()
-		end
-	end
-	if not ignoreFrameFade and L('hideui') and not self.fadeFrames then
-		local frames = GetFadeFrames()
-		for frame in pairs(frames) do
-			L.UIFrameFadeOut(frame, fadeTime or 0.2, frame:GetAlpha(), 0, hideFrames[frame] and {
-				finishedFunc = frame.Hide,
-				finishedArg1 = frame,
-			})
-		end
-		self.fadeFrames = frames
-
-		-- Track hidden frames and fade them back in if moused over.
-		local time = 0
-		self:SetScript('OnUpdate', function(self, elapsed)
-			time = time + elapsed
-			if time > 0.5 then
-				if self.fadeFrames then
-					for frame, info in pairs(self.fadeFrames) do
-						if frame:IsMouseOver() and frame:IsMouseEnabled() then
-							if hideFrames[frame] then
-								frame:Show()
-							end
-							L.UIFrameFadeIn(frame, 0.2, frame:GetAlpha(), info.origAlpha)
-							info.throttle = 0
-						elseif frame:GetAlpha() > 0.1 then
-							-- If this frame keeps fading back in then something else is
-							-- affecting the alpha change. Stop manipulating the alpha value
-							-- of the frame and remove it from the table.
-							info.throttle = info.throttle + 1
-							if info.throttle > 2 then
-								self.fadeFrames[frame] = nil
-								L.ToggleIgnoreFrame(frame, true)
-								L.UIFrameStopFading(frame)
-							else
-								L.UIFrameFadeOut(frame, 0.2, frame:GetAlpha(), 0, hideFrames[frame] and {
-									finishedFunc = frame.Hide,
-									finishedArg1 = frame,
-								}) 
-							end
-						end
-					end
-				else
-					self:SetScript('OnUpdate', nil)
-				end
-				time = 0
-			end
-		end)
-	end
-end
-
-function frame:RestoreFadedFrames()
-	if self.fadeFrames then
-		for frame, info in pairs(self.fadeFrames) do
-			if hideFrames[frame] then
-				frame:Show()
-			end
-			L.UIFrameFadeIn(frame, 0.5, frame:GetAlpha(), info.origAlpha)
-		end
-		self.fadeFrames = nil
-	end
-end
-
-function frame:FadeOut(fadeTime, ignoreOnTheFly)
-	self.fadeState = 'out'
-	L.UIFrameFadeOut(self, fadeTime or 1, self:GetAlpha(), 0, {
-		finishedFunc = self.Hide,
-		finishedArg1 = self,
-	})
-	self:RestoreFadedFrames()
-end
 
 --------------------------------
 -- Anchor the real talking head to the fake talking head,

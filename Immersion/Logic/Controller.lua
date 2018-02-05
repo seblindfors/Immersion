@@ -126,20 +126,20 @@ local ControllerInput = {
 -------------------------------------------------
 	[KEY.UP] = function(self)
 		self.TitleButtons:SetPrevious()
-	end,
+	end;
 	[KEY.DOWN] = function(self)
 		self.TitleButtons:SetNext()
-	end,
+	end;
 	[KEY.LEFT] = function(self)
 		if self.isInspecting then
 			self.Inspector:SetPrevious()
 		end
-	end,
+	end;
 	[KEY.RIGHT] = function(self)
 		if self.isInspecting then
 			self.Inspector:SetNext()
 		end
-	end,
+	end;
 	[KEY.SQUARE] = function(self)
 		local text = self.TalkBox.TextFrame.Text
 		if text:IsSequence() then
@@ -149,14 +149,14 @@ local ControllerInput = {
 				text:ForceNext()
 			end
 		end
-	end,
+	end;
 	[KEY.CIRCLE] = function(self)
 		if self.isInspecting then
 			self.Inspector:Hide()
 		elseif self.hasItems then
 			self:ShowItems()
 		end
-	end,
+	end;
 	[KEY.CROSS] = function(self)
 		-- Gossip/multiple quest choices
 		if self.TitleButtons:GetMaxIndex() > 0 then
@@ -180,21 +180,40 @@ local ControllerInput = {
 		elseif IsQuestCompletable() then
 			CompleteQuest()
 		end
-	end,
-	[KEY.TRIANGLE] = function(self) CloseGossip() CloseQuest() end,
-	[KEY.OPTIONS] = function(self) CloseGossip() CloseQuest() end,
-	[KEY.CENTER] = function(self) CloseGossip() CloseQuest() end,
-	[KEY.SHARE] = function(self) CloseGossip() CloseQuest() end,
+	end;
+	[KEY.TRIANGLE] = function(self) CloseGossip() CloseQuest() end;
+	[KEY.OPTIONS] = function(self) CloseGossip() CloseQuest() end;
+	[KEY.CENTER] = function(self) CloseGossip() CloseQuest() end;
+	[KEY.SHARE] = function(self) CloseGossip() CloseQuest() end;
 -------------------------------------------------
 } -----------------------------------------------
 -------------------------------------------------
 
+-- HACK: count popups for gossip edge case.
+local popupCounter = 0
+do
+	local function PopupFixOnShow() popupCounter = popupCounter + 1 end
+	local function PopupFixOnHide() popupCounter = popupCounter - 1 end
+	for i=1, 4 do
+		_G['StaticPopup'..i]:HookScript('OnShow', PopupFixOnShow)
+		_G['StaticPopup'..i]:HookScript('OnHide', PopupFixOnHide)
+	end
+end
+
 function NPC:ParseControllerCommand(button)
-	if controllerInterrupt then 
+	if controllerInterrupt then
+		-- Handle edge case when CP cursor should precede Immersion input,
+		-- specifically popups caused by pressing certain gossip options.
+		if ( popupCounter > 0 ) and not ConsolePort:GetData()('disableUI') then
+			return false
+		end
+		-- Handle case when the inspect binding or M1 is pressed,
+		-- in which case it should show the item inspector.
 		if button:match(L('inspect')) or button:match('SHIFT') then
 			self.Inspector:ShowFocusedTooltip(true)
 			return true
 		end
+		-- Handle every other case of possible controller inputs.
 		local keyID = ConsolePort:GetUIControlKey(GetBindingAction(button))
 		local func = keyID and ControllerInput[keyID]
 		if func then
