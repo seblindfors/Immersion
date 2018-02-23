@@ -126,30 +126,12 @@ function NPC:IsSpeechFinished()
 	return self.TalkBox.TextFrame.Text:IsFinished()
 end
 
-function NPC:IsGossipOnTheFly()
-	if L('onthefly') then
-		-- don't allow on-the-fly when there are
-		-- still gossip/greeting options to choose
-		if	GetNumGossipAvailableQuests() + 
-			GetNumGossipActiveQuests() +
-			GetNumGossipOptions() +
-			GetNumActiveQuests() +
-			GetNumAvailableQuests() > 0 then return end
-		-- confirm the talkbox and remaining dialogue
-		-- is available for playback
-		return	( not self:IsSpeechFinished() ) and 
-				( self:GetRemainingSpeechTime() > 0 ) and
-				( self.lastEvent ~= 'QUEST_DETAIL' ) and
-				( not self:IsQuestAutoAccepted() );
-	end
-end
-
 function NPC:ResetElements(event)
 	-- Do not reset elements on this event,
 	-- because it fires on auto-accepted quests.
 	-- E.g. QUEST_DETAIL is immediately followed by
 	-- QUEST_ACCEPTED, closing the elements frame.
-	if ( event == 'QUEST_ACCEPTED' or event == 'GOSSIP_ONTHEFLY' ) then return end
+	if ( event == 'QUEST_ACCEPTED' ) then return end
 	
 	self.Inspector:Hide()
 	self.TalkBox.Elements:Reset()
@@ -174,6 +156,10 @@ function NPC:UpdateTalkingHead(title, text, npcType, explicitUnit)
 	talkBox.NameFrame.Name:SetText(title)
 	local textFrame = talkBox.TextFrame
 	textFrame.Text:SetText(text)
+	-- Add contents to toast.
+	if L('onthefly') then
+		ImmersionToast:Queue(title, text, npcType, unit)
+	end
 	if textFrame.Text:IsSequence() and L('showprogressbar') and not L('disableprogression') then
 		talkBox.ProgressionBar:Show()
 	end
@@ -201,6 +187,7 @@ function NPC:GetItemColumn(owner, id)
 		if not column then
 			column = CreateFrame('Frame', nil, owner)
 			column:SetSize(1, 1) -- set size to make sure children are drawn
+			column:SetScript('OnHide', function(self) self.lastItem = nil end)
 			column:SetFrameStrata("FULLSCREEN_DIALOG")
 			L.Mixin(column, L.AdjustToChildren)
 			columns[id] = column
@@ -365,8 +352,6 @@ local inputs = {
 			SelectGossipOption(1)
 		elseif (self.lastEvent == 'GOSSIP_SHOW' or self.lastEvent == 'QUEST_GREETING') and numActive > 1 then
 			self:SelectBestOption()
-		elseif (self.lastEvent == 'GOSSIP_ONTHEFLY') then
-			self:FadeOut(0.5, true)
 		else
 			self.TalkBox:OnLeftClick()
 		end
@@ -558,8 +543,6 @@ function TalkBox:OnLeftClick()
 		else
 			CloseItemText()
 		end
-	elseif self.lastEvent == 'GOSSIP_ONTHEFLY' then
-		ImmersionFrame:FadeOut(0.5, true)
 	-- Progress quest to completion
 	elseif self.lastEvent == 'QUEST_PROGRESS' then
 		if IsQuestCompletable() then

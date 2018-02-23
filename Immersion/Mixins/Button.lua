@@ -4,6 +4,7 @@ L.ButtonMixin = Button
 function Button:OnClick()
 	local func = self[self.type]
 	if func then
+		L.ClickedTitleCache = {text = self:GetText(); icon = self.Icon:GetTexture()}
 		func(self)
 		PlaySound(SOUNDKIT.IG_QUEST_LIST_SELECT)
 	end

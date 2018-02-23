@@ -148,14 +148,6 @@ L.options = {
 							get = L.GetFromSV,
 							set = function(_, val) L.cfg.disableprogression = val end,
 						},
-						onthefly = {
-							type = 'toggle',
-							name = L["On the fly"],
-							desc = L["The quest/gossip text doesn't vanish when you stop interacting with the NPC or when accepting a new quest. Instead, it vanishes at the end of the text sequence. This allows you to maintain your immersive experience when speed leveling."],
-							order = 3,
-							get = L.GetFromSV,
-							set = function(_, val) L.cfg.onthefly = val end,
-						},
 						showprogressbar = {
 							type = 'toggle',
 							name = L['Show text progress bar'],
@@ -228,13 +220,52 @@ L.options = {
 								L.ToggleIgnoreFrame(ObjectiveTrackerFrame, not val)
 							end,
 						},
+						hidetooltip = {
+							type = 'toggle',
+							name = L['Hide tooltip'],
+							disabled = function() return not L('hideui') end,
+							order = 1,
+							get = L.GetFromSV,
+							set = function(_, val)
+								L.cfg.hidetooltip = val
+							end,
+						},
+					},
+				},
+				ontheflybox = {
+					type = 'group',
+					name = SHOW_TOAST_WINDOW_TEXT,
+					inline = true,
+					order = 3,
+					args = {
+						onthefly = {
+							type = 'toggle',
+							name = VIDEO_OPTIONS_ENABLED,
+							order = 0,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.onthefly = val end,
+						},
+						ontheflyalways = {
+							type = 'toggle',
+							name = ALWAYS,
+							order = 1,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.ontheflyalways = val end,
+							disabled = function() return not L('onthefly') end,
+						},
+						ontheflydesc = {
+							type = 'description',
+							fontSize = 'medium',
+							order = 2,
+							name = L["The quest/gossip text doesn't vanish when you stop interacting with the NPC or when accepting a new quest. Instead, it vanishes at the end of the text sequence. This allows you to maintain your immersive experience when speed leveling."],
+						},
 					},
 				},
 				talkinghead = {
 					type = 'group',
 					name = L['Hook talking head'],
 					inline = true,
-					order = 3,
+					order = 4,
 					args = {
 						movetalkinghead = {
 							type = 'toggle',

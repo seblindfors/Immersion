@@ -24,7 +24,7 @@ end
 local __cacheAlphaIgnored = {}
 local __staticAlphaIgnored = {
 	[AlertFrame]		= true,
-	[GameTooltip] 		= true,
+	[DressUpFrame]		= true,
 	[LevelUpDisplay] 	= true,
 	[StaticPopup1] 		= true,
 	[StaticPopup2] 		= true,
@@ -130,6 +130,21 @@ function frame:FadeOut(fadeTime, ignoreOnTheFly)
 	RestoreFadedFrames(self)
 end
 
-function frame:TestFadeOut()
-	FadeOut(self, 1, self:GetAlpha(), 0)
+----------------------------------
+-- Handle GameTooltip special case
+----------------------------------
+-- If the option to hide UI and to hide tooltip are ticked,
+-- user still needs to see the tooltip on an item or reward.
+do 	local function GameTooltipAlphaHandler(self)
+		if L('hideui') then
+			if L('hidetooltip') then
+				self:SetIgnoreParentAlpha(not self:IsOwned(UIParent))
+			else
+				self:SetIgnoreParentAlpha(true)
+			end
+		end
+	end
+
+	GameTooltip:HookScript('OnTooltipSetDefaultAnchor', GameTooltipAlphaHandler)
+	GameTooltip:HookScript('OnTooltipSetItem', GameTooltipAlphaHandler)
 end

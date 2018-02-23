@@ -8,8 +8,8 @@ do  local LINE_FEED, CARRIAGE_RETURN = string.char(10), string.char(13)
 	LINE_BREAK_REPLACE = LINE_FEED .. CARRIAGE_RETURN .. LINE_FEED
 end
 
-local DELAY_DIVISOR -- set later as baseline divisor for (text length / time).
-local DELAY_PADDING = 2 -- static padding, feels more natural with a pause to breathe.
+local TEXT_TIME_DIVISOR -- set later as baseline divisor for (text length / time).
+local TEXT_TIME_PADDING = 2 -- static padding, feels more natural with a pause to breathe.
 local MAX_UNTIL_SPLIT = 200 -- start recursive string splitting if the text is too long.
 
 Timer.Texts = {}
@@ -17,16 +17,19 @@ L.TextMixin = {}
 
 local Text = L.TextMixin
 
+----------------------------------
+-- Text: manage text input
+----------------------------------
 function Text:SetText(text)
-	DELAY_DIVISOR = L('delaydivisor')
-	self:StopTexts()
+	TEXT_TIME_DIVISOR = L('delaydivisor')
+	self:PreparePlayback()
 	self.storedText = text
 	if text then
-		local timeToFinish, strings, delays = self:GenerateSpeech(text)
+		local timeToFinish, strings, timers = self:CreateLineData(text)
 		self.numTexts = #strings
 		self.timeToFinish = timeToFinish
 		self.timeStarted = GetTime()
-		self:QueueTexts(strings, delays)
+		self:QueueTexts(strings, timers)
 	end
 end
 
@@ -44,21 +47,21 @@ function Text:ReplaceNatural(str)
 	return new, (new == str)
 end
 
-function Text:GenerateSpeech(text)
+function Text:CreateLineData(text)
 	text = self:ReplaceLinefeed(text)
-	local timeToFinish, strings, delays = 0, {}, {}
+	local timeToFinish, strings, timers = 0, {}, {}
 	for _, paragraph in ipairs({strsplit('\n', text)}) do
-		timeToFinish = timeToFinish + self:AddString(paragraph, strings, delays)
+		timeToFinish = timeToFinish + self:AddString(paragraph, strings, timers)
 	end
-	return timeToFinish, strings, delays
+	return timeToFinish, strings, timers
 end
 
-function Text:CalculateDelay(length)
-	return (length / (DELAY_DIVISOR or 15) ) + DELAY_PADDING
+function Text:CalculateLineTime(length)
+	return (length / (TEXT_TIME_DIVISOR or 15) ) + TEXT_TIME_PADDING
 end
 
-function Text:AddString(str, strings, delays)
-	local length, delay, new, forceShow = str:len(), 0
+function Text:AddString(str, strings, timers)
+	local length, timer, new, forceShow = str:len(), 0
 	if length > MAX_UNTIL_SPLIT then
 		new, forceShow = self:ReplaceNatural(str)
 		--[[ If the string is unchanged, this will recurse infinitely, therefore
@@ -66,25 +69,57 @@ function Text:AddString(str, strings, delays)
 			as it requires 200+ chars without any punctuation. ]]
 		if not forceShow then -- recursively split the altered string
 			for _, sentence in ipairs({strsplit('\n', new)}) do
-				delay = delay + self:AddString(sentence, strings, delays)
+				timer = timer + self:AddString(sentence, strings, timers)
 			end
-			return delay
+			return timer
 		end
 	end
 	if ( length ~= 0 or forceShow ) then
-		delay = self:CalculateDelay(length)
-		delays[ #strings + 1] = delay
+		timer = self:CalculateLineTime(length)
+		timers[ #strings + 1] = timer
 		strings[ #strings + 1 ] = str
 	end
-	return delay
+	return timer
 end
 
-function Text:QueueTexts(strings, delays)
+
+----------------------------------
+-- Text: playback
+----------------------------------
+function Text:QueueTexts(strings, timers)
 	assert(strings, 'No strings added to object '.. ( self:GetName() or '<unnamed fontString>' ) )
-	assert(delays, 'No delays added to object '.. ( self:GetName() or '<unnamed fontString>' ) )
+	assert(timers, 'No timers added to object '.. ( self:GetName() or '<unnamed fontString>' ) )
 	self.strings = strings
-	self.delays = delays
+	self.timers = timers
 	Timer:AddText(self)
+end
+
+function Text:ForceNext()
+	if self:HasLineData() then
+		local _, remainingLineTime = self:RemoveLine()
+		self.timeToFinish = self.timeToFinish - remainingLineTime
+		if self:HasLine() then
+			self:SetToCurrentLine()
+		else
+			self:PauseTimer()
+			self:RepeatTexts()
+		end
+		if not self:HasFollowup() then
+			self:OnFinished()
+		end
+	end
+end
+
+function Text:SetToCurrentLine()
+	self:DisplayLine(self:GetLine())
+end
+
+function Text:SetCurrentLineTime(time)
+	self.currentLineTime = time or 0
+end
+
+function Text:UpdateCurrentLineTime(delta)
+	self.timers[1] = self.timers[1] + delta
 end
 
 function Text:RepeatTexts()
@@ -93,18 +128,74 @@ function Text:RepeatTexts()
 	end
 end
 
-function Text:IsFinished()
-	return ( not self.strings )
+function Text:OnFinished()
+	self.strings = nil
+	self.timers = nil
 end
 
-function Text:IsSequence()
-	return ( self.numTexts and self.numTexts > 1 )
+function Text:PreparePlayback()
+	self.numTexts = nil
+	self:PauseTimer()
+	self:OnFinished()
+	self:DisplayLine()
 end
 
-function Text:GetNumRemaining()
-	return self.strings and #self.strings or 0
+function Text:ResumeTimer()
+	if self:HasLineData() then
+		Timer:AddText(self)
+		return true
+	end
 end
 
+function Text:PauseTimer()
+	Timer:RemoveText(self)
+end
+
+----------------------------------
+-- Text: display
+----------------------------------
+function Text:DisplayLine(text, time)
+	if not self:GetFont() then
+		self:CheckApplicableFonts()
+		self:SetFontObject(self.fontObjectsToTry[1])
+	end
+
+	getmetatable(self).__index.SetText(self, text)
+	self:SetCurrentLineTime(time)
+	self:ApplyFontObjects()
+
+	if self.OnDisplayLineCallback then
+		self:OnDisplayLineCallback(text, time)
+	end
+end
+
+function Text:SetFontObjectsToTry(...)
+	self.fontObjectsToTry = { ... }
+	if self:GetText() then
+		self:ApplyFontObjects()
+	end
+end
+
+function Text:ApplyFontObjects()
+	self:CheckApplicableFonts()
+
+	for i, fontObject in ipairs(self.fontObjectsToTry) do
+		self:SetFontObject(fontObject)
+		if not self:IsTruncated() then
+			break
+		end
+	end
+end
+
+function Text:CheckApplicableFonts()
+	if not self.fontObjectsToTry or not self.fontObjectsToTry[1] then
+		error('No fonts applied to TextMixin, call SetFontObjectsToTry first')
+	end
+end
+
+----------------------------------
+-- Text: state getters
+----------------------------------
 function Text:GetTimeRemaining()
 	if self.timeStarted and self.timeToFinish then
 		local difference = ( self.timeStarted + self.timeToFinish ) - GetTime()
@@ -114,8 +205,8 @@ function Text:GetTimeRemaining()
 end
 
 function Text:GetProgress()
-	local full = self.numTexts or 0
-	local remaining = self.strings and #self.strings or 0
+	local full = self:GetNumTexts()
+	local remaining = self:GetNumRemaining()
 	return ('%d/%d'):format(full - remaining + 1, full)
 end
 
@@ -128,97 +219,32 @@ function Text:GetProgressPercent()
 end
 
 function Text:GetCurrentProgress()
-	local delayCounter = self.delays and self.delays[1]
-	local fullDelay = self.currentDelay
-	if delayCounter and fullDelay and fullDelay > 0 then
-		return (1 - delayCounter / fullDelay)
+	local modifiedTime = self:GetModifiedTime()
+	local fullTime = self:GetOriginalTime()
+	if modifiedTime and fullTime and fullTime > 0 then
+		return (1 - modifiedTime / fullTime)
 	end
 end
 
-function Text:GetNumTexts() return self.numTexts or 0 end
+function Text:IsFinished() 		return not self.strings end
+function Text:IsSequence() 		return self.numTexts and self.numTexts > 1 end
+function Text:IsLineFinished() 	return self.timers[1] <= 0 end
+function Text:GetNumTexts() 	return self.numTexts or 0 end
+function Text:GetNumRemaining() return self.strings and #self.strings or 0 end
 
-function Text:OnFinished()
-	self.strings = nil
-	self.delays = nil
-end
+function Text:HasLineData() 	return self.strings and self.timers end
+function Text:HasLine() 		return self.strings and self.strings[1] and true end
+function Text:HasFollowup() 	return self.strings and self.strings[2] and true end
 
-function Text:ForceNext()
-	if self.delays and self.strings then
-		self.timeToFinish = self.timeToFinish - tremove(self.delays, 1)
-		tremove(self.strings, 1)
-		if self.strings[1] then
-			self:SetNext(self.strings[1], self.delays[1])
-		else
-			self:StopProgression()
-			self:RepeatTexts()
-		end
-		if not self.strings[2] then
-			self:OnFinished()
-		end
-	end
-end
+function Text:GetModifiedTime() return self.timers and self.timers[1] end
+function Text:GetOriginalTime()	return self.currentLineTime or 0 end
 
-function Text:StopProgression()
-	Timer:RemoveText(self)
-end
+function Text:GetLine() 		return self.strings[1], self.timers[1] end
+function Text:RemoveLine() 		return tremove(self.strings, 1), tremove(self.timers, 1) end
 
-function Text:StopTexts()
-	self.numTexts = nil
-	self:StopProgression()
-	self:OnFinished()
-	self:SetNext()
-end
-
-function Text:SetNext(text, currentDelay)
-	if not self:GetFont() then
-		if not self.fontObjectsToTry then
-			error('No fonts applied to TextMixin, call SetFontObjectsToTry first')
-		end
-		self:SetFontObject(self.fontObjectsToTry[1])
-	end
-
-	getmetatable(self).__index.SetText(self, text)
-	self:SetCurrentDelay(currentDelay)
-	self:ApplyFontObjects()
-end
-
-function Text:SetFontObjectsToTry(...)
-	self.fontObjectsToTry = { ... }
-	if self:GetText() then
-		self:ApplyFontObjects()
-	end
-end
-
-function Text:ApplyFontObjects()
-	if not self.fontObjectsToTry then
-		error('No fonts applied to TextMixin, call SetFontObjectsToTry first');
-	end
-
-	for i, fontObject in ipairs(self.fontObjectsToTry) do
-		self:SetFontObject(fontObject)
-		if not self:IsTruncated() then
-			break
-		end
-	end
-end
-
-function Text:SetCurrentDelay(delay)
-	self.currentDelay = delay or 0
-end
-
-function Text:SetFormattedText(format, ...)
-	if not self:GetFont() then
-		if not self.fontObjectsToTry then
-			error('No fonts applied to TextMixin, call SetFontObjectsToTry first')
-		end
-		self:SetFontObject(self.fontObjectsToTry[1])
-	end
-
-	getmetatable(self).__index.SetFormattedText(self, format, ...)
-	self:ApplyFontObjects()
-end
-
+----------------------------------
 -- Timer handle
+----------------------------------
 function Timer:AddText(fontString)
 	if fontString then
 		self.Texts[fontString] = true
@@ -245,20 +271,19 @@ end
 
 function Timer:OnUpdate(elapsed)
 	for text in self:GetTexts() do
-		if 	( text.strings and text.delays ) and
-		 	( next(text.strings) and next(text.delays) ) then
+		if text:HasLine() then
+			-- if there's no text displayed, display the current line.
 			if not text:GetText() then
-				text:SetNext(text.strings[1], text.delays[1])
+				text:SetToCurrentLine()
 			end
-			-- deduct elapsed time since update from current delay
-			text.delays[1] = text.delays[1] - elapsed
-			-- delay is below/equal to zero, move on to next line
-			if text.delays[1] <= 0 then
-				tremove(text.delays, 1)
-				tremove(text.strings, 1)
+			-- deduct elapsed time since update from current timer
+			text:UpdateCurrentLineTime(-elapsed)
+			-- timer is below/equal to zero, move on to next line
+			if text:IsLineFinished() then
+				text:RemoveLine()
 				-- check if there's another line waiting
-				if text.strings[1] then
-					text:SetNext(text.strings[1], text.delays[1])
+				if text:HasLine() then
+					text:SetToCurrentLine()
 				else
 					text:OnFinished()
 				end

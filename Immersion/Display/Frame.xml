@@ -308,6 +308,7 @@
 				</Frames>
 				<Scripts>
 					<OnLoad>
+						-- add tables for column frames, used when drawing qItems as tooltips
 						self.Choices.Columns = {};
 						self.Extras.Columns = {};
 						self.Active = {};
@@ -343,12 +344,12 @@
 						wipe(self.Active);
 
 						-- Reset columns
-						for _, column in pairs(self.Choices.Columns) do
+						for _, column in ipairs(self.Choices.Columns) do
 							column.lastItem = nil
 							column:SetSize(1, 1)
 							column:Hide()
 						end
-						for _, column in pairs(self.Extras.Columns) do
+						for _, column in ipairs(self.Extras.Columns) do
 							column.lastItem = nil
 							column:SetSize(1, 1)
 							column:Hide()
@@ -1103,75 +1104,216 @@
 		</Frames>
 	</Frame>
 
-	<Frame name="ImmersionToast" virtual="true">
+
+	<Button name="ImmersionToast" parent="UIParent" hidden="true" frameStrata="LOW" alpha="0">
 		<Size x="235" y="25"/>
-		<Layers>
-			<Layer level="ARTWORK">
-				<Texture parentKey="Background" hidden="false" alpha="1" atlas="Objective-Header" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="TOPLEFT" x="-29" y="14"/>
-					</Anchors>
-				</Texture>
-				<FontString parentKey="Text" inherits="GameFontNormalMed2" justifyH="LEFT">
-					<Size x="170" y="16"/>
-					<Anchors>
-						<Anchor point="LEFT" x="4" y="-1"/>
-					</Anchors>
-				</FontString>
-				<Texture parentKey="LineGlow" hidden="false" alpha="0" alphaMode="ADD" atlas="OBJFX_LineGlow" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Background" x="-50" y="18"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="SoftGlow" hidden="false" alpha="0" alphaMode="ADD" atlas="OBJFX_Glow" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.Background" relativePoint="LEFT" x="20" y="20"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="StarBurst" hidden="false" alpha="0" alphaMode="ADD" atlas="OBJFX_StarBurst" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.SoftGlow"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="LineSheen" hidden="false" alpha="0" alphaMode="ADD" atlas="OBJFX_LineBurst">
-					<Size x="60" y="15"/>
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.SoftGlow" x="0" y="-13"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-		</Layers>
+		<Anchors>
+			<Anchor point="LEFT" x="500" y="-100"/>
+		</Anchors>
+		<Frames>
+			<Frame parentKey="Header" setAllPoints="true" frameLevel="1">
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="IconBorder">
+							<Size x="88" y="88"/>
+							<Anchors>
+								<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" x="0" y="-20"/>
+							</Anchors>
+						</Texture>
+						<FontString parentKey="Title" inherits="GameFontNormalMed2" justifyH="LEFT">
+							<Size x="235" y="16"/>
+							<Anchors>
+								<Anchor point="LEFT" x="4" y="-1"/>
+							</Anchors>
+						</FontString>
+						<Texture parentKey="Background" hidden="false" alpha="1" atlas="Objective-Header" useAtlasSize="true">
+							<Anchors>
+								<Anchor point="TOPLEFT" x="-29" y="14"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="LineGlow" hidden="false" alpha="0" alphaMode="ADD" atlas="OBJFX_LineGlow" useAtlasSize="true">
+							<Anchors>
+								<Anchor point="LEFT" relativeKey="$parent.Background" x="-50" y="18"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="SoftGlow" hidden="false" alpha="0" alphaMode="ADD" atlas="OBJFX_Glow" useAtlasSize="true">
+							<Anchors>
+								<Anchor point="CENTER" relativeKey="$parent.Background" relativePoint="LEFT" x="20" y="20"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="StarBurst" hidden="false" alpha="0" alphaMode="ADD" atlas="OBJFX_StarBurst" useAtlasSize="true">
+							<Anchors>
+								<Anchor point="CENTER" relativeKey="$parent.SoftGlow"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="LineSheen" hidden="false" alpha="0" alphaMode="ADD" atlas="OBJFX_LineBurst">
+							<Size x="60" y="15"/>
+							<Anchors>
+								<Anchor point="CENTER" relativeKey="$parent.SoftGlow" x="0" y="-13"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+
+					<Layer level="OVERLAY">
+						<Texture parentKey="IconBorderSheen" alphaMode="ADD" alpha="0">
+							<Size x="88" y="88"/>
+							<Anchors>
+								<Anchor point="CENTER" relativeKey="$parent.IconBorder"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+
+					<Layer level="BACKGROUND" textureSubLevel="1" alpha="0">
+						<Texture parentKey="TextBackground" file="Interface\LevelUp\MinorTalents.blp">
+							<Anchors>
+								<Anchor point="TOPLEFT" x="-80" y="-22"/>
+								<Anchor point="TOPRIGHT" x="100" y="-22"/>
+							</Anchors>
+							<TexCoords left="0.011953125" right="0.808359375" bottom="0.6660" top="0.794921875"/>
+						</Texture>
+					</Layer>
+
+				</Layers>
+				<Animations>
+					<AnimationGroup parentKey="HeaderOpenAnim" setToFinalAlpha="true">
+						<Alpha childKey="IconBorderSheen" duration="0.15" order="1" fromAlpha="0" toAlpha="1"/>
+						<Alpha childKey="IconBorderSheen" startDelay="0.25" duration="1" order="1" fromAlpha="1" toAlpha="0"/>
+						<Rotation childKey="IconBorderSheen" smoothing="NONE" duration="0.4" order="1" degrees="-360"/>
+						<Alpha childKey="IconBorder" startDelay="0" duration="0" order="1" fromAlpha="0" toAlpha="0"/>
+						<Alpha childKey="IconBorder" startDelay="0.4" duration="0.15" order="1" fromAlpha="0" toAlpha="1"/>
+						<Alpha childKey="TextBackground" duration="0.15" order="1" fromAlpha="0" toAlpha="0.75"/>
+						<Alpha childKey="TextBackground" startDelay="0.25" duration="0.65" order="1" fromAlpha="0.75" toAlpha="0.5"/>
+						<Alpha childKey="Background" startDelay="0" duration="0" order="1" fromAlpha="0" toAlpha="0"/>
+						<Alpha childKey="Background" startDelay="0.25" duration="0.5" order="1" fromAlpha="0" toAlpha="1"/>
+						<Alpha childKey="LineGlow" duration="0.15" order="1" fromAlpha="0" toAlpha="1"/>
+						<Alpha childKey="LineGlow" startDelay="0.25" duration="0.65" order="1" fromAlpha="1" toAlpha="0"/>
+						<Scale childKey="LineGlow" duration="0.15" order="1" fromScaleX="0.1" fromScaleY="1.5" toScaleX="2" toScaleY="1.5">
+							<Origin point="CENTER">
+								<Offset x="-50" y="0"/>
+							</Origin>
+						</Scale>
+						<Translation childKey="LineGlow" duration="0.75" order="1" offsetX="50" offsetY="0"/>
+						<Alpha childKey="SoftGlow" duration="0.25" order="1" fromAlpha="0" toAlpha="1"/>
+						<Alpha childKey="SoftGlow" startDelay="0.25" duration="0.5" order="1" fromAlpha="1" toAlpha="0"/>
+						<Scale childKey="SoftGlow" duration="0.25" order="1" fromScaleX="0.5" fromScaleY="0.5" toScaleX="0.8" toScaleY="0.8"/>
+						<Alpha childKey="StarBurst" duration="0.25" order="1" fromAlpha="0" toAlpha="1"/>
+						<Alpha childKey="StarBurst" startDelay="0.25" duration="0.5" order="1" fromAlpha="1" toAlpha="0"/>
+						<Scale childKey="StarBurst" duration="0.25" order="1" fromScaleX="0.5" fromScaleY="0.5" toScaleX="1" toScaleY="1"/>
+						<Alpha childKey="LineSheen" startDelay="0.15" duration="0.5" order="1" fromAlpha="0" toAlpha="0.75"/>
+						<Alpha childKey="LineSheen" startDelay="0.75" duration="0.5" order="1" fromAlpha="0.75" toAlpha="0"/>
+						<Translation childKey="LineSheen" startDelay="0.15" duration="1.5" order="1" offsetX="250" offsetY="0"/>
+					</AnimationGroup>
+				</Animations>
+			</Frame>
+			<Frame parentKey="Content" setAllPoints="true" frameLevel="2">
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString parentKey="Subtitle" inherits="GameFontHighlightLarge" alpha="1" justifyH="LEFT" justifyV="TOP">
+							<Size x="280"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="0" y="-8"/>
+							</Anchors>
+							<Color r="1" g="1" b="1"/>
+						</FontString>
+						<FontString parentKey="Text" inherits="GameFontHighlightLarge" alpha="1" justifyH="LEFT" justifyV="TOP" mixin="ShrinkUntilTruncateFontStringMixin">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.Subtitle" relativePoint="BOTTOMLEFT" x="0" y="-3"/>
+								<Anchor point="TOPRIGHT" relativeKey="$parent.Subtitle" relativePoint="TOPRIGHT" x="0" y="-3"/>
+							</Anchors>
+							<Color r="1" g="1" b="1"/>
+						</FontString>
+						<Texture parentKey="ToastType">
+							<Size x="16" y="16"/>
+							<Anchors>
+								<Anchor point="TOPRIGHT" relativeKey="$parent.Text" relativePoint="TOPLEFT" x="-4" y="0"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="CacheType">
+							<Size x="16" y="16"/>
+							<Anchors>
+								<Anchor point="TOPRIGHT" relativeKey="$parent.Subtitle" relativePoint="TOPLEFT" x="-4" y="0"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+			</Frame>
+
+			<Button parentKey="CloseButton">
+				<Size x="30" y="30"/>
+				<Anchors>
+					<Anchor point="LEFT" relativeKey="$parent.Header.Title" relativePoint="RIGHT" x="0" y="4"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						self:GetParent():OnCloseButtonClicked();
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT");
+						GameTooltip:SetText(NEXT, nil, nil, nil, nil, true);
+						GameTooltip:Show();
+					</OnEnter>
+					<OnLeave function="GameTooltip_Hide"/>
+				</Scripts>
+				<NormalTexture file="Interface\Buttons\UI-LinkProfession-Up"/>
+				<PushedTexture file="Interface\Buttons\UI-LinkProfession-Down"/>
+				<HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
+			</Button>
+
+			<Button parentKey="QuestButton">
+				<Size x="30" y="30"/>
+				<Anchors>
+					<Anchor point="CENTER" relativeKey="$parent.Content.CacheType" x="0" y="-2"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						self:GetParent():OnQuestButtonClicked();
+					</OnClick>
+					<OnEnter>
+						self:GetParent():OnQuestButtonMouseover();
+					</OnEnter>
+					<OnLeave function="GameTooltip_Hide"/>
+				</Scripts>
+				<NormalTexture file="Interface\Buttons\AdventureGuideMicrobuttonAlert"/>
+				<PushedTexture file="Interface\Buttons\AdventureGuideMicrobuttonAlert"/>
+				<HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
+			</Button>
+		</Frames>
 		<Scripts>
 			<OnLoad>
+				self.PlayAnimations = function(self) self.Header.HeaderOpenAnim:Play(); end;
 				self.SetDurationMultiplier = function(self, multiplier)
-					for _, animation in ipairs({self.HeaderOpenAnim:GetAnimations()}) do
-						animation:SetDuration(animation:GetDuration() * multiplier)
+					for _, animation in ipairs({self.Header.HeaderOpenAnim:GetAnimations()}) do
+						animation:SetDuration(animation:GetDuration() * multiplier);
 					end
 				end
+
+				self.IconPool = CreateTexturePool(self, 'BACKGROUND');
+
+				-- Store on main for brevity in Lua
+				self.Text = self.Content.Text;
+				self.Subtitle = self.Content.Subtitle;
+				self.ToastType = self.Content.ToastType;
+				self.CacheType = self.Content.CacheType;
+				self.IconBorder = self.Header.IconBorder;
+
+				-- Set portrait frame textures (horizontally flipped "Artifacts-PerkRing-GoldMedal")
+				local iconBorder, iconBorderSheen = self.IconBorder, self.Header.IconBorderSheen;
+				local texture, _, _, left, right, top, bottom = GetAtlasInfo("Artifacts-PerkRing-GoldMedal");
+				iconBorder:SetTexture(texture);
+				iconBorder:SetTexCoord(right, left, top, bottom);
+				iconBorderSheen:SetTexture(texture);
+				iconBorderSheen:SetTexCoord(right, left, top, bottom);
+
+				-- Change the color slightly to fit the portrait
+				self.Header.Background:SetVertexColor(1, 0.8, 1);
+
+				self:SetHitRectInsets(-50, 0, -25, -25);
+				self:SetMovable(true);
+				self:RegisterForDrag('LeftButton');
+				self:SetScript('OnDragStart', self.StartMoving);
+				self:SetScript('OnDragStop', self.StopMovingOrSizing);
+				self:SetScript('OnHide', self.StopMovingOrSizing);
 			</OnLoad>
 		</Scripts>
-		<Animations>
-			<AnimationGroup parentKey="HeaderOpenAnim" setToFinalAlpha="true">
-				<Alpha childKey="Background" startDelay="0" duration="0" order="1" fromAlpha="0" toAlpha="0"/>
-				<Alpha childKey="Background" startDelay="0.25" duration="0.5" order="1" fromAlpha="0" toAlpha="1"/>
-				<Alpha childKey="LineGlow" duration="0.15" order="1" fromAlpha="0" toAlpha="1"/>
-				<Alpha childKey="LineGlow" startDelay="0.25" duration="0.65" order="1" fromAlpha="1" toAlpha="0"/>
-				<Scale childKey="LineGlow" duration="0.15" order="1" fromScaleX="0.1" fromScaleY="1.5" toScaleX="2" toScaleY="1.5">
-					<Origin point="CENTER">
-						<Offset x="-50" y="0"/>
-					</Origin>
-				</Scale>
-				<Translation childKey="LineGlow" duration="0.75" order="1" offsetX="50" offsetY="0"/>
-				<Alpha childKey="SoftGlow" duration="0.25" order="1" fromAlpha="0" toAlpha="1"/>
-				<Alpha childKey="SoftGlow" startDelay="0.25" duration="0.5" order="1" fromAlpha="1" toAlpha="0"/>
-				<Scale childKey="SoftGlow" duration="0.25" order="1" fromScaleX="0.5" fromScaleY="0.5" toScaleX="0.8" toScaleY="0.8"/>
-				<Alpha childKey="StarBurst" duration="0.25" order="1" fromAlpha="0" toAlpha="1"/>
-				<Alpha childKey="StarBurst" startDelay="0.25" duration="0.5" order="1" fromAlpha="1" toAlpha="0"/>
-				<Scale childKey="StarBurst" duration="0.25" order="1" fromScaleX="0.5" fromScaleY="0.5" toScaleX="1" toScaleY="1"/>
-				<Alpha childKey="LineSheen" startDelay="0.15" duration="0.5" order="1" fromAlpha="0" toAlpha="0.75"/>
-				<Alpha childKey="LineSheen" startDelay="0.75" duration="0.5" order="1" fromAlpha="0.75" toAlpha="0"/>
-				<Translation childKey="LineSheen" startDelay="0.15" duration="1.5" order="1" offsetX="250" offsetY="0"/>
-			</AnimationGroup>
-		</Animations>
-	</Frame>
+	</Button>
 </Ui>

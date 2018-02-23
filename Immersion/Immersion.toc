@@ -1,7 +1,7 @@
 ## Interface: 70300
 ## Title: Immersion
 ## Notes: Immersive replacement for quest & gossip
-## Version: 0.6.0
+## Version: 0.7.0
 ## Author: Sebastian Lindfors
 ## SavedVariables: ImmersionSetup
 ## OptionalDeps: ConsolePort
@@ -41,3 +41,4 @@ Display\Fademgr.lua
 Logic\Logic.lua
 Logic\Events.lua
 Logic\Controller.lua
+Logic\Toast.lua

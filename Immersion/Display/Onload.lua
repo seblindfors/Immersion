@@ -63,9 +63,9 @@ titles:RegisterUnitEvent('UNIT_QUEST_LOG_CHANGED', 'player')
 
 
 ----------------------------------
--- Load SavedVaribles and related shit
+-- Load SavedVaribles, config and compat
 ----------------------------------
-frame.ADDON_LOADED = function(self, name)
+function frame:ADDON_LOADED(name)
 	if name == _ then
 		local svref = _ .. 'Setup'
 		L.cfg = _G[svref] or L.GetDefaultConfig()
@@ -190,13 +190,11 @@ do
 end
 
 ----------------------------------
--- Set this point here
--- since the anchorpoint didn't
--- exist on load. XML sucks.
+-- Set point since the relative
+-- region didn't exist on load.
 ----------------------------------
 local name = talkbox.NameFrame.Name
 name:SetPoint('TOPLEFT', talkbox.PortraitFrame.Portrait, 'TOPRIGHT', 2, -19)
-
 
 ----------------------------------
 -- Model script, light
@@ -209,11 +207,12 @@ _Mixin(model, L.ModelMixin)
 -- Main text things
 ----------------------------------
 local text = talkbox.TextFrame.Text
-Mixin(text, L.TextMixin) -- see Text.lua
+Mixin(text, L.TextMixin) -- see Mixins\Text.lua
 -- Set array of fonts so the fontstring can be as big as possible without truncating the text
 text:SetFontObjectsToTry(SystemFont_Shadow_Large, SystemFont_Shadow_Med2, SystemFont_Shadow_Med1)
+
 -- Run a 'talk' animation on the portrait model whenever a new text is set
-hooksecurefunc(text, 'SetNext', function(self, text)
+function text:OnDisplayLineCallback(text)
 	local counter = talkbox.TextFrame.SpeechProgress
 	talkbox.TextFrame.FadeIn:Stop()
 	talkbox.TextFrame.FadeIn:Play()
@@ -226,7 +225,7 @@ hooksecurefunc(text, 'SetNext', function(self, text)
 			else
 				self:SetVertexColor(1, 1, 1)
 				if not L('disableanisequence') then
-					model:SetRemainingTime(GetTime(), ( self.delays and self.delays[1]))
+					model:SetRemainingTime(GetTime(), self:GetModifiedTime())
 					if model.asking and not self:IsSequence() then
 						model:Ask()
 					else
@@ -258,14 +257,15 @@ hooksecurefunc(text, 'SetNext', function(self, text)
 
 	if self:IsVisible() then
 		if L('disableprogression') then
-			self:StopProgression()
+			self:PauseTimer()
 		end
 	end
-end)
+end
 
-text.OnFinishedCallback = function(self)
-	if frame.lastEvent == 'GOSSIP_ONTHEFLY' then
-		frame:FadeOut()
+function text:OnFinishedCallback()
+	-- remove the last playback line, because the text played until completion.
+	if L('onthefly') and not L('ontheflyalways') then
+		ImmersionToast:PopLatest()
 	end
 end
 

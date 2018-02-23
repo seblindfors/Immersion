@@ -13,15 +13,7 @@ end
 function NPC:GOSSIP_CLOSED(...)
 	CloseGossip()
 	self:PlayOutro()
-	if self:IsGossipOnTheFly() and self.lastEvent == 'GOSSIP_SHOW' then
-		return self:OnEvent('GOSSIP_ONTHEFLY')
-	end
-end
-
-function NPC:GOSSIP_ONTHEFLY(...) -- not a real event, but treat it like one.
-	self.TalkBox:SetExtraOffset(0)
-	self:PlayIntro('GOSSIP_ONTHEFLY', true)
-	return 'GOSSIP_ONTHEFLY'
+	L.ClickedTitleCache = nil
 end
 
 function NPC:QUEST_GREETING(...)
@@ -51,12 +43,6 @@ function NPC:QUEST_COMPLETE(...)
 	self:UpdateTalkingHead(GetTitleText(), GetRewardText(), 'ActiveQuest')
 	self:AddQuestInfo('QUEST_REWARD')
 	self:AddHint('CROSS', COMPLETE_QUEST)
-end
-
-function NPC:QUEST_ACCEPTED(...)
-	if ( self:IsGossipOnTheFly() and self.lastEvent ~= 'QUEST_PROGRESS' ) then
-		return self:OnEvent('GOSSIP_ONTHEFLY')
-	end
 end
 
 function NPC:QUEST_FINISHED(...)
