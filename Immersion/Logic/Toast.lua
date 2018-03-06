@@ -42,9 +42,18 @@ function Toast:PopOrClose()
 	end
 end
 
-function Toast:PopLatest()
+function Toast:PopToastForText(text)
 	if self:IsObstructed() then
-		self:ReleaseIconForToast(tremove(playbackQueue, #playbackQueue))
+		for i, playbackItem in ipairs(playbackQueue) do
+			if playbackItem[2] == text then
+				self:ReleaseIconForToast(tremove(playbackQueue, i))
+				break
+			end
+		end
+		local cacheIndex = self:IsTextCached(text)
+		if cacheIndex then
+			tremove(textCache, cacheIndex)
+		end
 	end
 end
 
@@ -75,7 +84,7 @@ end
 function Toast:IsTextCached(text)
 	for i, cachedText in ipairs(textCache) do
 		if text == cachedText then
-			return true
+			return i
 		end
 	end
 end
@@ -150,11 +159,13 @@ function Toast:PauseAndHide(fadeTime)
 end
 
 function Toast:Play()
-	if Text:ResumeTimer() then
-		self:AttemptFadeIn()
-		self:PlayAnimations()
-	elseif playbackQueue[1] then
-		self:DisplayNextData()
+	if playbackQueue[1] then
+		if Text:ResumeTimer() then
+			self:AttemptFadeIn()
+			self:PlayAnimations()
+		else
+			self:DisplayNextData()
+		end
 	end
 end
 
@@ -282,7 +293,7 @@ function Text:OnDisplayLineCallback()
 
 	Toast.Subtitle:SetFontObject(currentFontObject)
 	Toast:AttemptFadeIn()
-	Toast:DisplayClickableQuest(playbackQueue[1][4])
+	Toast:DisplayClickableQuest(playbackQueue[1] and playbackQueue[1][4])
 
 	local numTotalLines = self:GetNumLines() + Toast.Subtitle:GetNumLines()
 	local _, fontSize = currentFontObject:GetFont()

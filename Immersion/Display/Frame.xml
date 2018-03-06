@@ -1178,7 +1178,7 @@
 					<AnimationGroup parentKey="HeaderOpenAnim" setToFinalAlpha="true">
 						<Alpha childKey="IconBorderSheen" duration="0.15" order="1" fromAlpha="0" toAlpha="1"/>
 						<Alpha childKey="IconBorderSheen" startDelay="0.25" duration="1" order="1" fromAlpha="1" toAlpha="0"/>
-						<Rotation childKey="IconBorderSheen" smoothing="NONE" duration="0.4" order="1" degrees="-360"/>
+						<Rotation childKey="IconBorderSheen" smoothing="OUT" duration="0.6" order="1" degrees="-360"/>
 						<Alpha childKey="IconBorder" startDelay="0" duration="0" order="1" fromAlpha="0" toAlpha="0"/>
 						<Alpha childKey="IconBorder" startDelay="0.4" duration="0.15" order="1" fromAlpha="0" toAlpha="1"/>
 						<Alpha childKey="TextBackground" duration="0.15" order="1" fromAlpha="0" toAlpha="0.75"/>

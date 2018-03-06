@@ -103,9 +103,11 @@ function Text:ForceNext()
 		else
 			self:PauseTimer()
 			self:RepeatTexts()
+			self:FlagForceFinished(true)
 		end
 		if not self:HasFollowup() then
 			self:OnFinished()
+			self:FlagForceFinished(true)
 		end
 	end
 end
@@ -133,8 +135,17 @@ function Text:OnFinished()
 	self.timers = nil
 end
 
+function Text:FlagForceFinished(state)
+	self.forceFinished = state
+end
+
+function Text:IsForceFinishedFlagged()
+	return self.forceFinished
+end
+
 function Text:PreparePlayback()
 	self.numTexts = nil
+	self:FlagForceFinished(false)
 	self:PauseTimer()
 	self:OnFinished()
 	self:DisplayLine()
