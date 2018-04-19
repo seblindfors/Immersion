@@ -58,7 +58,7 @@ function Toast:PopToastForText(text)
 end
 
 function Toast:PrepareNameAndIcon(unit)
-	self.ReleaseIconForToast(self.releaseToastOnHide)
+	self:ReleaseIconForToast(self.releaseToastOnHide)
 	local icon = self.IconPool:Acquire()
 	local name = unit and UnitName(unit) or ''
 

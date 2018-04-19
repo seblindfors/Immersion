@@ -1,5 +1,4 @@
-local _, L = ...
-L.locale = GetLocale()
+local _, L = ... L.locale = GetLocale()
 
 L["Behavior"] = "Behavior"
 L["Change the placement and scale of your dialogue options."] = "Change the placement and scale of your dialogue options."

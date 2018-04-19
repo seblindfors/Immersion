@@ -487,11 +487,6 @@
 													</Layer>
 												</Layers>
 												<Scripts>
-													<OnLoad>
-														-- Hacks to get this to display a little more nicely
-														self.Name:SetPoint("LEFT", self.NameFrame, 24, 0);
-														self.Name:SetWidth(81);
-													</OnLoad>
 													<OnEnter>
 														if (self.tooltip) then
 															GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
@@ -1117,7 +1112,7 @@
 						<Texture parentKey="IconBorder">
 							<Size x="88" y="88"/>
 							<Anchors>
-								<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" x="0" y="-20"/>
+								<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" x="12" y="-16"/>
 							</Anchors>
 						</Texture>
 						<FontString parentKey="Title" inherits="GameFontNormalMed2" justifyH="LEFT">

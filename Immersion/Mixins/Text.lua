@@ -249,6 +249,7 @@ function Text:HasFollowup() 	return self.strings and self.strings[2] and true en
 
 function Text:GetModifiedTime() return self.timers and self.timers[1] end
 function Text:GetOriginalTime()	return self.currentLineTime or 0 end
+function Text:GetLineProgress() return (self.timers and self.currentLineTime) and (self.timers[1]/self.currentLineTime) or 1 end
 
 function Text:GetLine() 		return self.strings[1], self.timers[1] end
 function Text:RemoveLine() 		return tremove(self.strings, 1), tremove(self.timers, 1) end

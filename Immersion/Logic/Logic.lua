@@ -342,9 +342,7 @@ local inputs = {
 	accept = function(self)
 		local text = self.TalkBox.TextFrame.Text
 		local numActive = self.TitleButtons.numActive
-		if IsShiftKeyDown() then
-			text:RepeatTexts()
-		elseif text:GetNumRemaining() > 1 and text:IsSequence() then
+		if not self:IsModifierDown() and text:GetNumRemaining() > 1 and text:IsSequence() then
 			text:ForceNext()
 		elseif self.lastEvent == 'GOSSIP_SHOW' and numActive < 1 then
 			CloseGossip()
@@ -387,6 +385,21 @@ local inputs = {
 	end,
 }
 
+local modifierStates = {
+	SHIFT 	= IsShiftKeyDown;
+	CTRL 	= IsControlKeyDown;
+	ALT 	= IsAltKeyDown;
+	NOMOD 	= function() return false end;
+}
+
+function NPC:IsInspectModifier(button)
+	return button and button:match(L('inspect')) and true
+end
+
+function NPC:IsModifierDown(modifier)
+	return modifierStates[modifier or L('inspect')]()
+end
+
 function NPC:OnKeyDown(button)
 	if button == 'ESCAPE' then
 		self:ForceClose()
@@ -394,7 +407,7 @@ function NPC:OnKeyDown(button)
 	elseif self:ParseControllerCommand(button) then
 		self:SetPropagateKeyboardInput(false)
 		return
-	elseif button:match(L('inspect')) and self.hasItems then
+	elseif self:IsInspectModifier(button) and self.hasItems then
 		self:SetPropagateKeyboardInput(false)
 		self:ShowItems()
 		return
@@ -420,9 +433,9 @@ end
 
 function NPC:OnKeyUp(button)
 	local inspector = self.Inspector
-	if ( inspector.ShowFocusedTooltip and ( button:match(L('inspect')) or button:match('SHIFT') ) ) then
+	if ( inspector.ShowFocusedTooltip and ( self:IsInspectModifier(button) or button:match('SHIFT') ) ) then
 		inspector:ShowFocusedTooltip(false)
-	elseif ( button:match(L('inspect')) and inspector:IsVisible() ) then
+	elseif ( self:IsInspectModifier(button) and inspector:IsVisible() ) then
 		inspector:Hide()
 	end
 end

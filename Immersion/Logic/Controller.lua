@@ -209,7 +209,7 @@ function NPC:ParseControllerCommand(button)
 		end
 		-- Handle case when the inspect binding or M1 is pressed,
 		-- in which case it should show the item inspector.
-		if button:match(L('inspect')) or button:match('SHIFT') then
+		if self:IsInspectModifier(button) or button:match('SHIFT') then
 			self.Inspector:ShowFocusedTooltip(true)
 			return true
 		end
