@@ -151,7 +151,19 @@ function Titles:UpdateActive()
 	self:ResetPosition()
 	self:AdjustHeight(newHeight)
 	if self.SetFocus then
-		self:SetFocus(1)
+		local _, bestOptionIndex = self:GetBestOption()
+		self:SetFocus(bestOptionIndex)
+	end
+end
+
+function Titles:GetBestOption()
+	local numActive = self:GetNumActive()
+	if numActive > 0 then
+		local option = self.Buttons[1]
+		for i=2, numActive do
+			option = option:ComparePriority(self.Buttons[i])
+		end
+		return option, option.idx
 	end
 end
 

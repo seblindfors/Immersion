@@ -44,7 +44,7 @@ function Text:ReplaceNatural(str)
 	:gsub('%.%.%.\n', '...\n...') 	-- ponder
 	:gsub('%!%s+', '!\n')			-- exclamation
 	:gsub('%?%s+', '?\n') 			-- question
-	return new, (new == str)
+	return new, (new == str) -- return new string, and whether something changed
 end
 
 function Text:CreateLineData(text)

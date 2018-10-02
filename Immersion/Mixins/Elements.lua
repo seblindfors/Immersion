@@ -285,8 +285,8 @@ function Elements:ShowRewards()
 
 	do -- Spell rewards
 		for rewardSpellIndex = 1, numSpellRewards do
-			local texture, name, isTradeskillSpell, isSpellLearned, hideSpellLearnText, isBoostSpell, garrFollowerID, spellID = GetSpell(rewardSpellIndex)
-			local knownSpell = IsSpellKnownOrOverridesKnown(spellID)
+			local texture, name, isTradeskillSpell, isSpellLearned, hideSpellLearnText, isBoostSpell, garrFollowerID, genericUnlock, spellID = GetSpell(rewardSpellIndex)
+			local knownSpell = tonumber(spellID) and IsSpellKnownOrOverridesKnown(spellID)
 
 			-- only allow the spell reward if user can learn it
 			if ( texture and not knownSpell and (not isBoostSpell or IsCharacterNewlyBoosted()) and (not garrFollowerID or not C_Garrison.IsFollowerCollected(garrFollowerID)) ) then
@@ -420,20 +420,16 @@ function Elements:ShowRewards()
 
 			-- Generate spell buckets
 			for rewardSpellIndex = 1, numSpellRewards do
-				local texture, name, isTradeskillSpell, isSpellLearned, hideSpellLearnText, isBoostSpell, garrFollowerID, spellID = GetSpell(rewardSpellIndex)
+				local texture, name, isTradeskillSpell, isSpellLearned, hideSpellLearnText, isBoostSpell, garrFollowerID, genericUnlock, spellID = GetSpell(rewardSpellIndex)
 				local knownSpell = IsSpellKnownOrOverridesKnown(spellID)
 				if texture and not knownSpell and (not isBoostSpell or IsCharacterNewlyBoosted()) and (not garrFollowerID or not C_Garrison.IsFollowerCollected(garrFollowerID)) then
-					if ( isTradeskillSpell ) then
-						AddSpellToBucket(spellBuckets, QUEST_SPELL_REWARD_TYPE_TRADESKILL_SPELL, rewardSpellIndex)
-					elseif ( isBoostSpell ) then
-						AddSpellToBucket(spellBuckets, QUEST_SPELL_REWARD_TYPE_ABILITY, rewardSpellIndex)
-					elseif ( garrFollowerID ) then
-						AddSpellToBucket(spellBuckets, QUEST_SPELL_REWARD_TYPE_FOLLOWER, rewardSpellIndex)
-					elseif ( not isSpellLearned ) then
-						AddSpellToBucket(spellBuckets, QUEST_SPELL_REWARD_TYPE_AURA, rewardSpellIndex)
-					else
-						AddSpellToBucket(spellBuckets, QUEST_SPELL_REWARD_TYPE_SPELL, rewardSpellIndex)
-					end
+					local bucket = 	isTradeskillSpell 	and QUEST_SPELL_REWARD_TYPE_TRADESKILL_SPELL or
+									isBoostSpell 		and QUEST_SPELL_REWARD_TYPE_ABILITY or
+									garrFollowerID 		and QUEST_SPELL_REWARD_TYPE_FOLLOWER or
+									isSpellLearned 		and QUEST_SPELL_REWARD_TYPE_SPELL or
+									genericUnlock 		and QUEST_SPELL_REWARD_TYPE_UNLOCK or QUEST_SPELL_REWARD_TYPE_AURA
+					
+					AddSpellToBucket(spellBuckets, bucket, rewardSpellIndex)
 				end
 			end
 

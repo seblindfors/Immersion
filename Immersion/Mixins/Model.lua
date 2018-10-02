@@ -27,7 +27,14 @@ function Model:IsEther() return (self.unit == 'ether') end
 function Model:GetUnit() return self.unit end
 
 function Model:SetUnit(unit)
-	self:ClearModel()
+	self.unitDirty = unit
+	if self:IsVisible() then
+		self:ClearModel()
+		self:ApplyModelFromUnit(unit)
+	end
+end
+
+function Model:ApplyModelFromUnit(unit)
 	if m2[unit] then
 		self:SetModel(m2[unit])
 		self:SetCamDistanceScale(.4)
@@ -35,11 +42,14 @@ function Model:SetUnit(unit)
 		self:SetPosition(0, 0, .25)
 		self.unit = 'ether'
 	else
+		local mt = getmetatable(self).__index
+		local creatureID = tonumber(unit)
+		local applyModelFunction = creatureID and mt.SetCreature or mt.SetUnit 
 		self:SetCamDistanceScale(1)
 		self:SetPortraitZoom(.85)
 		self:SetPosition(0, 0, 0)
-		getmetatable(self).__index.SetUnit(self, unit)
-		self.unit = unit
+		applyModelFunction(self, creatureID or unit)
+		self.unit = creatureID and 'npc' or unit
 	end
 end
 
@@ -104,6 +114,13 @@ function Model:OnAnimFinished()
 			self:PrepareAnimation(nil, nil)
 			self:Reset()
 		end
+	end
+end
+
+function Model:OnShow()
+	self:ClearModel()
+	if self.unitDirty then
+		self:ApplyModelFromUnit(self.unitDirty)
 	end
 end
 

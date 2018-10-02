@@ -41,7 +41,27 @@ for _, event in pairs({
 	'QUEST_PROGRESS',	-- Fires when you click on a quest you're currently on
 	'QUEST_ITEM_UPDATE', -- Item update while in convo, refresh frames.
 --	'MERCHANT_SHOW', 	-- Force close gossip on merchant interaction.
+	'NAME_PLATE_UNIT_ADDED', 	-- For nameplate mode
+	'NAME_PLATE_UNIT_REMOVED', 	-- For nameplate mode
+	'SUPER_TRACKED_QUEST_CHANGED',
 }) do frame:RegisterEvent(event) end
+
+
+frame.IgnoreResetEvent = {
+	QUEST_ACCEPTED = true,
+	NAME_PLATE_UNIT_ADDED = true,
+	NAME_PLATE_UNIT_REMOVED = true,
+	SUPER_TRACKED_QUEST_CHANGED = true,
+}
+
+frame.IgnoreGossipEvent = {
+	GOSSIP_SHOW = true,
+	GOSSIP_CLOSED = true,
+	QUEST_ACCEPTED = true,
+	NAME_PLATE_UNIT_ADDED = true,
+	NAME_PLATE_UNIT_REMOVED = true,
+	SUPER_TRACKED_QUEST_CHANGED = true,
+}
 
 ----------------------------------
 -- Register events for titlebuttons
@@ -264,8 +284,8 @@ end
 
 function text:OnFinishedCallback()
 	-- remove the last playback line, because the text played until completion.
-	if L('onthefly') and not L('ontheflyalways') and not self:IsForceFinishedFlagged() then
-		ImmersionToast:PopToastForText(self.storedText)
+	if ( L('onthefly') or L('supertracked') ) and not self:IsForceFinishedFlagged() then
+		frame:RemoveToastByText(self.storedText)
 	end
 end
 
@@ -375,4 +395,18 @@ do
 	else -- Hook to the loading function.
 		hooksecurefunc('TalkingHead_LoadUI', HookTalkingHead)
 	end
+end
+
+
+-- Azerite Empowered Item UI
+do
+	local loaded = false
+	local function ignoreAzeriteItemUI()
+		if not loaded and IsAddOnLoaded('Blizzard_AzeriteUI') then
+			loaded = true
+			L.ToggleIgnoreFrame(AzeriteEmpoweredItemUI, true)
+		end
+	end
+	hooksecurefunc('OpenAzeriteEmpoweredItemUIFromItemLocation', ignoreAzeriteItemUI)
+	hooksecurefunc('OpenAzeriteEmpoweredItemUIFromLink', ignoreAzeriteItemUI)
 end

@@ -147,4 +147,5 @@ do 	local function GameTooltipAlphaHandler(self)
 
 	GameTooltip:HookScript('OnTooltipSetDefaultAnchor', GameTooltipAlphaHandler)
 	GameTooltip:HookScript('OnTooltipSetItem', GameTooltipAlphaHandler)
+	GameTooltip:HookScript('OnShow', GameTooltipAlphaHandler)
 end

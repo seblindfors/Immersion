@@ -48,6 +48,10 @@ end
 function NPC:QUEST_FINISHED(...)
 	CloseQuest()
 	self:PlayOutro()
+--	if self:IsGossipAvailable(true) then
+--		self:OnEvent('GOSSIP_SHOW')
+--		self.TitleButtons:OnEvent('GOSSIP_SHOW')
+--	end
 end
 
 function NPC:QUEST_DETAIL(...)
@@ -82,7 +86,6 @@ function NPC:ITEM_TEXT_BEGIN()
 	self:RegisterEvent('PLAYER_STARTED_MOVING')
 	self:PlayIntro('ITEM_TEXT_BEGIN')
 	self:UpdateTalkingHead(title, '', 'TrainerGossip', 'player')
-	-- add book model? (75431)
 end
 
 function NPC:ITEM_TEXT_READY()
@@ -113,4 +116,20 @@ end
 function NPC:PLAYER_STARTED_MOVING()
 	self.readEmoteCancelled = true
 	return 'ITEM_TEXT_READY'
+end
+
+
+function NPC:NAME_PLATE_UNIT_ADDED()
+	self.TalkBox:UpdateNameplateAnchor()
+	return self.lastEvent
+end
+
+function NPC:NAME_PLATE_UNIT_REMOVED()
+	self.TalkBox:UpdateNameplateAnchor()
+	return self.lastEvent
+end
+
+function NPC:SUPER_TRACKED_QUEST_CHANGED(questID)
+	self:PlaySuperTrackedQuestToast(questID)
+	return self.lastEvent
 end

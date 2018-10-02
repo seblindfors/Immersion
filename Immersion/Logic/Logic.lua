@@ -1,16 +1,14 @@
 local _, L = ...
 local NPC, TalkBox = {}, {}
-local frame, GetTime, GetOffset = L.frame, GetTime, UIParent.GetBottom
+local frame, GetTime, GetOffset, GetNamePlateForUnit = L.frame, GetTime, UIParent.GetBottom, C_NamePlate.GetNamePlateForUnit
 
 ----------------------------------
 -- Event handler
 ----------------------------------
 function NPC:OnEvent(event, ...)
 	self:ResetElements(event)
+	self:HandleGossipQuestOverlap(event)
 	if self[event] then
-		if event ~= 'QUEST_ACCEPTED' and event:match('QUEST') then
-			CloseGossip()
-		end
 		event = self[event](self, ...) or event
 	end
 	self.TalkBox.lastEvent = event
@@ -46,7 +44,7 @@ function NPC:AddQuestInfo(template)
 	self.TalkBox.NameFrame.FadeIn:Play()
 end
 
-function NPC:IsGossipAvailable()
+function NPC:IsGossipAvailable(ignoreAutoSelect)
 	-- if there is only a non-gossip option, then go to it directly
 	if 	(GetNumGossipAvailableQuests() == 0) and 
 		(GetNumGossipActiveQuests() == 0) and 
@@ -55,7 +53,9 @@ function NPC:IsGossipAvailable()
 		----------------------------
 		local text, gossipType = GetGossipOptions()
 		if ( gossipType ~= 'gossip' ) then
-			SelectGossipOption(1)
+			if not ignoreAutoSelect then
+				SelectGossipOption(1)
+			end
 			return false
 		end
 	end
@@ -101,20 +101,12 @@ end
 
 -- Iterate through gossip options and simulate a click on the best option.
 function NPC:SelectBestOption()
-	local titles = self.TitleButtons.Buttons
-	local numActive = self.TitleButtons.numActive
-	if numActive > 1 then
-		local button = titles[1]
-		if button then
-			for i=2, numActive do
-				local title = titles[i]
-				button = button:ComparePriority(title)
-			end
-			button.Hilite:SetAlpha(1)
-			button:Click()
-			button:OnLeave()
-			PlaySound(SOUNDKIT.IG_QUEST_LIST_SELECT)
-		end
+	local button = self.TitleButtons:GetBestOption()
+	if button then
+		button.Hilite:SetAlpha(1)
+		button:Click()
+		button:OnLeave()
+		PlaySound(SOUNDKIT.IG_QUEST_LIST_SELECT)
 	end
 end
 
@@ -126,18 +118,29 @@ function NPC:IsSpeechFinished()
 	return self.TalkBox.TextFrame.Text:IsFinished()
 end
 
+function NPC:IsObstructingQuestEvent(forceEvent)
+	local event = forceEvent or self.lastEvent or ''
+	return ( event:match('^QUEST') and event ~= 'QUEST_ACCEPTED' )
+end
+
+function NPC:HandleGossipQuestOverlap(event)
+	if (type(event) == 'string') then
+		if ( event == 'GOSSIP_SHOW' ) then
+		--	CloseQuest()
+		elseif self:IsObstructingQuestEvent(event) then
+			CloseGossip()
+		end
+	end
+end
+
 function NPC:ResetElements(event)
-	-- Do not reset elements on this event,
-	-- because it fires on auto-accepted quests.
-	-- E.g. QUEST_DETAIL is immediately followed by
-	-- QUEST_ACCEPTED, closing the elements frame.
-	if ( event == 'QUEST_ACCEPTED' ) then return end
+	if ( self.IgnoreResetEvent[event] ) then return end
 	
 	self.Inspector:Hide()
 	self.TalkBox.Elements:Reset()
 end
 
-function NPC:UpdateTalkingHead(title, text, npcType, explicitUnit)
+function NPC:UpdateTalkingHead(title, text, npcType, explicitUnit, isToastPlayback)
 	local unit = explicitUnit
 	if not unit then
 		if ( UnitExists('questnpc') and not UnitIsUnit('questnpc', 'player') and not UnitIsDead('questnpc') ) then
@@ -157,10 +160,14 @@ function NPC:UpdateTalkingHead(title, text, npcType, explicitUnit)
 	local textFrame = talkBox.TextFrame
 	textFrame.Text:SetText(text)
 	-- Add contents to toast.
-	if L('onthefly') then
-		ImmersionToast:Queue(title, text, npcType, unit)
+	if not isToastPlayback then
+		if L('onthefly') then
+			self:QueueToast(title, text, npcType, unit)
+		elseif L('supertracked') then
+			self:QueueQuestToast(title, text, npcType, unit)
+		end
 	end
-	if textFrame.Text:IsSequence() and L('showprogressbar') and not L('disableprogression') then
+	if L('showprogressbar') and not L('disableprogression') then
 		talkBox.ProgressionBar:Show()
 	end
 end
@@ -300,39 +307,47 @@ end
 function NPC:PlayIntro(event, freeFloating)
 	local isShown = self:IsVisible()
 	local shouldAnimate = not isShown and not L('disableglowani')
+	self.playbackEvent = event
+
 	if freeFloating then
 		self:ClearImmersionFocus()
 	else
 		self:SetImmersionFocus()
 		self:AddHint('TRIANGLE', GOODBYE)
 	end
+
 	self:Show()
+
 	if IsOptionFrameOpen() then
-		self:ForceClose()
+		self:ForceClose(true)
 	else
-		self:EnableKeyboard(true)
+		self:EnableKeyboard(not freeFloating)
 		self:FadeIn(nil, shouldAnimate, freeFloating)
+
 		local box = self.TalkBox
 		local x, y = L('boxoffsetX'), L('boxoffsetY')
 		box:ClearAllPoints()
 		box:SetOffset(box.offsetX or x, box.offsetY or y)
+
 		if not shouldAnimate and not L('disableglowani') then
 			self.TalkBox.MainFrame.SheenOnly:Play()
 		end
+
 	end
 end
 
 -- This will also hide the frames after the animation is done.
-function NPC:PlayOutro()
+function NPC:PlayOutro(optionFrameOpen)
 	self:EnableKeyboard(false)
 	self:FadeOut(0.5)
+	self:PlayToasts(optionFrameOpen)
 end
 
-function NPC:ForceClose()
+function NPC:ForceClose(optionFrameOpen)
 	CloseGossip()
 	CloseQuest()
 	CloseItemText()
-	self:PlayOutro()
+	self:PlayOutro(optionFrameOpen)
 end
 
 ----------------------------------
@@ -342,13 +357,13 @@ local inputs = {
 	accept = function(self)
 		local text = self.TalkBox.TextFrame.Text
 		local numActive = self.TitleButtons.numActive
-		if not self:IsModifierDown() and text:GetNumRemaining() > 1 and text:IsSequence() then
+		if ( not self:IsModifierDown() and text:GetNumRemaining() > 1 and text:IsSequence() ) then
 			text:ForceNext()
-		elseif self.lastEvent == 'GOSSIP_SHOW' and numActive < 1 then
+		elseif ( self.lastEvent == 'GOSSIP_SHOW' and numActive < 1 ) then
 			CloseGossip()
-		elseif self.lastEvent == 'GOSSIP_SHOW' and numActive == 1 then
+		elseif ( self.lastEvent == 'GOSSIP_SHOW' and numActive == 1 ) then
 			SelectGossipOption(1)
-		elseif (self.lastEvent == 'GOSSIP_SHOW' or self.lastEvent == 'QUEST_GREETING') and numActive > 1 then
+		elseif ( numActive > 1 ) then
 			self:SelectBestOption()
 		else
 			self.TalkBox:OnLeftClick()
@@ -444,6 +459,10 @@ end
 -- TalkBox "button"
 ----------------------------------
 function TalkBox:SetOffset(x, y)
+	if self:UpdateNameplateAnchor() then
+		return
+	end
+
 	local point = L('boxpoint')
 	local anidivisor = L('anidivisor')
 	x = x or L('boxoffsetX')
@@ -462,7 +481,6 @@ function TalkBox:SetOffset(x, y)
 		self:SetPoint(point, UIParent, x, y)
 		return
 	end
-
 	self:SetScript('OnUpdate', function(self)
 		self.isOffsetting = true
 		local offset = (GetOffset(self) or 0) - (GetOffset(UIParent) or 0)
@@ -487,15 +505,39 @@ function TalkBox:SetExtraOffset(newOffset)
 	self:SetOffset(currX, currY)
 end
 
+function TalkBox:UpdateNameplateAnchor()
+	if self.plateInHiding then
+		self.plateInHiding:SetAlpha(1)
+		self.plateInHiding = nil
+	end
+	if L('nameplatemode') then
+		local plate = GetNamePlateForUnit('npc')
+		if plate then
+			if self.isOffsetting then
+				self:SetScript('OnUpdate', nil)
+				self.isOffsetting = false
+			end
+			self:ClearAllPoints()
+			self:SetPoint('CENTER', plate, 'TOP', 0, self.extraY or 0)
+			if plate.UnitFrame then
+				self.plateInHiding = plate.UnitFrame
+				self.plateInHiding:SetAlpha(0)
+			end
+			return true
+		end
+	end
+end
+
 function TalkBox:OnEnter()
 	-- Highlight the button when it can be clicked
 	if not L('disableboxhighlight') then
-		if 	L('immersivemode') or ( ( ( self.lastEvent == 'QUEST_COMPLETE' ) and
+		local lastEvent = self.lastEvent
+		if 	L('immersivemode') or ( ( ( lastEvent == 'QUEST_COMPLETE' ) and
 			not (self.Elements.itemChoice == 0 and GetNumQuestChoices() > 1) ) or
-			( self.lastEvent == 'QUEST_ACCEPTED' ) or
-			( self.lastEvent == 'QUEST_DETAIL' ) or
-			( self.lastEvent == 'ITEM_TEXT_READY' ) or
-			( self.lastEvent ~= 'GOSSIP_SHOW' and IsQuestCompletable() ) ) then
+			( lastEvent == 'QUEST_ACCEPTED' ) or
+			( lastEvent == 'QUEST_DETAIL' ) or
+			( lastEvent == 'ITEM_TEXT_READY' ) or
+			( lastEvent ~= 'GOSSIP_SHOW' and IsQuestCompletable() ) ) then
 			L.UIFrameFadeIn(self.Hilite, 0.15, self.Hilite:GetAlpha(), 1)
 		end
 	end
@@ -581,7 +623,11 @@ function TalkBox:OnClick(button)
 		if text:GetNumRemaining() > 1 and text:IsSequence() then
 			text:ForceNext()
 		elseif text:IsSequence() then
-			text:RepeatTexts()
+			if ( ImmersionFrame.playbackEvent == 'IMMERSION_TOAST' ) then
+				ImmersionFrame:RemoveToastByText(text.storedText)
+			else
+				text:RepeatTexts()
+			end
 		end
 	end
 end

@@ -63,7 +63,7 @@
 		</Scripts>
 	</Button>
 
-	<Button name="ImmersionItemButtonTemplate" virtual="true">
+	<Button name="ImmersionItemButtonTemplate" virtual="true" registerForClicks="LeftButtonUp,RightButtonUp">
 		<Size x="250" y="54" />
 		<Layers>
 			<Layer level="BORDER">
@@ -235,7 +235,7 @@
 					</OnLoad>
 				</Scripts>
 			</Frame>
-			<Button parentKey="Button">
+			<Button parentKey="Button" registerForClicks="LeftButtonUp,RightButtonUp">
 				<HighlightTexture parentKey="HighlightTexture" file="Interface\PVPFrame\PvPMegaQueue" alphaMode="ADD" alpha="0.25">
 					<TexCoords left="0.00195313" right="0.63867188" top="0.70703125" bottom="0.76757813"/>
 					<Anchors>
@@ -380,7 +380,7 @@
 						</Anchors>
 					</Frame>
 					<Frame parentKey="Elements" useParentLevel="true">
-						<Size x="570" y="0"/>
+						<Size x="570" y="1"/>
 						<Anchors>
 							<Anchor point="TOP" relativeKey="$parent" relativePoint="BOTTOM" x="0" y="8"/>
 						</Anchors>
@@ -781,7 +781,7 @@
 					<Frame parentKey="PortraitFrame" setAllPoints="true">
 						<Layers>
 							<Layer level="OVERLAY">
-								<Texture parentKey="Portrait" hidden="false" alpha="1" alphaMode="BLEND" atlas="TalkingHeads-PortraitFrame" useAtlasSize="true">
+								<Texture parentKey="Portrait" hidden="false" alpha="1" alphaMode="BLEND" atlas="TalkingHeads-Alliance-PortraitFrame" useAtlasSize="true">
 									<Anchors>
 										<Anchor point="TOPLEFT" x="5" y="-6"/>
 									</Anchors>
@@ -869,7 +869,9 @@
 								</Anchors>
 								<Scripts>
 									<OnClick>
-										self:GetParent():GetParent():GetParent():ForceClose();
+										local mainframe = self:GetParent():GetParent():GetParent();
+										mainframe:ClearToasts();
+										mainframe:ForceClose();
 									</OnClick>
 								</Scripts>
 							</Button>
@@ -1099,7 +1101,7 @@
 		</Frames>
 	</Frame>
 
-
+<!--
 	<Button name="ImmersionToast" parent="UIParent" hidden="true" frameStrata="LOW" alpha="0">
 		<Size x="235" y="25"/>
 		<Anchors>
@@ -1284,14 +1286,12 @@
 
 				self.IconPool = CreateTexturePool(self, 'BACKGROUND');
 
-				-- Store on main for brevity in Lua
 				self.Text = self.Content.Text;
 				self.Subtitle = self.Content.Subtitle;
 				self.ToastType = self.Content.ToastType;
 				self.CacheType = self.Content.CacheType;
 				self.IconBorder = self.Header.IconBorder;
 
-				-- Set portrait frame textures (horizontally flipped "Artifacts-PerkRing-GoldMedal")
 				local iconBorder, iconBorderSheen = self.IconBorder, self.Header.IconBorderSheen;
 				local texture, _, _, left, right, top, bottom = GetAtlasInfo("Artifacts-PerkRing-GoldMedal");
 				iconBorder:SetTexture(texture);
@@ -1299,7 +1299,6 @@
 				iconBorderSheen:SetTexture(texture);
 				iconBorderSheen:SetTexCoord(right, left, top, bottom);
 
-				-- Change the color slightly to fit the portrait
 				self.Header.Background:SetVertexColor(1, 0.8, 1);
 
 				self:SetHitRectInsets(-50, 0, -25, -25);
@@ -1311,4 +1310,5 @@
 			</OnLoad>
 		</Scripts>
 	</Button>
+-->
 </Ui>

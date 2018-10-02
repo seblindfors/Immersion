@@ -65,7 +65,10 @@ function Tooltip:OnClick()
 	local item = self.item
 	local inspector = self.inspector
 	if item then
-		if ( item.container and item.container.chooseItems and item.type == "choice" ) then
+		if (IsModifiedClick('EXPANDITEM') and item.objectType == 'item' ) then
+			HandleModifiedItemClick(GetQuestItemLink(item.type, item:GetID()))
+			inspector:Hide()
+		elseif ( item.container and item.container.chooseItems and item.type == "choice" ) then
 			item.container.itemChoice = item:GetID()
 			item.highlight:SetPoint('TOPLEFT', item, 0, 0)
 			item.highlight:Show()
