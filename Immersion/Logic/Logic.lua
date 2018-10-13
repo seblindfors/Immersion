@@ -124,6 +124,9 @@ function NPC:IsObstructingQuestEvent(forceEvent)
 end
 
 function NPC:HandleGossipQuestOverlap(event)
+	-- Since Blizzard handles this transition by mutually exclusive gossip/quest frames,
+	-- and their visibility to determine whether to close gossip or quest interaction,
+	-- events need to be checked so that an NPC interaction is correctly transitioned.
 	if (type(event) == 'string') then
 		if ( event == 'GOSSIP_SHOW' ) then
 		--	CloseQuest()

@@ -153,7 +153,7 @@ do	-- OBSTRUCTION:
 	AddToastObstructor(AlertFrame)
 
 	if TalkingHeadFrame then
-		Toast:AddObstructor(TalkingHeadFrame)
+		AddToastObstructor(TalkingHeadFrame)
 	else
 		hooksecurefunc('TalkingHead_LoadUI', function() AddToastObstructor(TalkingHeadFrame) end)
 	end

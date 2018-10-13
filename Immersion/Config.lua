@@ -264,13 +264,13 @@ L.options = {
 				},
 				ontheflybox = {
 					type = 'group',
-					name = SHOW_TOAST_WINDOW_TEXT,
+					name = PLAYBACK,
 					inline = true,
 					order = 3,
 					args = {
 						onthefly = {
 							type = 'toggle',
-							name = VIDEO_OPTIONS_ENABLED,
+							name = QUICKBUTTON_NAME_EVERYTHING,
 							order = 0,
 							get = L.GetFromSV,
 							set = function(_, val) L.cfg.onthefly = val end,
@@ -281,13 +281,26 @@ L.options = {
 							order = 1,
 							name = L["The quest/gossip text doesn't vanish when you stop interacting with the NPC or when accepting a new quest. Instead, it vanishes at the end of the text sequence. This allows you to maintain your immersive experience when speed leveling."],
 						},
+						supertracked = {
+							type = 'toggle',
+							name = OBJECTIVES_TRACKER_LABEL,
+							order = 2,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.supertracked = val end,
+						},
+						supertrackeddesc = {
+							type = 'description',
+							fontSize = 'medium',
+							order = 3,
+							name = L["When a quest is supertracked (clicked on in the objective tracker, or set automatically by proximity), the quest text will play if nothing else is obstructing it."],
+						},
 					},
 				},
 				talkinghead = {
 					type = 'group',
 					name = L['Hook talking head'],
 					inline = true,
-					order = 4,
+					order = 5,
 					args = {
 						movetalkinghead = {
 							type = 'toggle',
@@ -582,27 +595,6 @@ L.options = {
 							fontSize = 'medium',
 							order = 2,
 							name = 'Show frame on NPC nameplate. This feature requires a CVar to be enabled (nameplateShowFriends).\nClick on the button above to toggle this CVar on/off.\n\nNote that you might have to press Cancel in the interface options for the CVar changes to take effect.',
-						},
-					},
-				},
-				supertrackedbox = {
-					type = 'group',
-					name = 'Toast when quest is supertracked',
-					inline = true,
-					order = 1,
-					args = {
-						supertracked = {
-							type = 'toggle',
-							name = VIDEO_OPTIONS_ENABLED,
-							order = 0,
-							get = L.GetFromSV,
-							set = function(_, val) L.cfg.supertracked = val end,
-						},
-						supertrackeddesc = {
-							type = 'description',
-							fontSize = 'medium',
-							order = 1,
-							name = 'When a quest is supertracked (clicked on in the objective tracker, or set automatically by proximity), the quest text will play if nothing else is obstructing it.',
 						},
 					},
 				},
