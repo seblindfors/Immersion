@@ -392,9 +392,7 @@ end
 -- Return itemLink and display text for SQUARE (modified clicks)
 local function GetModifiedClickInfo(item)
 	local link = item and GetQuestItemLink(item.type, item:GetID())
-	if 	link and -- azerite item
-		C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItemByID(link) and 
-		C_AzeriteEmpoweredItem.IsAzeritePreviewSourceDisplayable(link) then
+	if 	link and ImmersionAPI:IsAzeriteItem(link) then
 		----------------------------------------
 		return link, LFG_LIST_DETAILS
 	end

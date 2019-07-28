@@ -1,6 +1,6 @@
 local _, L = ...
-local NPC, TalkBox = {}, {}
-local frame, GetTime, GetOffset, GetNamePlateForUnit = L.frame, GetTime, UIParent.GetBottom, C_NamePlate.GetNamePlateForUnit
+local NPC, TalkBox, API = {}, {}, ImmersionAPI
+local frame, GetTime, GetOffset = L.frame, GetTime, UIParent.GetBottom
 
 ----------------------------------
 -- Event handler
@@ -68,8 +68,8 @@ function NPC:IsQuestAutoAccepted(questStartItemID)
 	-- Handling here is prone to cause bugs/weird behaviour, update with caution.
 
 	local questID = GetQuestID()
-	local isFromAdventureMap = QuestIsFromAdventureMap()
-	local isFromAreaTrigger = QuestGetAutoAccept() and QuestIsFromAreaTrigger()
+	local isFromAdventureMap = API:QuestIsFromAdventureMap()
+	local isFromAreaTrigger = API:QuestGetAutoAccept() and API:QuestIsFromAreaTrigger()
 	local isFromItem = (questStartItemID ~= nil and questStartItemID ~= 0)
 
 	-- the quest came from an adventure map, so user has already seen and accepted it.
@@ -359,7 +359,7 @@ end
 local inputs = {
 	accept = function(self)
 		local text = self.TalkBox.TextFrame.Text
-		local numActive = self.TitleButtons.numActive
+		local numActive = self.TitleButtons:GetNumActive()
 		if ( not self:IsModifierDown() and text:GetNumRemaining() > 1 and text:IsSequence() ) then
 			text:ForceNext()
 		elseif ( self.lastEvent == 'GOSSIP_SHOW' and numActive < 1 ) then
@@ -462,9 +462,9 @@ end
 -- TalkBox "button"
 ----------------------------------
 function TalkBox:SetOffset(x, y)
-	if self:UpdateNameplateAnchor() then
+--[[if self:UpdateNameplateAnchor() then
 		return
-	end
+	end]]
 
 	local point = L('boxpoint')
 	local anidivisor = L('anidivisor')
@@ -514,7 +514,7 @@ function TalkBox:UpdateNameplateAnchor()
 		self.plateInHiding = nil
 	end
 	if L('nameplatemode') then
-		local plate = GetNamePlateForUnit('npc')
+		local plate = API:GetNamePlateForUnit('npc')
 		if plate then
 			if self.isOffsetting then
 				self:SetScript('OnUpdate', nil)

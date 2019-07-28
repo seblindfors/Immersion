@@ -1,4 +1,4 @@
-local TEMPLATE, Elements, _, L = {}, {}, ...
+local API, TEMPLATE, Elements, _, L = ImmersionAPI, {}, {}, ...
 L.ElementsMixin = Elements
 
 local TEXT_COLOR, TITLE_COLOR = GetMaterialTextColors('Stone') -- default text colors
@@ -21,6 +21,13 @@ local function AddSpellToBucket(spellBuckets, type, rewardSpellIndex)
 	end
 	local spellBucket = spellBuckets[type]
 	spellBucket[#spellBucket + 1] = rewardSpellIndex
+end
+
+local function IsValidSpellReward(texture, knownSpell, isBoostSpell, garrFollowerID)
+	-- check if already known, check if is boost spell, check if follower is collected
+	return  texture and not knownSpell and
+			(not isBoostSpell or API:IsCharacterNewlyBoosted()) and
+			(not garrFollowerID or not API:IsFollowerCollected(garrFollowerID))
 end
 
 local function GetItemButton(parentFrame, index, buttonType)
@@ -226,7 +233,7 @@ function Elements:ShowObjectivesText()
 end
 
 function Elements:ShowGroupSize()
-	local groupNum = GetSuggestedGroupNum()
+	local groupNum = API:GetSuggestedGroupNum()
 	local groupSize = self.Content.GroupSize
 	if ( groupNum > 0 ) then
 		groupSize:SetText(QUEST_SUGGESTED_GROUP_NUM:format(groupNum))
@@ -271,16 +278,16 @@ function Elements:ShowRewards()
 	local GetSpell = GetRewardSpell
 
 	do  -- Get data
-		numQuestRewards = GetNumQuestRewards()
-		numQuestChoices = GetNumQuestChoices()
-		numQuestCurrencies = GetNumRewardCurrencies()
-		money = GetRewardMoney()
-		skillName, skillIcon, skillPoints = GetRewardSkillPoints()
-		xp = GetRewardXP()
-		artifactXP, artifactCategory = GetRewardArtifactXP()
-		honor = GetRewardHonor()
-		playerTitle = GetRewardTitle()
-		numSpellRewards = GetNumRewardSpells()
+		numQuestRewards = API:GetNumQuestRewards()
+		numQuestChoices = API:GetNumQuestChoices()
+		numQuestCurrencies = API:GetNumRewardCurrencies()
+		money = API:GetRewardMoney()
+		skillName, skillIcon, skillPoints = API:GetRewardSkillPoints()
+		xp = API:GetRewardXP()
+		artifactXP, artifactCategory = API:GetRewardArtifactXP()
+		honor = API:GetRewardHonor()
+		playerTitle = API:GetRewardTitle()
+		numSpellRewards = API:GetNumRewardSpells()
 	end
 
 	do -- Spell rewards
@@ -289,7 +296,7 @@ function Elements:ShowRewards()
 			local knownSpell = tonumber(spellID) and IsSpellKnownOrOverridesKnown(spellID)
 
 			-- only allow the spell reward if user can learn it
-			if ( texture and not knownSpell and (not isBoostSpell or IsCharacterNewlyBoosted()) and (not garrFollowerID or not C_Garrison.IsFollowerCollected(garrFollowerID)) ) then
+			if IsValidSpellReward(texture, knownSpell, isBoostSpell, garrFollowerID) then
 				numQuestSpellRewards = numQuestSpellRewards + 1
 			end
 		end
@@ -422,7 +429,7 @@ function Elements:ShowRewards()
 			for rewardSpellIndex = 1, numSpellRewards do
 				local texture, name, isTradeskillSpell, isSpellLearned, hideSpellLearnText, isBoostSpell, garrFollowerID, genericUnlock, spellID = GetSpell(rewardSpellIndex)
 				local knownSpell = IsSpellKnownOrOverridesKnown(spellID)
-				if texture and not knownSpell and (not isBoostSpell or IsCharacterNewlyBoosted()) and (not garrFollowerID or not C_Garrison.IsFollowerCollected(garrFollowerID)) then
+				if IsValidSpellReward(texture, knownSpell, isBoostSpell, garrFollowerID) then
 					local bucket = 	isTradeskillSpell 	and QUEST_SPELL_REWARD_TYPE_TRADESKILL_SPELL or
 									isBoostSpell 		and QUEST_SPELL_REWARD_TYPE_ABILITY or
 									garrFollowerID 		and QUEST_SPELL_REWARD_TYPE_FOLLOWER or
@@ -584,7 +591,7 @@ function Elements:ShowRewards()
 				baseIndex = rewardsCount
 				local foundCurrencies = 0
 				buttonIndex = buttonIndex + 1
-				for i = 1, GetMaxRewardCurrencies(), 1 do
+				for i = 1, API:GetMaxRewardCurrencies(), 1 do
 					index = i + baseIndex
 					questItem = GetItemButton(self, index)
 					questItem.type = 'reward'
@@ -669,10 +676,10 @@ end
 
 
 function Elements:AcceptQuest()
-	if ( QuestFlagsPVP() ) then
+	if ( API:QuestFlagsPVP() ) then
 		StaticPopup_Show('CONFIRM_ACCEPT_PVP_QUEST')
 	else
-		if ( QuestGetAutoAccept() ) then
+		if ( API:QuestGetAutoAccept() ) then
 			AcknowledgeAutoAcceptQuest()
 		else
 			AcceptQuest()
@@ -686,9 +693,9 @@ function Elements:ShowProgress(material)
 	self.Content:Hide()
 	self:SetMaterial(material)
 	local self = self.Progress
-	local numRequiredItems = GetNumQuestItems()
-	local numRequiredMoney = GetQuestMoneyToGet()
-	local numRequiredCurrencies = GetNumQuestCurrencies()
+	local numRequiredItems = API:GetNumQuestItems()
+	local numRequiredMoney = API:GetQuestMoneyToGet()
+	local numRequiredCurrencies = API:GetNumQuestCurrencies()
 	local buttonIndex, buttons = 1, self.Buttons
 	if ( numRequiredItems > 0 or numRequiredMoney > 0 or numRequiredCurrencies > 0) then
 		self:Show()

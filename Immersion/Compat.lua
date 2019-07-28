@@ -23,7 +23,8 @@ L.compat = {
 			L.config.logo:Show()
 		end
 
-		ConsolePortConfig:AddPanel({
+		local config = ConsolePortOldConfig or ConsolePortConfig
+		config:AddPanel({
 			name = _, 
 			header = _, 
 			mixin = WindowMixin,

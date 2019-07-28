@@ -127,6 +127,59 @@
 		</Animations>
 	</Button>
 
+	<Button name="ImmersionQuestSpellTemplate" hidden="true" virtual="true">
+		<Size x="157" y="56"/>
+		<HitRectInsets left="0" right="0" top="0" bottom="14"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Icon" name="$parentIconTexture">
+					<Size x="39" y="39"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="10" y="-2"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="NameFrame" name="$parentNameFrame" file="Interface\QuestFrame\UI-QuestItemNameFrame">
+					<Size x="250" y="70"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="-20" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture name="$parentSpellBorder"  file="Interface\Spellbook\Spellbook-Parts">
+					<Size x="70" y="65"/>
+					<TexCoords left="0.00390625" right="0.27734375" top="0.44140625" bottom="0.69531250"/>
+					<Anchors>
+						<Anchor point="CENTER" relativeKey="$parent.Icon" x="2" y="0"/>
+					</Anchors>
+				</Texture>
+				<FontString parentKey="Name" name="$parentName" inherits="GameFontHighlight" justifyH="LEFT" >
+					<Size  x="170" y="36"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.NameFrame" x="30" y="0"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnEnter>
+				if (self.spellID) then
+					GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+					GameTooltip:SetSpellByID(self.spellID);
+				end
+			</OnEnter>
+			<OnLeave>
+				GameTooltip:Hide();
+			</OnLeave>
+			<OnClick>
+				if ( IsModifiedClick("CHATLINK") and self.spellID) then
+					local spellLink = GetSpellLink(self.spellID);
+					ChatEdit_InsertLink(spellLink);
+				end
+			</OnClick>
+		</Scripts>
+	</Button>
+
 	<Button name="ImmersionTitleButtonTemplate" virtual="true">
 		<Size x="310" y="64" />
 		<Layers>
@@ -426,7 +479,7 @@
 											</Layer>
 										</Layers>
 										<Frames>
-											<Button parentKey="SpellObjectiveFrame" inherits="QuestSpellTemplate" hidden="true"/>
+											<Button parentKey="SpellObjectiveFrame" inherits="ImmersionQuestSpellTemplate" hidden="true"/>
 										</Frames>
 									</Frame>
 
@@ -642,7 +695,7 @@
 										<Scripts>
 											<OnLoad>
 												self.buttonTemplate = "ImmersionItemButtonTemplate, ImmersionRewardItemCodeTemplate";
-												self.spellRewardPool = CreateFramePool("BUTTON", self, "QuestSpellTemplate, ImmersionRewardSpellCodeTemplate");
+												self.spellRewardPool = CreateFramePool("BUTTON", self, "ImmersionQuestSpellTemplate, ImmersionRewardSpellCodeTemplate");
 												self.followerRewardPool = CreateFramePool("BUTTON", self, "LargeQuestInfoRewardFollowerTemplate");
 												self.spellHeaderPool = CreateFontStringPool(self, "BACKGROUND", 0, "QuestInfoSpellHeaderTemplate");
 
@@ -777,11 +830,23 @@
 								<Alpha childKey="SolidBackground" startDelay="0.4" duration="0.75" order="1" fromAlpha="0" toAlpha="1"/>
 							</AnimationGroup>
 						</Animations>
+						<!-- <Scripts> Keep in case of implementing skins:
+							Default 	1, 156
+							Alliance 	158, 313
+							Horde 		315, 470
+							Neutral 	472, 627
+							Custom1		629, 784
+							Custom2 	786, 941
+							<OnLoad>
+								self.TextBackground:SetTexture([[Interface\AddOns\Immersion\Textures\TalkingHeads.blp]]);
+								self.TextBackground:SetTexCoord(0.000976562, 0.557617, 786/1024, 941/1024);
+							</OnLoad>
+						</Scripts> -->
 					</Frame>
 					<Frame parentKey="PortraitFrame" setAllPoints="true">
 						<Layers>
 							<Layer level="OVERLAY">
-								<Texture parentKey="Portrait" hidden="false" alpha="1" alphaMode="BLEND" atlas="TalkingHeads-Alliance-PortraitFrame" useAtlasSize="true">
+								<Texture parentKey="Portrait" hidden="false" alpha="1" alphaMode="BLEND" >
 									<Anchors>
 										<Anchor point="TOPLEFT" x="5" y="-6"/>
 									</Anchors>
@@ -793,6 +858,11 @@
 								<Alpha childKey="Portrait" duration="0.75" order="1" fromAlpha="0" toAlpha="1"/>
 							</AnimationGroup>
 						</Animations>
+						<Scripts>
+							<OnLoad>
+								self.Portrait:SetAtlas(ImmersionAPI:GetPortraitAtlas(), true);
+							</OnLoad>
+						</Scripts>
 					</Frame>
 					<Frame parentKey="MainFrame" setAllPoints="true" useParentLevel="true">
 						<Layers>
@@ -1076,7 +1146,7 @@
 								GameTooltip:Hide();
 							</OnLeave>
 							<OnShow>
-								local id, rep, maxRep, name, text, texture, reaction, threshold, nextThreshold = GetFriendshipReputation();
+								local id, rep, maxRep, name, text, texture, reaction, threshold, nextThreshold = ImmersionAPI:GetFriendshipReputation();
 								if ( id and id > 0 ) then
 									-- if max rank, make it look like a full bar
 									if ( not nextThreshold ) then

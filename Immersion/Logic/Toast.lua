@@ -149,12 +149,12 @@ do	-- OBSTRUCTION:
 	end
 
 	-- Force base frames and TalkingHeadFrame.
-	AddToastObstructor(LevelUpDisplay)
-	AddToastObstructor(AlertFrame)
+	if LevelUpDisplay then AddToastObstructor(LevelUpDisplay) end
+	if AlertFrame then AddToastObstructor(AlertFrame) end
 
 	if TalkingHeadFrame then
 		AddToastObstructor(TalkingHeadFrame)
-	else
+	elseif TalkingHead_LoadUI then
 		hooksecurefunc('TalkingHead_LoadUI', function() AddToastObstructor(TalkingHeadFrame) end)
 	end
 end

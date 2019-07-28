@@ -561,7 +561,7 @@ L.options = {
 				},
 			},
 		},	
-		experimental = {
+--[[	experimental = {
 			type = 'group',
 			name = 'Experimental',
 			order = 5,
@@ -599,6 +599,6 @@ L.options = {
 					},
 				},
 			},
-		},
+		},]]
 	},
 }

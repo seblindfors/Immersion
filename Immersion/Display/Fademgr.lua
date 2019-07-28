@@ -25,7 +25,7 @@ local __cacheAlphaIgnored = {}
 local __staticAlphaIgnored = {
 	[AlertFrame]		= true,
 	[DressUpFrame]		= true,
-	[LevelUpDisplay] 	= true,
+--	[LevelUpDisplay] 	= true,
 	[StaticPopup1] 		= true,
 	[StaticPopup2] 		= true,
 	[StaticPopup3] 		= true,
@@ -38,14 +38,20 @@ local __staticHideFrames = {
 	[MinimapCluster] = true,
 }
 
+if LevelUpDisplay then
+	__staticAlphaIgnored[LevelUpDisplay] = true
+end
+
 ----------------------------------
 local FadeIn, FadeOut = L.UIFrameFadeIn, L.UIFrameFadeOut
 ----------------------------------
 
 -- For config to cache certain frames for fade ignore/force.
 function L.ToggleIgnoreFrame(frame, ignore)
-	__cacheAlphaIgnored[frame] = ignore
-	frame:SetIgnoreParentAlpha(ignore)
+	if frame then
+		__cacheAlphaIgnored[frame] = ignore
+		frame:SetIgnoreParentAlpha(ignore)
+	end
 end
 
 -- Return a list of all frames to ignore and their current

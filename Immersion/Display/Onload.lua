@@ -392,7 +392,7 @@ do
 	-- Run the init if the frame already exists (force loaded)
 	if TalkingHeadFrame then
 		HookTalkingHead()
-	else -- Hook to the loading function.
+	elseif TalkingHead_LoadUI then -- Hook to the loading function.
 		hooksecurefunc('TalkingHead_LoadUI', HookTalkingHead)
 	end
 end
@@ -407,6 +407,8 @@ do
 			L.ToggleIgnoreFrame(AzeriteEmpoweredItemUI, true)
 		end
 	end
-	hooksecurefunc('OpenAzeriteEmpoweredItemUIFromItemLocation', ignoreAzeriteItemUI)
-	hooksecurefunc('OpenAzeriteEmpoweredItemUIFromLink', ignoreAzeriteItemUI)
+	if OpenAzeriteEmpoweredItemUIFromItemLocation and OpenAzeriteEmpoweredItemUIFromLink then
+		hooksecurefunc('OpenAzeriteEmpoweredItemUIFromItemLocation', ignoreAzeriteItemUI)
+		hooksecurefunc('OpenAzeriteEmpoweredItemUIFromLink', ignoreAzeriteItemUI)
+	end
 end

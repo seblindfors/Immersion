@@ -1,4 +1,4 @@
-local Titles, _, L = {}, ...
+local API, Titles, _, L = ImmersionAPI, {}, ...
 L.TitlesMixin = Titles
 
 -- Upvalue for update scripts
@@ -289,7 +289,7 @@ function Titles:UpdateActiveGreetingQuests(numActiveQuests)
 		local qType = ( IsActiveQuestTrivial(i) and TRIVIAL_QUEST_DISPLAY )
 		button:SetFormattedText(qType or NORMAL_QUEST_DISPLAY, title)
 		----------------------------------
-		local icon = ( isComplete and IsActiveQuestLegendary(i) and 'ActiveLegendaryQuestIcon' ) or
+		local icon = ( isComplete and API:IsActiveQuestLegendary(i) and 'ActiveLegendaryQuestIcon' ) or
 					( isComplete and 'ActiveQuestIcon') or
 					( 'InCompleteQuestIcon' )
 		button:SetGossipQuestIcon(icon, qType and 0.75)
@@ -306,7 +306,7 @@ function Titles:UpdateAvailableGreetingQuests(numAvailableQuests)
 	for i=1, numAvailableQuests do
 		local button = self:GetButton(self.idx)
 		local title = GetAvailableTitle(i)
-		local isTrivial, frequency, isRepeatable, isLegendary = GetAvailableQuestInfo(i)
+		local isTrivial, frequency, isRepeatable, isLegendary = API:GetAvailableQuestInfo(i)
 		----------------------------------
 		local qType = ( isTrivial and TRIVIAL_QUEST_DISPLAY )
 		button:SetFormattedText(qType or NORMAL_QUEST_DISPLAY, title)
