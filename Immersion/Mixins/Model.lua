@@ -4,10 +4,10 @@ L.ModelMixin = Model
 ----------------------------------
 -- Animation wrappers
 ----------------------------------
-function Model:Read() self:SetAnimation(ani.reading) end
-function Model:Ask() self:SetAnimation(ani.asking) end
-function Model:Yell() self:SetAnimation(ani.yelling) end
-function Model:Talk() self:SetAnimation(ani.talking) end
+function Model:Read() self:SetAnimation(self.ani.reading) end
+function Model:Ask() self:SetAnimation(self.ani.asking) end
+function Model:Yell() self:SetAnimation(self.ani.yelling) end
+function Model:Talk() self:SetAnimation(self.ani.talking) end
 function Model:Reset() self:SetAnimation(0) end
 
 function Model:RunNextAnimation() if
@@ -16,6 +16,11 @@ function Model:RunNextAnimation() if
 	self.yelling then self:Yell() elseif
 	self.talking then self:Talk() else
 	self:Reset() end 
+end
+
+function Model:SetAnimation(...)
+	self.animstart = GetTime()
+	getmetatable(self).__index.SetAnimation(self, ...)
 end
 
 ----------------------------------
@@ -30,13 +35,22 @@ function Model:SetUnit(unit)
 	self.unitDirty = unit
 	if self:IsVisible() then
 		self:ClearModel()
+		self:MarkDefectModel(false)
 		self:ApplyModelFromUnit(unit)
 	end
 end
 
+function Model:MarkDefectModel(enabled)
+	self.defectmodel = enabled
+end
+
+function Model:IsDefectModel()
+	return self.defectmodel
+end
+
 function Model:ApplyModelFromUnit(unit)
-	if m2[unit] then
-		self:SetModel(m2[unit])
+	if self.file[unit] then
+		self:SetModel(self.file[unit])
 		self:SetCamDistanceScale(.4)
 		self:SetPortraitZoom(0)
 		self:SetPosition(0, 0, .25)
@@ -72,10 +86,17 @@ function Model:GetRemainingTime(start, remaining)
 	end
 end
 
+function Model:IsPrematureFinish(start)
+	if start then
+		local difference = GetTime() - start
+		return difference < self.premature, difference
+	end
+end
+
 function Model:PrepareAnimation(unit, text)
 	-- if no unit/text or if the text is a description rather than spoken words
 	if ( not unit or not text ) or ( text and text:match('%b<>') ) then
-		for state in pairs(ani) do
+		for state in pairs(self.ani) do
 			self[state] = nil
 		end
 	else
@@ -92,6 +113,15 @@ end
 -- Handler
 ----------------------------------
 function Model:OnAnimFinished()
+	if self:IsDefectModel() then return end
+	-----------------------------------
+	local isPremature, difference = self:IsPrematureFinish(self.animstart)
+	if isPremature then
+		self:MarkDefectModel(true)
+		self:Reset()
+		return
+	end
+	-----------------------------------
 	if self:IsPlayer() then
 		self:Read()
 	else
@@ -128,14 +158,14 @@ end
 ----------------------------------
 -- Consts
 ----------------------------------
-ani = {
+Model.ani = {
 	reading = 520,
-	asking = 65,
+	asking  = 65,
 	yelling = 64,
 	talking = 60,
 }
 
-m2 = {
+Model.file = {
 	AvailableQuest	= 'interface\\buttons\\talktome.m2',
 	ActiveQuest		= 'interface\\buttons\\talktomequestionmark.m2',
 	IncompleteQuest = 'interface\\buttons\\talktomequestion_grey.m2',
@@ -148,12 +178,14 @@ Model.LightValues = {
 	-250,	-- dirX
 	0,		-- dirY
 	0,		-- dirZ
-	0.25,	-- ambIntensity
+	0.25,	-- dirIntensity
 	1,		-- ambR
 	1,		-- ambG
 	1,		-- ambB
-	75,		-- dirIntensity
+	75,		-- ambIntensity
 	1,		-- dirR
 	1,		-- dirG
 	1,		-- dirB
 }
+
+Model.premature = 0.5

@@ -75,8 +75,7 @@ function NPC:PlaySuperTrackedQuestToast(questID)
 			not IsOptionFrameOpen() and
 			not self:IsToastObstructed() then
 			----------------------------------
-			PlayToast(toast)
-			tremove(questCache, i)
+			PlayToast(tremove(questCache, i))
 			break
 		end
 	end
