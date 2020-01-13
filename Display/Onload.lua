@@ -237,26 +237,10 @@ function text:OnDisplayLineCallback(text)
 	talkbox.TextFrame.FadeIn:Stop()
 	talkbox.TextFrame.FadeIn:Play()
 	if text then
-		model:PrepareAnimation(model:GetUnit(), text)
-		if model:IsNPC() then
-			-- Suggests that this phrase is an emote description
-			if text:match('%b<>') then
-				self:SetVertexColor(1, 0.5, 0)
-			else
-				self:SetVertexColor(1, 1, 1)
-				if not L('disableanisequence') then
-					model:SetRemainingTime(GetTime(), self:GetModifiedTime())
-					if model.asking and not self:IsSequence() then
-						model:Ask()
-					else
-						local yell = model.yelling and random(2) == 2
-						if yell then model:Yell() else model:Talk() end
-					end
-				end
-			end
-		elseif model:IsPlayer() then
-			model:Read()
-		end
+		local isEmote = text:match('%b<>')
+		self:SetVertexColor(1, isEmote and 0.5 or 1, isEmote and 0 or 1)
+		model:PrepareAnimation(text, isEmote)
+		model:RunSequence(self:GetModifiedTime(), self:IsSequence())
 	end
 	
 	counter:Hide()
@@ -265,12 +249,7 @@ function text:OnDisplayLineCallback(text)
 			counter:Show()
 			counter:SetText(self:GetProgress())
 		end
-
-		if self:GetNumRemaining() <= 1 then
-			frame:AddHint('SQUARE', RESET)
-		else
-			frame:AddHint('SQUARE', NEXT)
-		end
+		frame:AddHint('SQUARE', self:GetNumRemaining() <= 1 and RESET or NEXT)
 	else
 		frame:RemoveHint('SQUARE')
 	end

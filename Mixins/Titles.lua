@@ -8,8 +8,8 @@ local NORMAL_QUEST_DISPLAY = NORMAL_QUEST_DISPLAY:gsub(0, 'f')
 local TRIVIAL_QUEST_DISPLAY = TRIVIAL_QUEST_DISPLAY:gsub(0, 'f')
 
 -- Priority
-local P_COMPLETE_QUEST = 1
-local P_AVAILABLE_QUEST = 2
+local P_COMPLETE_QUEST   = 1
+local P_AVAILABLE_QUEST  = 2
 local P_AVAILABLE_GOSSIP = 3
 local P_INCOMPLETE_QUEST = 4
 
@@ -185,7 +185,7 @@ end
 
 function Titles:UpdateAvailableQuests(...)
 	local titleIndex = 1
-	for i = 1, select('#', ...), 7 do
+	for i = 1, select('#', ...), API:GetAvailableQuestIterator() do
 		local button = self:GetButton(self.idx)
 		local 	titleText, level, isTrivial, frequency, 
 				isRepeatable, isLegendary = select(i, ...)
@@ -213,7 +213,7 @@ function Titles:UpdateActiveQuests(...)
 	local titleIndex = 1
 	local numActiveQuestData = select("#", ...)
 	self.hasActiveQuests = (numActiveQuestData > 0)
-	for i = 1, numActiveQuestData, 6 do
+	for i = 1, numActiveQuestData, API:GetActiveQuestIterator() do
 		local button = self:GetButton(self.idx)
 		local 	titleText, level, isTrivial, 
 				isComplete, isLegendary = select(i, ...)
@@ -237,7 +237,7 @@ end
 
 function Titles:UpdateGossipOptions(...)
 	local titleIndex = 1
-	for i=1, select('#', ...), 2 do
+	for i=1, select('#', ...), API:GetGossipOptionIterator() do
 		local button = self:GetButton(self.idx)
 		local titleText, icon = select(i, ...)
 		----------------------------------

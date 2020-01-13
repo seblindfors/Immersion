@@ -4,10 +4,6 @@ local NPC, Text = ImmersionFrame, ImmersionFrame.TalkBox.TextFrame.Text
 local playbackQueue, questCache = {}, {}
 local QUEST_TOAST_CACHE_LIMIT = 30
 ----------------------------------
-local function GetCreatureID(unit)
-	local guid = UnitGUID(unit)
-	return guid and select(6, strsplit('-', guid))
-end
 
 local function IsTextCached(text, tbl)
 	for i, toast in ipairs(tbl) do
@@ -60,7 +56,7 @@ local function QueueToast(tbl, title, text, purpose, unit)
 			purpose = purpose;
 			questID = GetQuestID();
 			youSaid = L.ClickedTitleCache or {};
-			display = GetCreatureID(unit);
+			display = ImmersionAPI:GetCreatureID(unit);
 		})
 	end
 end

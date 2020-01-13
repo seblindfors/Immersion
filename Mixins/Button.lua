@@ -1,15 +1,6 @@
 local Button, _, L = {}, ...
 L.ButtonMixin = Button
 
-function Button:OnClick()
-	local func = self[self.type]
-	if func then
-		L.ClickedTitleCache = {text = self:GetText(); icon = self.Icon:GetTexture()}
-		func(self)
-		PlaySound(SOUNDKIT.IG_QUEST_LIST_SELECT)
-	end
-end
-
 ----------------------------------
 function Button:ActiveQuest() SelectActiveQuest(self:GetID()) end
 function Button:AvailableQuest() SelectAvailableQuest(self:GetID()) end
@@ -18,6 +9,15 @@ function Button:Gossip() SelectGossipOption(self:GetID()) end
 function Button:Active() SelectGossipActiveQuest(self:GetID()) end
 function Button:Available() SelectGossipAvailableQuest(self:GetID()) end
 ----------------------------------
+
+function Button:OnClick()
+	local func = self[self.type]
+	if func then
+		L.ClickedTitleCache = {text = self:GetText(); icon = self.Icon:GetTexture()}
+		func(self)
+		PlaySound(SOUNDKIT.IG_QUEST_LIST_SELECT)
+	end
+end
 
 function Button:OnShow()
 	self.Counter:SetShown(L('enablenumbers'))
@@ -53,6 +53,7 @@ function Button:OnScaleFinished()
 	-- Force a text/height update after scaling
 	self:SetText(self:GetText())
 end
+----------------------------------
 
 function Button:SetFormattedText(...)
 	local __index = getmetatable(self).__index
@@ -71,6 +72,8 @@ function Button:SetHeight(height, force)
 		getmetatable(self).__index.SetHeight(self, height)
 	end
 end
+
+----------------------------------
 
 function Button:SetIcon(texture)
 	self.Icon:SetVertexColor(1, 1, 1)
@@ -103,14 +106,15 @@ end
 function Button:Init(id)
 	local parent = self:GetParent()
 	local set = parent.Buttons
+	local top = (id == 1)
 	self.Container = parent
 	self.idx = id
-
-	if id == 1 then
-		self.anchor = {'TOP', parent, 'TOP', 0, 0}
-	else
-		self.anchor = {'TOP', set[id - 1], 'BOTTOM', 0, 0}
-	end
+	self.anchor = {
+		'TOP',
+		top and parent or set[id-1],
+		top and 'TOP' or 'BOTTOM',
+		0, 0,
+	}
 
 	self:SetPoint(unpack(self.anchor))
 	----------------------------------

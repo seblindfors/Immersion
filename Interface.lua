@@ -1,16 +1,23 @@
 local API = {}; ImmersionAPI = API;
+-- Version
+local IS_CLASSIC = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC 
+local IS_RETAIL  = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
 
-function API:GetFriendshipReputation(...)
-	return GetFriendshipReputation and GetFriendshipReputation(...) or 0
-end
+function API:IsClassic(...) return IS_CLASSIC end
+function API:IsRetail(...)  return IS_RETAIL  end
 
-function API:GetPortraitAtlas()
-	if GetAtlasInfo and GetAtlasInfo('TalkingHeads-PortraitFrame') then
-		return 'TalkingHeads-PortraitFrame';
-	end
-	return 'TalkingHeads-Alliance-PortraitFrame';
-end
+API.ITERATORS = {
+	GOSSIP    = IS_CLASSIC and 2 or IS_RETAIL and 2;
+	ACTIVE    = IS_CLASSIC and 6 or IS_RETAIL and 7;
+	AVAILABLE = IS_CLASSIC and 7 or IS_RETAIL and 8;
+}
 
+-- Chunk iterators
+function API:GetGossipOptionIterator(...)   return self.ITERATORS.GOSSIP    end
+function API:GetActiveQuestIterator(...)    return self.ITERATORS.ACTIVE    end
+function API:GetAvailableQuestIterator(...) return self.ITERATORS.AVAILABLE end
+
+-- Quest pickup API
 function API:QuestGetAutoAccept(...)
 	return QuestGetAutoAccept and QuestGetAutoAccept(...)
 end
@@ -27,6 +34,7 @@ function API:QuestFlagsPVP(...)
 	return QuestFlagsPVP and QuestFlagsPVP(...)
 end
 
+-- Quest content API
 function API:GetSuggestedGroupNum(...)
 	return GetSuggestedGroupNum and GetSuggestedGroupNum(...) or 0
 end
@@ -98,6 +106,18 @@ function API:IsActiveQuestLegendary(...)
 	return IsActiveQuestLegendary and IsActiveQuestLegendary(...)
 end
 
+-- Misc
+function API:GetFriendshipReputation(...)
+	return GetFriendshipReputation and GetFriendshipReputation(...) or 0
+end
+
+function API:GetPortraitAtlas()
+	if GetAtlasInfo and GetAtlasInfo('TalkingHeads-PortraitFrame') then
+		return 'TalkingHeads-PortraitFrame';
+	end
+	return 'TalkingHeads-Alliance-PortraitFrame';
+end
+
 function API:IsAzeriteItem(...)
 	if C_AzeriteEmpoweredItem then
 		return 	C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItemByID(...) and
@@ -115,4 +135,9 @@ end
 
 function API:GetNamePlateForUnit(...)
 	return C_NamePlate and C_NamePlate.GetNamePlateForUnit(...)
+end
+
+function API:GetCreatureID(unit)
+	local guid = unit and UnitGUID(unit)
+	return guid and select(6, strsplit('-', guid))
 end

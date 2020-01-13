@@ -1,24 +1,25 @@
-local Model, GetTime, _, L, ani, m2 = {}, GetTime, ...
+local Model, GetTime, API, _, L, ani, m2 = {}, GetTime, ImmersionAPI, ...
 L.ModelMixin = Model
 
 ----------------------------------
 -- Animation wrappers
 ----------------------------------
-function Model:Read() self:SetAnimation(self.ani.reading) end
-function Model:Ask() self:SetAnimation(self.ani.asking) end
-function Model:Yell() self:SetAnimation(self.ani.yelling) end
-function Model:Talk() self:SetAnimation(self.ani.talking) end
+function Model:Read()  self:SetAnimation(self.ani.reading) end
+function Model:Ask()   self:SetAnimation(self.ani.asking) end
+function Model:Yell()  self:SetAnimation(self.ani.yelling) end
+function Model:Talk()  self:SetAnimation(self.ani.talking) end
 function Model:Reset() self:SetAnimation(0) end
 
 function Model:RunNextAnimation() if
 	self.reading then self:Read() elseif
-	self.asking then self:Ask() elseif
+	self.asking  then self:Ask() elseif
 	self.yelling then self:Yell() elseif
 	self.talking then self:Talk() else
 	self:Reset() end 
 end
 
 function Model:SetAnimation(...)
+	self.animation = ...
 	self.animstart = GetTime()
 	getmetatable(self).__index.SetAnimation(self, ...)
 end
@@ -27,9 +28,13 @@ end
 -- Unit stuff
 ----------------------------------
 function Model:IsPlayer() return self.unit == 'player' end
-function Model:IsNPC() return ( self.unit == 'npc' or self.unit == 'questnpc' ) end
-function Model:IsEther() return (self.unit == 'ether') end
-function Model:GetUnit() return self.unit end
+function Model:IsNPC()    return self.unit == 'npc' or self.unit == 'questnpc' end
+function Model:IsEther()  return self.unit == 'ether' end
+function Model:GetUnit()  return self.unit end
+
+function Model:GetCreature()
+	return self.creatureID or API:GetCreatureID(self.unit)
+end
 
 function Model:SetUnit(unit)
 	self.unitDirty = unit
@@ -57,13 +62,16 @@ function Model:ApplyModelFromUnit(unit)
 		self.unit = 'ether'
 	else
 		local mt = getmetatable(self).__index
-		local creatureID = tonumber(unit)
-		local applyModelFunction = creatureID and mt.SetCreature or mt.SetUnit 
+		local creatureID = tonumber(unit) or API:GetCreatureID(unit)
+		local apply = creatureID and mt.SetCreature or unit and mt.SetUnit
 		self:SetCamDistanceScale(1)
 		self:SetPortraitZoom(.85)
 		self:SetPosition(0, 0, 0)
-		applyModelFunction(self, creatureID or unit)
-		self.unit = creatureID and 'npc' or unit
+		if apply then
+			apply(self, creatureID or unit)
+			self.creatureID = creatureID
+			self.unit = creatureID and 'npc' or unit
+		end
 	end
 end
 
@@ -93,20 +101,42 @@ function Model:IsPrematureFinish(start)
 	end
 end
 
-function Model:PrepareAnimation(unit, text)
+function Model:PrepareAnimation(text, isEmote, isSequence)
 	-- if no unit/text or if the text is a description rather than spoken words
-	if ( not unit or not text ) or ( text and text:match('%b<>') ) then
+	if ( not self.unit or not text ) or ( isEmote ) then
 		for state in pairs(self.ani) do
 			self[state] = nil
 		end
 	else
-		self.reading = unit:match('player') and true
+		self.reading = self.unit:match('player') and true
 		if not self.reading then
-			self.asking = text:match('?')
+			self.asking  = text:match('?')
 			self.yelling = text:match('!')
 			self.talking = true
 		end
 	end
+end
+
+function Model:RunSequence(remainingTime, isSequence)
+	if self:IsNPC() then
+		if not L('disableanisequence') then
+			self:SetRemainingTime(GetTime(), remainingTime)
+			if self.asking and not isSequence then
+				self:Ask()
+			elseif self.yelling then
+				self:Randomize(self.ani.yelling)
+			else
+				self:Talk()
+			end
+		end
+	elseif self:IsPlayer() then
+		self:Read()
+	end
+end
+
+function Model:Randomize(animation)
+	local rand = random(2) == 2
+	self:SetAnimation(rand and animation or self.ani.talking)
 end
 
 ----------------------------------
@@ -131,13 +161,10 @@ function Model:OnAnimFinished()
 			self.talking = true
 			if self.asking then
 				self:Ask()
+			elseif self.yelling then
+				self:Randomize(self.ani.yelling)
 			else
-				-- randomize the yelling, since this animation is normally short and repetitive
-				if ( self.yelling and ( random(2) == 2 ) ) then
-					self:Yell()
-				else
-					self:Talk()
-				end
+				self:Talk()
 			end
 		else
 			self:SetRemainingTime(nil, nil)
@@ -150,6 +177,7 @@ end
 function Model:OnShow()
 	self:ClearModel()
 	if self.unitDirty then
+		self:MarkDefectModel(false)
 		self:ApplyModelFromUnit(self.unitDirty)
 	end
 end
