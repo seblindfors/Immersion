@@ -15,11 +15,13 @@ function NPC:OnEvent(event, ...)
 	self.lastEvent = event
 	self.timeStamp = GetTime()
 	self:UpdateItems()
+	self:UpdateBackground()
 	return event
 end
 
 function NPC:OnHide()
 	self:ClearImmersionFocus()
+	self.TalkBox.BackgroundFrame.OverlayKit:Hide()
 end
 
 ----------------------------------
@@ -114,6 +116,7 @@ function NPC:IsSpeechFinished()
 	return self.TalkBox.TextFrame.Text:IsFinished()
 end
 
+-- hack to figure out if event is related to quests
 function NPC:IsObstructingQuestEvent(forceEvent)
 	local event = forceEvent or self.lastEvent or ''
 	return ( event:match('^QUEST') and event ~= 'QUEST_ACCEPTED' )
@@ -132,11 +135,61 @@ function NPC:HandleGossipQuestOverlap(event)
 	end
 end
 
+function NPC:HandleGossipOpenEvent(kit)
+	local handler = kit and self:GetGossipHandler(kit)
+	if handler then
+		self.customGossipFrame = handler(kit)
+	else
+		self:SetBackground(kit)
+		self:UpdateTalkingHead(API:GetUnitName('npc'), API:GetGossipText(), 'GossipGossip')
+		if self:IsGossipAvailable() then
+			self:PlayIntro('GOSSIP_SHOW')
+		end
+	end
+end
+
+function NPC:HandleGossipCloseEvent()
+	if self.customGossipFrame then
+		self.customGossipFrame:Hide()
+		self.customGossipFrame = nil;
+	end
+end
+
+function NPC:SetBackground(kit)
+	local backgroundFrame = self.TalkBox.BackgroundFrame;
+	local overlay = backgroundFrame.OverlayKit;
+
+	if kit then
+		local backgroundAtlas = GetFinalNameFromTextureKit('QuestBG-%s', kit)
+		local atlasInfo = C_Texture.GetAtlasInfo(backgroundAtlas)
+		if atlasInfo then
+			overlay:Show()
+			overlay:SetGradientAlpha('HORIZONTAL', 1, 1, 1, 0, 1, 1, 1, 1)
+
+			overlay:SetSize(atlasInfo.width, atlasInfo.height)
+			overlay:SetTexture(atlasInfo.file)
+			overlay:SetTexCoord(
+				atlasInfo.leftTexCoord, atlasInfo.rightTexCoord + 0.035,
+				atlasInfo.topTexCoord, atlasInfo.bottomTexCoord + 0.035)
+			return
+		end
+	end
+end
+
+function NPC:UpdateBackground()
+	local theme = C_QuestLog.GetQuestDetailsTheme(GetQuestID())
+	local kit = theme and theme.background and theme.background:gsub('QuestBG%-', '')
+	if kit then
+		self:SetBackground(kit)
+	end
+end
+
 function NPC:ResetElements(event)
 	if ( self.IgnoreResetEvent[event] ) then return end
 	
 	self.Inspector:Hide()
 	self.TalkBox.Elements:Reset()
+	self:SetBackground(nil)
 end
 
 function NPC:UpdateTalkingHead(title, text, npcType, explicitUnit, isToastPlayback)
@@ -415,7 +468,7 @@ function NPC:IsModifierDown(modifier)
 end
 
 function NPC:OnKeyDown(button)
-	if button == 'ESCAPE' then
+	if (button == 'ESCAPE' or GetBindingAction(button) == 'TOGGLEGAMEMENU') then
 		self:ForceClose()
 		return
 	elseif self:ParseControllerCommand(button) then
@@ -453,6 +506,9 @@ function NPC:OnKeyUp(button)
 		inspector:Hide()
 	end
 end
+
+NPC.OnGamePadButtonDown = NPC.OnKeyDown;
+NPC.OnGamePadButtonUp   = NPC.OnKeyUp;
 
 ----------------------------------
 -- TalkBox "button"
@@ -604,6 +660,8 @@ function TalkBox:OnLeftClick()
 		else
 			ImmersionFrame:ForceClose()
 		end
+	else
+		ImmersionFrame:ForceClose()
 	end
 end
 

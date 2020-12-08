@@ -4,7 +4,6 @@ local talkbox = frame.TalkBox
 local titles = frame.TitleButtons
 local inspector = frame.Inspector
 local elements = talkbox.Elements
-local _Mixin = L.Mixin
 L.frame = frame
 
 ----------------------------------
@@ -188,25 +187,25 @@ L.SetBackdrop(talkbox.Hilite, L.Backdrops.GOSSIP_HILITE)
 ----------------------------------
 -- Initiate titlebuttons
 ----------------------------------
-_Mixin(titles, L.TitlesMixin)
+L.Mixin(titles, L.TitlesMixin)
 
 ----------------------------------
 -- Initiate elements
 ----------------------------------
-_Mixin(elements, L.ElementsMixin)
+L.Mixin(elements, L.ElementsMixin)
 
 ----------------------------------
 -- Set up dynamically sized frames
 ----------------------------------
 do
 	local AdjustToChildren = L.AdjustToChildren
-	_Mixin(elements, AdjustToChildren)
-	_Mixin(elements.Content, AdjustToChildren)
-	_Mixin(elements.Progress, AdjustToChildren)
-	_Mixin(elements.Content.RewardsFrame, AdjustToChildren)
-	_Mixin(inspector, AdjustToChildren)
-	_Mixin(inspector.Extras, AdjustToChildren)
-	_Mixin(inspector.Choices, AdjustToChildren)
+	L.Mixin(elements, AdjustToChildren)
+	L.Mixin(elements.Content, AdjustToChildren)
+	L.Mixin(elements.Progress, AdjustToChildren)
+	L.Mixin(elements.Content.RewardsFrame, AdjustToChildren)
+	L.Mixin(inspector, AdjustToChildren)
+	L.Mixin(inspector.Extras, AdjustToChildren)
+	L.Mixin(inspector.Choices, AdjustToChildren)
 end
 
 ----------------------------------
@@ -221,7 +220,7 @@ name:SetPoint('TOPLEFT', talkbox.PortraitFrame.Portrait, 'TOPRIGHT', 2, -19)
 ----------------------------------
 local model = talkbox.MainFrame.Model
 model:SetLight(unpack(L.ModelMixin.LightValues))
-_Mixin(model, L.ModelMixin)
+L.Mixin(model, L.ModelMixin)
 
 ----------------------------------
 -- Main text things
@@ -274,6 +273,8 @@ end
 talkbox:RegisterForClicks('LeftButtonUp', 'RightButtonUp')
 talkbox:RegisterForDrag('LeftButton')
 talkbox.TextFrame.SpeechProgress:SetFont('Fonts\\MORPHEUS.ttf', 16, '')
+talkbox.TextFrame.SpeechProgress:SetShadowColor(0, 0, 0, 1)
+talkbox.TextFrame.SpeechProgress:SetShadowOffset(0, -1)
 
 ----------------------------------
 -- Set movable frames
@@ -286,9 +287,24 @@ titles:SetMovable(true)
 titles:SetUserPlaced(false)
 
 --------------------------------
+-- Hooks and hacks
+--------------------------------
+
+-- Handle custom gossip events (new in Shadowlands)
+if CustomGossipManagerMixin then
+	-- Only mixin the necessities
+	local mixin = CustomGossipManagerMixin
+	frame.RegisterHandler = mixin.RegisterHandler
+	frame.GetGossipHandler = mixin.GetHandler
+	mixin.OnLoad(frame)
+	-- Simplest solution to kill GossipFrame without spreading taint
+	if CustomGossipFrameManager then
+		CustomGossipFrameManager:UnregisterAllEvents()
+	end
+end
+
 -- Anchor the real talking head to the fake talking head,
 -- make it appear IN PLACE of the fake one if the fake one isn't shown.
---------------------------------
 do 
 	local function HookTalkingHead()
 		-- use this as assertion. if something else beat Immersion to it and manipulated the frame,
@@ -376,9 +392,7 @@ do
 	end
 end
 
-
--- Azerite Empowered Item UI
-do
+do  -- Azerite Empowered Item UI
 	local loaded = false
 	local function ignoreAzeriteItemUI()
 		if not loaded and IsAddOnLoaded('Blizzard_AzeriteUI') then

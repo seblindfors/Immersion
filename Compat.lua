@@ -5,30 +5,32 @@ local _, L = ...
 L.compat = {
 ----------------------------------
 	['ConsolePort'] = function(self)
-		L.ToggleIgnoreFrame(ConsolePortCursor, true)
-		L.ToggleIgnoreFrame(ConsolePortMouseHandle, true)
-		L.ToggleIgnoreFrame(ConsolePortUIHandle.HintBar, true)
+		if ConsolePortCursor then L.ToggleIgnoreFrame(ConsolePortCursor, true) end
+		if ConsolePortMouseHandle then L.ToggleIgnoreFrame(ConsolePortMouseHandle, true) end
+		if ConsolePortUIHandle then L.ToggleIgnoreFrame(ConsolePortUIHandle.HintBar, true) end
 
-		local WindowMixin = {}
-		function WindowMixin:OnShow()
-			L.config:SetParent(self)
-			L.config:ClearAllPoints()
-			L.config:SetPoint('TOPLEFT', 16, -16)
-			L.config:SetPoint('BOTTOMRIGHT', -16, 16)
-			L.config.logo:Hide()
-			L.config:Show()
+		local config = ConsolePortOldConfig
+		if config then
+			local WindowMixin = {}
+			function WindowMixin:OnShow()
+				L.config:SetParent(self)
+				L.config:ClearAllPoints()
+				L.config:SetPoint('TOPLEFT', 16, -16)
+				L.config:SetPoint('BOTTOMRIGHT', -16, 16)
+				L.config.logo:Hide()
+				L.config:Show()
+			end
+
+			function WindowMixin:OnHide()
+				L.config.logo:Show()
+			end
+			
+			config:AddPanel({
+				name = _, 
+				header = _, 
+				mixin = WindowMixin,
+			})
 		end
-
-		function WindowMixin:OnHide()
-			L.config.logo:Show()
-		end
-
-		local config = ConsolePortOldConfig or ConsolePortConfig
-		config:AddPanel({
-			name = _, 
-			header = _, 
-			mixin = WindowMixin,
-		})
 	end;
 ----------------------------------
 	['Blitz'] = function(self)
