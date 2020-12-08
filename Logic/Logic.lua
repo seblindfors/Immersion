@@ -604,6 +604,8 @@ function TalkBox:OnLeftClick()
 		else
 			ImmersionFrame:ForceClose()
 		end
+	else
+		ImmersionFrame:ForceClose()
 	end
 end
 
