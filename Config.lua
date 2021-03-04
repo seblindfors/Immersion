@@ -402,17 +402,6 @@ L.options = {
 						L.frame:SetScale(val)
 					end,
 				},
-				solidbackground = {
-					type = 'toggle',
-					name = L['Solid background'],
-					order = 3,
-					get = L.GetFromSV,
-					set = function(_, val) 
-						L.cfg.solidbackground = val
-						L.frame.TalkBox.BackgroundFrame.SolidBackground:SetShown(val)
-						L.frame.TalkBox.Elements:SetBackdrop(val and L.Backdrops.TALKBOX_SOLID or L.Backdrops.TALKBOX)
-					end,
-				},
 				header = {
 					type = 'header',
 					name = DISPLAY,
@@ -432,23 +421,28 @@ L.options = {
 					inline = true,
 					order = 6,
 					args = {
-						boxscale = {
-							type = 'range',
-							name = L['Scale'],
+						solidbackground = {
+							type = 'toggle',
+							name = L['Solid background'],
 							order = 0,
-							min = 0.5,
-							max = 1.5,
-							step = 0.1,
-							get = L.GetFromDefaultOrSV,
-							set = function(self, val) 
-								L.cfg.boxscale = val
-								L.frame.TalkBox:SetScale(val)
+							get = L.GetFromSV,
+							set = function(_, val) 
+								L.cfg.solidbackground = val
+								L.frame.TalkBox.BackgroundFrame.SolidBackground:SetShown(val)
+								L.frame.TalkBox.Elements:SetBackdrop(val and L.Backdrops.TALKBOX_SOLID or L.Backdrops.TALKBOX)
 							end,
+						},
+						disablebgtextures = {
+							type = 'toggle',
+							name = L['Disable overlay backgrounds'],
+							order = 1,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.disablebgtextures = val end,
 						},
 						disableglowani = {
 							type = 'toggle',
 							name = L['Disable sheen animation'],
-							order = 1,
+							order = 2,
 							get = L.GetFromSV,
 							set = function(_, val) L.cfg.disableglowani = val end,
 						},
@@ -466,7 +460,7 @@ L.options = {
 						disableanisequence = {
 							type = 'toggle',
 							name = L['Disable model animations'],
-							order = 5,
+							order = 4,
 							get = L.GetFromSV,
 							set = function(_, val)
 								L.cfg.disableanisequence = val
@@ -475,10 +469,23 @@ L.options = {
 						disableboxhighlight = {
 							type = 'toggle',
 							name = L['Disable mouseover highlight'],
-							order = 6,
+							order = 5,
 							get = L.GetFromSV,
 							set = function(_, val)
 								L.cfg.disableboxhighlight = val
+							end,
+						},
+						boxscale = {
+							type = 'range',
+							name = L['Scale'],
+							order = 6,
+							min = 0.5,
+							max = 1.5,
+							step = 0.1,
+							get = L.GetFromDefaultOrSV,
+							set = function(self, val) 
+								L.cfg.boxscale = val
+								L.frame.TalkBox:SetScale(val)
 							end,
 						},
 						resetposition = {
@@ -510,7 +517,7 @@ L.options = {
 							name = L['Show at mouse location'],
 							get = L.GetFromSV,
 							set = function(_, val) L.cfg.gossipatcursor = val end,
-							order = 0,
+							order = 1,
 						},
 						titlescale = {
 							type = 'range',
@@ -518,7 +525,7 @@ L.options = {
 							min = 0.5,
 							max = 1.5,
 							step = 0.1,
-							order = 2,
+							order = 0,
 							get = L.GetFromDefaultOrSV,
 							set = function(self, val) 
 								L.cfg.titlescale = val
@@ -539,7 +546,7 @@ L.options = {
 							min = 0.5,
 							max = 1.5,
 							step = 0.1,
-							order = 2,
+							order = 0,
 							get = L.GetFromDefaultOrSV,
 							set = function(self, val) 
 								L.cfg.elementscale = val
@@ -549,7 +556,7 @@ L.options = {
 						inspect = {
 							type = 'select',
 							name = INSPECT .. ' ('..ITEMS..')',
-							order = 3,
+							order = 1,
 							values = modifiers,
 							get = L.GetFromDefaultOrSV,
 							set = function(_, val)

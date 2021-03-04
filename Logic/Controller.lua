@@ -8,7 +8,7 @@
 -------------------------------------------------
 -- Initialization
 -------------------------------------------------
-local NPC, _, L = ImmersionFrame, ...
+local NPC, API, _, L = ImmersionFrame, ImmersionAPI, ...
 local HANDLE, KEY
 do 
 	-- list of functions existing on the HANDLE
@@ -30,7 +30,7 @@ do
 
 	-- For programming convenience, set all these functions to no-op
 	-- if ConsolePort isn't loaded, since they won't be doing anything useful.
-	if not ConsolePort then
+	if (not ConsolePortUIHandle) then
 		local function noop() end
 		for _, funcID in ipairs(HANDLE_functions) do
 			NPC[funcID] = noop
@@ -219,6 +219,14 @@ do
 	end
 end
 
+local function GetUIControlKey(button)
+	if ConsolePort.GetUIControlKey then
+		return ConsolePort:GetUIControlKey(GetBindingAction(button))
+	elseif ConsolePortUIHandle.GetUIControlBinding then
+		return ConsolePortUIHandle:GetUIControlBinding(button)
+	end
+end
+
 function NPC:ParseControllerCommand(button)
 	if controllerInterrupt then
 		-- Handle edge case when CP cursor should precede Immersion input.
@@ -234,7 +242,7 @@ function NPC:ParseControllerCommand(button)
 			return true
 		end
 		-- Handle every other case of possible controller inputs.
-		local keyID = ConsolePort:GetUIControlKey(GetBindingAction(button))
+		local keyID = GetUIControlKey(button)
 		local func = keyID and ControllerInput[keyID]
 		if func then
 			return not func(self)
@@ -303,7 +311,7 @@ function Selector:GetNextButton(index, delta)
 		local modifier = delta
 		while true do
 			local key = index + delta
-			if key < 1 or key > self.Threshold then
+			if key < 1 or key > self:GetMaxIndex() then
 				return self.Active[self.index]
 			end
 			if self.Active[key] then
@@ -417,5 +425,4 @@ hooksecurefunc(L.TooltipMixin, 'OnLeave', function(self)
 end)
 
 -- Titles
-Titles.Threshold = NUMGOSSIPBUTTONS
 Titles.HintText = ACCEPT

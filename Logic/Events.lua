@@ -3,16 +3,14 @@ local NPC, API = L.frame, ImmersionAPI
 ----------------------------------
 -- Events
 ----------------------------------
-function NPC:GOSSIP_SHOW(...)
-	self:UpdateTalkingHead(API:GetUnitName('npc'), API:GetGossipText(), 'GossipGossip')
-	if self:IsGossipAvailable() then
-		self:PlayIntro('GOSSIP_SHOW')
-	end
+function NPC:GOSSIP_SHOW(customGossipHandler)
+	self:HandleGossipOpenEvent(customGossipHandler)
 end
 
 function NPC:GOSSIP_CLOSED(...)
 	API:CloseGossip()
 	self:PlayOutro()
+	self:HandleGossipCloseEvent()
 	L.ClickedTitleCache = nil
 end
 

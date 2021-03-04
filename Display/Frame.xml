@@ -128,7 +128,7 @@
 	</Button>
 
 	<Button name="ImmersionQuestSpellTemplate" hidden="true" virtual="true">
-		<Size x="157" y="56"/>
+		<Size x="250" y="56"/>
 		<HitRectInsets left="0" right="0" top="0" bottom="14"/>
 		<Layers>
 			<Layer level="BACKGROUND">
@@ -733,10 +733,22 @@
 					<Frame parentKey="BackgroundFrame" setAllPoints="true" useParentLevel="true">
 						<Layers>
 							<Layer level="BACKGROUND">
-								<Texture parentKey="TextBackground" hidden="false" alpha="1" alphaMode="BLEND" atlas="TalkingHeads-TextBackground" useAtlasSize="true"/>
+								<Texture parentKey="TextBackground" hidden="false" atlas="TalkingHeads-TextBackground" useAtlasSize="true"/>
 							</Layer>
 							<Layer level="BACKGROUND">
-								<Texture parentKey="SolidBackground" hidden="true" alpha="1" alphaMode="BLEND" atlas="TalkingHeads-TextBackground" useAtlasSize="true"/>
+								<Texture parentKey="SolidBackground" hidden="true" atlas="TalkingHeads-TextBackground" useAtlasSize="true"/>
+							</Layer>
+							<Layer level="ARTWORK">
+								<Texture parentKey="OverlayKit" hidden="true">
+									<Anchors>
+										<Anchor point="BOTTOMRIGHT" x="0" y="0"/>
+									</Anchors>
+								</Texture>
+								<MaskTexture parentKey="Mask" setAllPoints="true" file="Interface\AddOns\Immersion\Textures\Mask_BG" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
+									<MaskedTextures>
+										<MaskedTexture childKey="OverlayKit"/>
+									</MaskedTextures>
+								</MaskTexture>
 							</Layer>
 						</Layers>
 						<Animations>

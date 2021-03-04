@@ -12,6 +12,11 @@ local SEAL_QUESTS = { -- Seal quests
 	[46730] = {text = '|cff2f0a48'..QUEST_KHADGAR..'|r', sealAtlas = 'Quest-Legionfall-WaxSeal'},
 }
 
+local LOOT_ITEM_TYPES = {
+	[0] = 'item'; -- LOOT_LIST_ITEM
+	[1] = 'currency'; -- LOOT_LIST_CURRENCY
+}
+
 ----------------------------------
 -- Helper functions
 ----------------------------------
@@ -44,12 +49,14 @@ end
 local function UpdateItemInfo(self)
 	assert(self.type)
 	assert(self:GetID())
+
 	if self.objectType == 'item' then
-		local name, texture, numItems, quality, isUsable = GetQuestItemInfo(self.type, self:GetID())
+		local name, texture, amount, quality, isUsable = GetQuestItemInfo(self.type, self:GetID())
 		-- For the tooltip
 		self.Name:SetText(name)
 		self.itemTexture = texture
-		SetItemButtonCount(self, numItems)
+		SetItemButtonCount(self, amount)
+	--	SetItemButtonQuality(self, quality, GetQuestItemLink(self.type, self:GetID()))
 		SetItemButtonTexture(self, texture)
 		if ( isUsable ) then
 			SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0)
@@ -61,19 +68,18 @@ local function UpdateItemInfo(self)
 		self:Show()
 		return true
 	elseif self.objectType == 'currency' then
-		local name, texture, numItems = GetQuestCurrencyInfo(self.type, self:GetID())
-		if (name and texture and numItems) then
-			-- For the tooltip
-			self.Name:SetText(name)
-			self.itemTexture = texture
-			SetItemButtonCount(self, numItems, true)
-			SetItemButtonTexture(self, texture)
-			SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0)
-			SetItemButtonNameFrameVertexColor(self, 1.0, 1.0, 1.0)
-			return true
-		else
-			return self:Hide()
-		end
+		local name, texture, amount, quality = GetQuestCurrencyInfo(self.type, self:GetID())
+		local currencyID = GetQuestCurrencyID(self.type, self:GetID())
+		name, texture, amount, quality = CurrencyContainerUtil.GetCurrencyContainerInfo(currencyID, amount, name, texture, quality)
+		-- For the tooltip
+		self.Name:SetText(name)
+		self.itemTexture = texture
+		SetItemButtonCount(self, amount, true)
+		SetItemButtonTexture(self, texture)
+		SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0)
+		SetItemButtonNameFrameVertexColor(self, 1.0, 1.0, 1.0)
+		self:Show()
+		return true
 	end
 end
 
@@ -267,7 +273,7 @@ function Elements:ShowRewards()
 	local self = self.Content.RewardsFrame -- more convenient this way
 	local rewardButtons = self.Buttons
 	local 	numQuestRewards, numQuestChoices, numQuestCurrencies,
-			money,
+			questID, money,
 			skillName, skillPoints, skillIcon,
 			xp, artifactXP, artifactCategory, honor,
 			playerTitle,
@@ -278,6 +284,7 @@ function Elements:ShowRewards()
 	local GetSpell = GetRewardSpell
 
 	do  -- Get data
+		questID = GetQuestID()
 		numQuestRewards = API:GetNumQuestRewards()
 		numQuestChoices = API:GetNumQuestChoices()
 		numQuestCurrencies = API:GetNumRewardCurrencies()
@@ -363,14 +370,24 @@ function Elements:ShowRewards()
 				questItem = GetItemButton(self, index)
 				questItem.type = 'choice'
 				questItem.objectType = 'item'
+				questItem.questID = questID
 				numItems = 1
 				questItem:SetID(i)
 				questItem:Show()
 
+				-- Handle Blizzard's new Shadowlands shenanigans
+				local newType = LOOT_ITEM_TYPES[GetQuestItemInfoLootType(questItem.type, i)]
+				if newType then
+					questItem.objectType = newType;
+				end
+
 				UpdateItemInfo(questItem)
 
-				local link = GetQuestItemLink(questItem.type, i)
-				local vendorValue = link and select(11, GetItemInfo(link))
+				local vendorValue
+				if (questItem.objectType == 'item') then
+					local link = GetQuestItemLink(questItem.type, i)
+					vendorValue = link and select(11, GetItemInfo(link))
+				end
 				
 				if vendorValue and ( not highestValue or vendorValue > highestValue ) then
 					highestValue = vendorValue
@@ -565,6 +582,7 @@ function Elements:ShowRewards()
 					questItem = GetItemButton(self, index)
 					questItem.type = 'reward'
 					questItem.objectType = 'item'
+					questItem.questID = questID
 					questItem:SetID(i)
 					questItem:Show()
 
@@ -591,11 +609,12 @@ function Elements:ShowRewards()
 				baseIndex = rewardsCount
 				local foundCurrencies = 0
 				buttonIndex = buttonIndex + 1
-				for i = 1, API:GetMaxRewardCurrencies(), 1 do
+				for i = 1, numQuestCurrencies, 1 do
 					index = i + baseIndex
 					questItem = GetItemButton(self, index)
 					questItem.type = 'reward'
 					questItem.objectType = 'currency'
+					questItem.questID = questID
 					questItem:SetID(i)
 					questItem:Show()
 
@@ -733,6 +752,7 @@ function Elements:ShowProgress(material)
 				local requiredItem = GetItemButton(self, buttonIndex, 'ProgressItem')
 				requiredItem.type = 'required'
 				requiredItem.objectType = 'item'
+				requiredItem.questID = questID
 				requiredItem:SetID(i)
 				requiredItem:Show()
 
@@ -754,6 +774,7 @@ function Elements:ShowProgress(material)
 			local requiredItem = GetItemButton(self, buttonIndex, 'ProgressItem')
 			requiredItem.type = 'required'
 			requiredItem.objectType = 'currency'
+			requiredItem.questID = questID
 			requiredItem:SetID(i)
 			requiredItem:Show()
 

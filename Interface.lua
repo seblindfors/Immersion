@@ -319,7 +319,10 @@ function API:GetUnitName(...)
 end
 
 function API:GetFriendshipReputation(...)
-	return GetFriendshipReputation and GetFriendshipReputation(...) or 0
+	if GetFriendshipReputation then
+		return GetFriendshipReputation(...)
+	end
+	return 0
 end
 
 function API:GetPortraitAtlas()
