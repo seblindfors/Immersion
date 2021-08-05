@@ -291,16 +291,11 @@ titles:SetUserPlaced(false)
 --------------------------------
 
 -- Handle custom gossip events (new in Shadowlands)
-if CustomGossipManagerMixin then
-	-- Only mixin the necessities
-	local mixin = CustomGossipManagerMixin
-	frame.RegisterHandler = mixin.RegisterHandler
-	frame.GetGossipHandler = mixin.GetHandler
-	mixin.OnLoad(frame)
-	-- Simplest solution to kill GossipFrame without spreading taint
-	if CustomGossipFrameManager then
-		CustomGossipFrameManager:UnregisterAllEvents()
-	end
+if CustomGossipFrameManager then
+	frame.gossipHandlers = CustomGossipFrameManager.handlers;
+	GossipFrame_HandleShow = nop; -- let's hope blizz doesn't call this anywhere else
+else
+	frame.gossipHandlers = {}
 end
 
 -- Anchor the real talking head to the fake talking head,
