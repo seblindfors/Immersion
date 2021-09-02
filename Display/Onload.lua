@@ -42,8 +42,11 @@ for _, event in pairs({
 --	'MERCHANT_SHOW', 	-- Force close gossip on merchant interaction.
 	'NAME_PLATE_UNIT_ADDED', 	-- For nameplate mode
 	'NAME_PLATE_UNIT_REMOVED', 	-- For nameplate mode
-	'SUPER_TRACKING_CHANGED',
-}) do frame:RegisterEvent(event) end
+	ImmersionAPI:IsRetail() and 'SUPER_TRACKING_CHANGED',
+}) do if event then
+		frame:RegisterEvent(event)
+	end
+end
 
 
 frame.IgnoreResetEvent = {

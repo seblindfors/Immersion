@@ -1,15 +1,18 @@
 local API = {}; ImmersionAPI = API;
 -- Version
-local IS_CLASSIC = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC 
-local IS_RETAIL  = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
+local IS_VANILLA = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC or nil;
+local IS_RETAIL  = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE or nil;
+local IS_CLASSIC = WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC or nil;
 
-function API:IsClassic(...) return IS_CLASSIC end
-function API:IsRetail(...)  return IS_RETAIL  end
+function API:IsVanilla() return IS_VANILLA end
+function API:IsRetail()  return IS_RETAIL  end
+function API:IsClassic() return IS_CLASSIC end
+function API:IsClassicOrVanilla() return IS_CLASSIC or IS_VANILLA end 
 
 API.ITERATORS = {
-	GOSSIP    = IS_CLASSIC and 2 or IS_RETAIL and 2;
-	ACTIVE    = IS_CLASSIC and 6 or IS_RETAIL and 7;
-	AVAILABLE = IS_CLASSIC and 7 or IS_RETAIL and 8;
+	GOSSIP    = (IS_VANILLA or IS_CLASSIC) and 2 or IS_RETAIL and 2;
+	ACTIVE    = (IS_VANILLA or IS_CLASSIC) and 6 or IS_RETAIL and 7;
+	AVAILABLE = (IS_VANILLA or IS_CLASSIC) and 7 or IS_RETAIL and 8;
 }
 
 -- Chunk iterators
@@ -27,6 +30,7 @@ local function map(lambda, step, ...)
 end
 
 function API:MapGossipAvailableQuests(i, ...)
+	--local titleText, level, isTrivial, frequency, isRepeatable, isLegendary, isIgnored = select(i, ...);
 	local title, level, trivial, frequency, repeatable, legendary, id = select(i, ...)
 	return {
 		title       = title,
@@ -101,7 +105,7 @@ function API:QuestFlagsPVP(...)
 end
 
 function API:GetQuestIconOffer(quest)
-	if QuestUtil.GetQuestIconOffer then
+	if QuestUtil and QuestUtil.GetQuestIconOffer then
 		return QuestUtil.GetQuestIconOffer(
 			quest.isLegendary,
 			quest.frequency,
@@ -111,14 +115,14 @@ function API:GetQuestIconOffer(quest)
 	end
 	local icon =
 		( quest.isLegendary and 'AvailableLegendaryQuestIcon') or
-		( quest.frequency and quest.frequency ~= 0 and 'DailyQuestIcon') or
+		( quest.frequency and quest.frequency > 1 and 'DailyQuestIcon') or
 		( quest.repeatable and 'DailyActiveQuestIcon') or
 		( 'AvailableQuestIcon' )
 	return ([[Interface\GossipFrame\%s]]):format(icon)
 end
 
 function API:GetQuestIconActive(quest)
-	if QuestUtil.GetQuestIconActive then
+	if QuestUtil and QuestUtil.GetQuestIconActive then
 		return QuestUtil.GetQuestIconActive(
 			quest.isComplete,
 			quest.isLegendary,
@@ -130,8 +134,8 @@ function API:GetQuestIconActive(quest)
 	local icon =
 		( quest.isComplete ) and (
 			( quest.isLegendary and  'ActiveLegendaryQuestIcon') or
-			( quest.isComplete and 'ActiveQuestIcon') ) or
-		( 'InCompleteQuestIcon' )
+			( quest.isComplete and 'ActiveQuestIcon')
+		) or ( 'InCompleteQuestIcon' )
 	return ([[Interface\GossipFrame\%s]]):format(icon)
 end
 
@@ -358,4 +362,16 @@ end
 
 function API:CloseItemText(...)
 	if CloseItemText then return CloseItemText(...) end
+end
+
+function API:GetQuestDetailsTheme(...)
+	if C_QuestLog and C_QuestLog.GetQuestDetailsTheme then
+		return C_QuestLog.GetQuestDetailsTheme(...)
+	end
+end
+
+function API:GetQuestItemInfoLootType(...)
+	if GetQuestItemInfoLootType then
+		return GetQuestItemInfoLootType(...)
+	end
 end

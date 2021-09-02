@@ -376,7 +376,7 @@ function Elements:ShowRewards()
 				questItem:Show()
 
 				-- Handle Blizzard's new Shadowlands shenanigans
-				local newType = LOOT_ITEM_TYPES[GetQuestItemInfoLootType(questItem.type, i)]
+				local newType = LOOT_ITEM_TYPES[API:GetQuestItemInfoLootType(questItem.type, i)]
 				if newType then
 					questItem.objectType = newType;
 				end

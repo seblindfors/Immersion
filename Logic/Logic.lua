@@ -167,7 +167,7 @@ function NPC:SetBackground(kit)
 end
 
 function NPC:UpdateBackground()
-	local theme = C_QuestLog.GetQuestDetailsTheme(GetQuestID())
+	local theme = API:GetQuestDetailsTheme(GetQuestID())
 	local kit = theme and theme.background and theme.background:gsub('QuestBG%-', '')
 	if kit then
 		self:SetBackground(kit)
