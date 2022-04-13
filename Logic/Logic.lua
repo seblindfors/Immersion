@@ -279,10 +279,6 @@ function NPC:ShowItems()
 
 		self:SetItemTooltip(tooltip, item, inspector)
 
-		-- Readjust tooltip size to fit the icon
-		local width, height = tooltip:GetSize()
-		tooltip:SetSize(width + 30, height + 4)
-
 		-- Anchor the tooltip to the column
 		tooltip:SetPoint('TOP', column.lastItem or column, column.lastItem and 'BOTTOM' or 'TOP', 0, 0)
 		column.lastItem = tooltip
