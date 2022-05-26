@@ -1,8 +1,16 @@
 ## Interface: 90200
+## Interface-Classic: 11402
+## Interface-BCC: 20504
 ## Title: Immersion
 ## Notes: Immersive replacement for quest & gossip
-## Version: 1.4.1
+## Version: 1.4.2
+
 ## Author: Sebastian Lindfors
+## X-Website: https://github.com/seblindfors/Immersion
+## X-Curse-Project-ID: 257550
+## X-WoWI-ID: 24714
+## X-Wago-ID: RaN0MP6j
+
 ## SavedVariables: ImmersionSetup
 ## OptionalDeps: ConsolePort
 
