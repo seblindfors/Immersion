@@ -4,7 +4,7 @@ externals:
   Libs/LibStub: https://repos.wowace.com/wow/ace3/trunk/LibStub
   Libs/CallbackHandler-1.0: https://repos.wowace.com/wow/ace3/trunk/CallbackHandler-1.0
   Libs/AceGUI-3.0: https://repos.wowace.com/wow/ace3/trunk/AceGUI-3.0
-  Libs/AceConfig-3.0: https://repos.wowace.com/wow/ace3/trunk/AceConfig-3.0 
+  Libs/AceConfig-3.0: https://repos.wowace.com/wow/ace3/trunk/AceConfig-3.0
 
 ignore:
   - README.md
