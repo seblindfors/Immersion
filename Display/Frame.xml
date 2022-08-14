@@ -266,9 +266,25 @@
 		<Scripts>
 			<OnLoad inherit="append">
 				self.shoppingTooltips = GameTooltip.shoppingTooltips;
-				self:SetBackdropBorderColor(TOOLTIP_DEFAULT_COLOR.r, TOOLTIP_DEFAULT_COLOR.g, TOOLTIP_DEFAULT_COLOR.b);
-				self:SetBackdropColor(TOOLTIP_DEFAULT_BACKGROUND_COLOR.r, TOOLTIP_DEFAULT_BACKGROUND_COLOR.g, TOOLTIP_DEFAULT_BACKGROUND_COLOR.b);
+
+				if ( self.SetBackdropBorderColor ) then
+					self:SetBackdropBorderColor(TOOLTIP_DEFAULT_COLOR.r, TOOLTIP_DEFAULT_COLOR.g, TOOLTIP_DEFAULT_COLOR.b);
+				elseif ( self.NineSlice and self.NineSlice.SetBorderColor ) then
+					self.NineSlice:SetBorderColor(TOOLTIP_DEFAULT_COLOR.r, TOOLTIP_DEFAULT_COLOR.g, TOOLTIP_DEFAULT_COLOR.b);
+				end
+				if ( self.SetBackdropColor ) then
+					self:SetBackdropColor(TOOLTIP_DEFAULT_BACKGROUND_COLOR.r, TOOLTIP_DEFAULT_BACKGROUND_COLOR.g, TOOLTIP_DEFAULT_BACKGROUND_COLOR.b);
+				elseif ( self.NineSlice and self.NineSlice.SetCenterColor ) then
+					self.NineSlice:SetCenterColor(TOOLTIP_DEFAULT_BACKGROUND_COLOR.r, TOOLTIP_DEFAULT_BACKGROUND_COLOR.g, TOOLTIP_DEFAULT_BACKGROUND_COLOR.b);
+				end
 			</OnLoad>
+			<OnTooltipSetItem>
+				-- Readjust tooltip size to fit the icon
+				C_Timer.After(0, function()
+					local width, height = self:GetSize()
+					self:SetSize(width + 30, height + 4)
+				end)
+			</OnTooltipSetItem>
 		</Scripts>
 	</GameTooltip>
 
@@ -1019,38 +1035,56 @@
 									<TexCoords left="0.01367188" right="0.53515625" top="0.01562500" bottom="0.60937500"/>
 								</Texture>
 							</Layer>
-							<Layer level="ARTWORK" textureSubLevel="1">
+							<Layer level="ARTWORK" textureSubLevel="0">
 								<Texture file="Interface\Common\friendship-heart" parentKey="icon">
 									<Size x="32" y="32"/>
 									<Anchors>
-										<Anchor point="TOPLEFT" x="-27" y="12"/>
+										<Anchor point="TOPLEFT" x="-27" y="16"/>
 									</Anchors>
 								</Texture>
-								<Texture name="$parentNotch1" file="Interface\Common\friendship-parts">
+								<MaskTexture parentKey="FriendshipIconMask" file="Interface\CharacterFrame\TempPortraitAlphaMask" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
+									<Anchors>
+										<Anchor point="TOPLEFT" relativeKey="$parent.icon" x="1" y="-1"/>
+										<Anchor point="BOTTOMRIGHT" relativeKey="$parent.icon" x="-1" y="1"/>
+									</Anchors>
+									<MaskedTextures>
+										<MaskedTexture childKey="icon"/>
+									</MaskedTextures>
+								</MaskTexture>
+							</Layer>
+							<Layer level="ARTWORK" textureSubLevel="1">
+								<Texture parentKey="BarCircle" file="Interface\QuestFrame\Friendship"> <!-- the bar's ring -->
+									<Size x="54" y="40"/>
+									<Anchors>
+										<Anchor point="TOPLEFT" x="-32" y="19"/>
+									</Anchors>
+									<TexCoords left="0.0175781" right="0.123047" top="0.015625" bottom="0.640625"/>
+								</Texture>
+								<Texture parentKey="Notch1" file="Interface\Common\friendship-parts">
 									<Size x="4" y="17"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" x="43" y="1"/>
 									</Anchors>
 									<TexCoords left="0.00195313" right="0.00976563" top="0.01562500" bottom="0.28125000"/>
 								</Texture>
-								<Texture name="$parentNotch2" file="Interface\Common\friendship-parts">
+								<Texture parentKey="Notch2" file="Interface\Common\friendship-parts">
 									<Size x="4" y="17"/>
 									<Anchors>
-										<Anchor point="LEFT" relativeTo="$parentNotch1" x="47" y="0"/>
+										<Anchor point="LEFT" relativeKey="$parent.Notch1" x="47" y="0"/>
 									</Anchors>
 									<TexCoords left="0.00195313" right="0.00976563" top="0.01562500" bottom="0.28125000"/>
 								</Texture>
-								<Texture name="$parentNotch3" file="Interface\Common\friendship-parts">
+								<Texture parentKey="Notch3" file="Interface\Common\friendship-parts">
 									<Size x="4" y="17"/>
 									<Anchors>
-										<Anchor point="LEFT" relativeTo="$parentNotch2" x="47" y="0"/>
+										<Anchor point="LEFT" relativeKey="$parent.Notch2" x="47" y="0"/>
 									</Anchors>
 									<TexCoords left="0.00195313" right="0.00976563" top="0.01562500" bottom="0.28125000"/>
 								</Texture>
-								<Texture name="$parentNotch4" file="Interface\Common\friendship-parts">
+								<Texture parentKey="Notch4" file="Interface\Common\friendship-parts">
 									<Size x="4" y="17"/>
 									<Anchors>
-										<Anchor point="LEFT" relativeTo="$parentNotch3" x="47" y="0"/>
+										<Anchor point="LEFT" relativeKey="$parent.Notch3" x="47" y="0"/>
 									</Anchors>
 									<TexCoords left="0.00195313" right="0.00976563" top="0.01562500" bottom="0.28125000"/>
 								</Texture>

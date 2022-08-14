@@ -41,6 +41,7 @@ end
 function Inspector:OnShow()
 	self.parent.TalkBox:Dim();
 	self.tooltipFramePool:ReleaseAll();
+	L.UIFrameFadeIn(self, 0.25, 0, 1)
 end
 
 function Inspector:OnHide()
@@ -58,6 +59,14 @@ function Inspector:OnHide()
 		column.lastItem = nil
 		column:SetSize(1, 1)
 		column:Hide()
+	end
+end
+
+function Inspector:OnUpdate(elapsed)
+	self.timer = (self.timer or 0) + elapsed
+	if self.timer > 0.1 then 
+		self:AdjustToChildren()
+		self.timer = 0
 	end
 end
 

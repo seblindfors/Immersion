@@ -10,7 +10,6 @@ end
 function NPC:GOSSIP_CLOSED(...)
 	API:CloseGossip()
 	self:PlayOutro()
-	self:HandleGossipCloseEvent()
 	L.ClickedTitleCache = nil
 end
 

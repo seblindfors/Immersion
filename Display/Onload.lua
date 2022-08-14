@@ -42,8 +42,11 @@ for _, event in pairs({
 --	'MERCHANT_SHOW', 	-- Force close gossip on merchant interaction.
 	'NAME_PLATE_UNIT_ADDED', 	-- For nameplate mode
 	'NAME_PLATE_UNIT_REMOVED', 	-- For nameplate mode
-	'SUPER_TRACKING_CHANGED',
-}) do frame:RegisterEvent(event) end
+	ImmersionAPI:IsRetail() and 'SUPER_TRACKING_CHANGED',
+}) do if event then
+		frame:RegisterEvent(event)
+	end
+end
 
 
 frame.IgnoreResetEvent = {
@@ -291,16 +294,11 @@ titles:SetUserPlaced(false)
 --------------------------------
 
 -- Handle custom gossip events (new in Shadowlands)
-if CustomGossipManagerMixin then
-	-- Only mixin the necessities
-	local mixin = CustomGossipManagerMixin
-	frame.RegisterHandler = mixin.RegisterHandler
-	frame.GetGossipHandler = mixin.GetHandler
-	mixin.OnLoad(frame)
-	-- Simplest solution to kill GossipFrame without spreading taint
-	if CustomGossipFrameManager then
-		CustomGossipFrameManager:UnregisterAllEvents()
-	end
+if CustomGossipFrameManager then
+	frame.gossipHandlers = CustomGossipFrameManager.handlers;
+	GossipFrame_HandleShow = nop; -- let's hope blizz doesn't call this anywhere else
+else
+	frame.gossipHandlers = {}
 end
 
 -- Anchor the real talking head to the fake talking head,

@@ -136,22 +136,12 @@ function NPC:HandleGossipQuestOverlap(event)
 end
 
 function NPC:HandleGossipOpenEvent(kit)
-	local handler = kit and self:GetGossipHandler(kit)
-	if handler then
-		self.customGossipFrame = handler(kit)
-	else
+	if not self.gossipHandlers[kit] then
 		self:SetBackground(kit)
 		self:UpdateTalkingHead(API:GetUnitName('npc'), API:GetGossipText(), 'GossipGossip')
 		if self:IsGossipAvailable() then
 			self:PlayIntro('GOSSIP_SHOW')
 		end
-	end
-end
-
-function NPC:HandleGossipCloseEvent()
-	if self.customGossipFrame then
-		self.customGossipFrame:Hide()
-		self.customGossipFrame = nil;
 	end
 end
 
@@ -169,15 +159,15 @@ function NPC:SetBackground(kit)
 			overlay:SetSize(atlasInfo.width, atlasInfo.height)
 			overlay:SetTexture(atlasInfo.file)
 			overlay:SetTexCoord(
-				atlasInfo.leftTexCoord, atlasInfo.rightTexCoord + 0.035,
-				atlasInfo.topTexCoord, atlasInfo.bottomTexCoord + 0.035)
+				atlasInfo.leftTexCoord, atlasInfo.rightTexCoord,-- + 0.035,
+				atlasInfo.topTexCoord, atlasInfo.bottomTexCoord)-- + 0.035)
 			return
 		end
 	end
 end
 
 function NPC:UpdateBackground()
-	local theme = C_QuestLog.GetQuestDetailsTheme(GetQuestID())
+	local theme = API:GetQuestDetailsTheme(GetQuestID())
 	local kit = theme and theme.background and theme.background:gsub('QuestBG%-', '')
 	if kit then
 		self:SetBackground(kit)
@@ -288,10 +278,6 @@ function NPC:ShowItems()
 		tooltip.Button:SetReferences(item, inspector)
 
 		self:SetItemTooltip(tooltip, item, inspector)
-
-		-- Readjust tooltip size to fit the icon
-		local width, height = tooltip:GetSize()
-		tooltip:SetSize(width + 30, height + 4)
 
 		-- Anchor the tooltip to the column
 		tooltip:SetPoint('TOP', column.lastItem or column, column.lastItem and 'BOTTOM' or 'TOP', 0, 0)
