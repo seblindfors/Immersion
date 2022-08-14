@@ -455,6 +455,7 @@ end
 
 function NPC:OnKeyDown(button)
 	if (button == 'ESCAPE' or GetBindingAction(button) == 'TOGGLEGAMEMENU') then
+		self:SetPropagateKeyboardInput(false)
 		self:ForceClose()
 		return
 	elseif self:ParseControllerCommand(button) then
