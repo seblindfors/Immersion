@@ -2,7 +2,7 @@ local API = {}; ImmersionAPI = API;
 -- Version
 local IS_VANILLA = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC or nil;
 local IS_RETAIL  = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE or nil;
-local IS_CLASSIC = WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC or nil;
+local IS_CLASSIC = WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC or nil;
 
 function API:IsVanilla() return IS_VANILLA end
 function API:IsRetail()  return IS_RETAIL  end
