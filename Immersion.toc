@@ -4,7 +4,7 @@
 ## Interface-Wrath: 30400
 ## Title: Immersion
 ## Notes: Immersive replacement for quest & gossip
-## Version: 1.4.4
+## Version: 1.4.5
 
 ## Author: Sebastian Lindfors
 ## X-Website: https://github.com/seblindfors/Immersion
