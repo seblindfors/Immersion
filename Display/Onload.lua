@@ -308,7 +308,7 @@ do
 	local function HookTalkingHead()
 		-- use this as assertion. if something else beat Immersion to it and manipulated the frame,
 		-- it shouldn't be moved, even if enabled by user. in essence, dummy protection.
-		if UIPARENT_MANAGED_FRAME_POSITIONS.TalkingHeadFrame then
+		if UIPARENT_MANAGED_FRAME_POSITIONS and UIPARENT_MANAGED_FRAME_POSITIONS.TalkingHeadFrame then
 			local managedFramePos = UIPARENT_MANAGED_FRAME_POSITIONS.TalkingHeadFrame
 			local alertFrameIndex, alertFrameSettings
 			local isTalkingHeadMoved, isDragging
