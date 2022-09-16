@@ -152,17 +152,17 @@ function NPC:SetBackground(kit)
 	if kit and not L('disablebgtextures') then
 		local backgroundAtlas = GetFinalNameFromTextureKit('QuestBG-%s', kit)
 		local atlasInfo = C_Texture.GetAtlasInfo(backgroundAtlas)
-		if atlasInfo then
-			overlay:Show()
-			overlay:SetGradientAlpha('HORIZONTAL', 1, 1, 1, 0, 1, 1, 1, 0.5)
-
-			overlay:SetSize(atlasInfo.width, atlasInfo.height)
-			overlay:SetTexture(atlasInfo.file)
-			overlay:SetTexCoord(
-				atlasInfo.leftTexCoord, atlasInfo.rightTexCoord,-- + 0.035,
-				atlasInfo.topTexCoord, atlasInfo.bottomTexCoord)-- + 0.035)
-			return
-		end
+		--if atlasInfo then
+		--	overlay:Show()
+		--	--overlay:SetGradientAlpha('HORIZONTAL', 1, 1, 1, 0, 1, 1, 1, 0.5)
+		--
+		--	overlay:SetSize(atlasInfo.width, atlasInfo.height)
+		--	overlay:SetTexture(atlasInfo.file)
+		--	overlay:SetTexCoord(
+		--		atlasInfo.leftTexCoord, atlasInfo.rightTexCoord,-- + 0.035,
+		--		atlasInfo.topTexCoord, atlasInfo.bottomTexCoord)-- + 0.035)
+		--	return
+		--end
 	end
 end
 
@@ -400,7 +400,7 @@ local inputs = {
 		elseif ( self.lastEvent == 'GOSSIP_SHOW' and numActive < 1 ) then
 			API:CloseGossip()
 		elseif ( self.lastEvent == 'GOSSIP_SHOW' and numActive == 1 ) then
-			API:SelectGossipOption(1)
+			API:SelectGossipOption(self.gossip.gossipOptionID)
 		elseif ( numActive > 1 ) then
 			self:SelectBestOption()
 		else

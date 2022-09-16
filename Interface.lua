@@ -57,7 +57,9 @@ end
 
 function API:MapGossipOptions(i, ...)
 	local name, icon = select(i, ...)
+
 	return {
+		gossipOptionID = i,
 		name = name,
 		type = icon,
 	}
@@ -234,7 +236,7 @@ function API:CanAutoSelectGossip(dontAutoSelect)
 	local gossip = self:GetGossipOptions()
 	if ( #gossip > 0  and gossip[1].type:lower() ~= 'gossip') then
 		if not dontAutoSelect then
-			self:SelectGossipOption(1)
+			self:SelectGossipOption(gossip.gossipOptionID)
 		end
 		return true
 	end
@@ -257,7 +259,7 @@ end
 
 function API:GetNumGossipOptions(...)
 	if GetNumGossipOptions then return GetNumGossipOptions(...) end
-	return C_GossipInfo.GetNumOptions(...)
+	return print(#C_GossipInfo.GetOptions(...))
 end
 
 function API:GetGossipAvailableQuests(...)

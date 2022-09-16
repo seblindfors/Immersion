@@ -100,9 +100,11 @@ function Elements:UpdateBoundaries()
 end
 
 function Elements:Reset()
-	for _, frame in pairs(self.Active) do
-		frame:Hide()
-	end
+	--if print(#self.Active) then
+	--	for _, frame in pairs(self.Active) do
+	--		frame:Hide()
+	--	end
+	--end
 	wipe(self.Active)
 	self:Hide()
 	self.Content:Hide()

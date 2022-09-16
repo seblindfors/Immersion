@@ -222,7 +222,8 @@ name:SetPoint('TOPLEFT', talkbox.PortraitFrame.Portrait, 'TOPRIGHT', 2, -19)
 -- Model script, light
 ----------------------------------
 local model = talkbox.MainFrame.Model
-model:SetLight(unpack(L.ModelMixin.LightValues))
+--model:SetLight(unpack(L.ModelMixin.LightValues))
+
 L.Mixin(model, L.ModelMixin)
 
 ----------------------------------

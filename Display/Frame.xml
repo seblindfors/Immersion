@@ -115,12 +115,12 @@
 			<AnimationGroup parentKey="InAnim" setToFinalAlpha="true">
 				<Scale childKey="Icon" startDelay="0" duration="0.35" order="1" fromScaleX="1.15" fromScaleY="1.15" toScaleX="1" toScaleY="1">
 					<Origin point="CENTER">
-						<Offset x="0" y="0"/>
+<!--						<Offset x="0" y="0"/>-->
 					</Origin>
 				</Scale>
 				<Scale childKey="Border" startDelay="0" duration="0.35" order="1" fromScaleX="1.15" fromScaleY="1.15" toScaleX="1" toScaleY="1">
 					<Origin point="CENTER">
-						<Offset x="0" y="0"/>
+<!--						<Offset x="0" y="0"/>-->
 					</Origin>
 				</Scale>
 			</AnimationGroup>
@@ -610,13 +610,13 @@
 														<Alpha childKey="TextSheen" startDelay="0" duration="0.35" order="1" fromAlpha="0" toAlpha="0.7"/>
 														<Scale childKey="TextSheen" startDelay="0" duration="0.35" order="1" fromScaleX="0.25" fromScaleY="1" toScaleX="1" toScaleY="1">
 															<Origin point="LEFT">
-																<Offset x="0" y="0"/>
+<!--																<Offset x="0" y="0"/>-->
 															</Origin>
 														</Scale>
 														<Alpha childKey="TextSheen" startDelay="0.5" duration="0.35" order="1" fromAlpha="0.7" toAlpha="0"/>
 														<Scale childKey="Icon" startDelay="0" duration="0.35" order="1" fromScaleX="1.15" fromScaleY="1.15" toScaleX="1" toScaleY="1">
 															<Origin point="CENTER">
-																<Offset x="0" y="0"/>
+<!--																<Offset x="0" y="0"/>-->
 															</Origin>
 														</Scale>
 													</AnimationGroup>
@@ -828,7 +828,7 @@
 							</Layer>
 						</Layers>
 						<Frames>
-							<PlayerModel parentKey="Model" alpha="1" alphaMode="BLEND" >
+							<PlayerModel parentKey="Model" alpha="1" >
 								<Size x="115" y="115"/>
 								<Anchors>
 									<Anchor point="TOPLEFT" x="21" y="-21"/>
@@ -876,7 +876,7 @@
 									</Layer>
 								</Layers>
 							</Frame>
-							<Button parentKey="CloseButton" inherits="UIPanelCloseButtonNoScripts" alphaMode="BLEND">
+							<Button parentKey="CloseButton" inherits="UIPanelCloseButtonNoScripts">
 								<Anchors>
 									<Anchor point="TOPRIGHT" x="-12" y="-12"/>
 								</Anchors>
@@ -898,7 +898,7 @@
 								<Translation childKey="Overlay.Glow_LeftBar" startDelay="0.35" duration="0.8" order="1" offsetX="0" offsetY="-10"/>
 								<Scale childKey="Overlay.Glow_LeftBar" startDelay="0.35" duration="0.7" order="1" fromScaleX="1" fromScaleY="0.5" toScaleX="1" toScaleY="1.6">
 									<Origin point="TOP">
-										<Offset x="0" y="0"/>
+<!--										<Offset x="0" y="0"/>-->
 									</Origin>
 								</Scale>
 								<Alpha childKey="Overlay.Glow_LeftBar" startDelay="0.85" duration="0.25" order="1" fromAlpha="0.7" toAlpha="0"/>
@@ -906,21 +906,21 @@
 								<Translation childKey="Overlay.Glow_RightBar" startDelay="0.35" duration="0.8" order="1" offsetX="0" offsetY="-10"/>
 								<Scale childKey="Overlay.Glow_RightBar" startDelay="0.35" duration="0.7" order="1" fromScaleX="1" fromScaleY="0.5" toScaleX="1" toScaleY="1.6">
 									<Origin point="TOP">
-										<Offset x="0" y="0"/>
+<!--										<Offset x="0" y="0"/>-->
 									</Origin>
 								</Scale>
 								<Alpha childKey="Overlay.Glow_RightBar" startDelay="0.95" duration="0.25" order="1" fromAlpha="0.7" toAlpha="0"/>
 								<Alpha childKey="Sheen" startDelay="0.5" duration="0.5" order="1" fromAlpha="0" toAlpha="0.7"/>
 								<Scale childKey="Sheen" startDelay="0.5" duration="0.25" order="1" fromScaleX="0.25" fromScaleY="1" toScaleX="1" toScaleY="1">
 									<Origin point="LEFT">
-										<Offset x="0" y="0"/>
+<!--										<Offset x="0" y="0"/>-->
 									</Origin>
 								</Scale>
 								<Alpha childKey="Sheen" startDelay="1" duration="0.5" order="1" fromAlpha="0.7" toAlpha="0"/>
 								<Alpha childKey="TextSheen" startDelay="0.75" duration="0.5" order="1" fromAlpha="0" toAlpha="0.7"/>
 								<Scale childKey="TextSheen" startDelay="0.75" duration="0.25" order="1" fromScaleX="0.25" fromScaleY="1" toScaleX="1" toScaleY="1">
 									<Origin point="LEFT">
-										<Offset x="0" y="0"/>
+<!--										<Offset x="0" y="0"/>-->
 									</Origin>
 								</Scale>
 								<Alpha childKey="TextSheen" startDelay="1.25" duration="0.5" order="1" fromAlpha="0.7" toAlpha="0"/>
@@ -932,14 +932,14 @@
 								<Alpha childKey="Sheen" startDelay="0" duration="0.5" order="1" fromAlpha="0" toAlpha="0.7"/>
 								<Scale childKey="Sheen" startDelay="0" duration="0.25" order="1" fromScaleX="0.25" fromScaleY="1" toScaleX="1" toScaleY="1">
 									<Origin point="LEFT">
-										<Offset x="0" y="0"/>
+<!--										<Offset x="0" y="0"/>-->
 									</Origin>
 								</Scale>
 								<Alpha childKey="Sheen" startDelay="0.5" duration="0.5" order="1" fromAlpha="0.7" toAlpha="0"/>
 								<Alpha childKey="TextSheen" startDelay="0.25" duration="0.5" order="1" fromAlpha="0" toAlpha="0.7"/>
 								<Scale childKey="TextSheen" startDelay="0.25" duration="0.25" order="1" fromScaleX="0.25" fromScaleY="1" toScaleX="1" toScaleY="1">
 									<Origin point="LEFT">
-										<Offset x="0" y="0"/>
+<!--										<Offset x="0" y="0"/>-->
 									</Origin>
 								</Scale>
 								<Alpha childKey="TextSheen" startDelay="0.75" duration="0.5" order="1" fromAlpha="0.7" toAlpha="0"/>
@@ -1010,7 +1010,7 @@
 								self.throttle = 0;
 								self.Text = self:GetParent().TextFrame.Text;
 								self:SetStatusBarTexture(1, 1, 1, "BORDER", -1);
-								self:GetStatusBarTexture():SetGradient("VERTICAL", 8/255, 93/255, 72/255, 11/255, 136/255, 105/255);
+								--self:GetStatusBarTexture():SetGradient("VERTICAL", 8/255, 93/255, 72/255, 11/255, 136/255, 105/255);
 								self:SetStatusBarColor(1, 0.8, 0);
 								self:SetMinMaxValues(0, 1);
 								self:SetFrameLevel(self:GetFrameLevel() - 1)
@@ -1098,7 +1098,7 @@
 						<Scripts>
 							<OnLoad>
 								self:SetStatusBarTexture(1, 1, 1, "BORDER", -1);
-								self:GetStatusBarTexture():SetGradient("VERTICAL", 8/255, 93/255, 72/255, 11/255, 136/255, 105/255);
+								--self:GetStatusBarTexture():SetGradient("VERTICAL", 8/255, 93/255, 72/255, 11/255, 136/255, 105/255);
 								self:SetStatusBarColor(0.5, 0.7, 1);
 							</OnLoad>
 							<OnEnter>
