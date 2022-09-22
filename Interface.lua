@@ -67,7 +67,7 @@ end
 
 -- Quest pickup API
 function API:CloseQuest(...)
-	return CloseQuest and CloseQuest(...)
+	--return CloseQuest and CloseQuest(...)
 end
 
 function API:GetGreetingText(...)
@@ -234,11 +234,11 @@ end
 
 function API:CanAutoSelectGossip(dontAutoSelect)
 	local gossip = self:GetGossipOptions()
-	if ( #gossip > 0  and gossip[1].type:lower() ~= 'gossip') then
+	if ( #gossip > 0) then
 		if not dontAutoSelect then
-			self:SelectGossipOption(gossip.gossipOptionID)
+			self:SelectGossipOption(gossip[1].gossipOptionID)
 		end
-		return true
+		return gossip[1].selectOptionWhenOnlyOption
 	end
 end
 
@@ -259,7 +259,7 @@ end
 
 function API:GetNumGossipOptions(...)
 	if GetNumGossipOptions then return GetNumGossipOptions(...) end
-	return print(#C_GossipInfo.GetOptions(...))
+	return #C_GossipInfo.GetOptions(...)
 end
 
 function API:GetGossipAvailableQuests(...)
