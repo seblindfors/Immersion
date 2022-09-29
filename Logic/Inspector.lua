@@ -21,7 +21,9 @@ do local self = Inspector
 
 	local r, g, b = GetClassColor(select(2, UnitClass('player')))
 	self.Background:SetColorTexture(1, 1, 1, 0.75)
-	--self.Background:SetGradientAlpha('VERTICAL', 0, 0, 0, 0.75, r / 5, g / 5, b / 5, 0.75)
+	local minColor = CreateColor( 0, 0, 0, 0.75)
+	local maxColor = CreateColor(r / 5, g / 5, b / 5, 0.75)
+	self.Background:SetGradient('VERTICAL', minColor, maxColor)
 
 	self.tooltipFramePool = CreateFramePool('GameTooltip', self, 'ImmersionItemTooltipTemplate', function(self, obj) obj:Hide() end)
 	self.tooltipFramePool.creationFunc = function(framePool)

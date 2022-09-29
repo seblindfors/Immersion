@@ -152,17 +152,19 @@ function NPC:SetBackground(kit)
 	if kit and not L('disablebgtextures') then
 		local backgroundAtlas = GetFinalNameFromTextureKit('QuestBG-%s', kit)
 		local atlasInfo = C_Texture.GetAtlasInfo(backgroundAtlas)
-		--if atlasInfo then
-		--	overlay:Show()
-		--	--overlay:SetGradientAlpha('HORIZONTAL', 1, 1, 1, 0, 1, 1, 1, 0.5)
-		--
-		--	overlay:SetSize(atlasInfo.width, atlasInfo.height)
-		--	overlay:SetTexture(atlasInfo.file)
-		--	overlay:SetTexCoord(
-		--		atlasInfo.leftTexCoord, atlasInfo.rightTexCoord,-- + 0.035,
-		--		atlasInfo.topTexCoord, atlasInfo.bottomTexCoord)-- + 0.035)
-		--	return
-		--end
+		if atlasInfo then
+			overlay:Show()
+			local minColor = CreateColor(1, 1, 1, 0)
+			local maxColor = CreateColor(1, 1, 1, 0.5)
+			overlay:SetGradient('HORIZONTAL', minColor, maxColor)
+
+			overlay:SetSize(atlasInfo.width, atlasInfo.height)
+			overlay:SetTexture(atlasInfo.file)
+			overlay:SetTexCoord(
+				atlasInfo.leftTexCoord, atlasInfo.rightTexCoord,-- + 0.035,
+				atlasInfo.topTexCoord, atlasInfo.bottomTexCoord)-- + 0.035)
+			return
+		end
 	end
 end
 
