@@ -305,7 +305,8 @@ function API:SelectAvailableQuest(...)
 end
 
 function API:SelectGossipOption(...)
-	--if SelectGossipOption then return SelectGossipOption(...) end
+	if API:IsRetail() then return C_GossipInfo.SelectOption(...) end
+	if SelectGossipOption then return SelectGossipOption(...) end
 	return C_GossipInfo.SelectOption(...)
 end
 
