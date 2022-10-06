@@ -29,6 +29,7 @@ for _, event in pairs({
 --	'ITEM_TEXT_BEGIN', 	-- Starting to read a book
 --	'ITEM_TEXT_READY', 	-- New book text is ready
 --	'ITEM_TEXT_CLOSED', -- Stop reading a book
+	ImmersionAPI:IsRetail() and 'PLAYER_INTERACTION_MANAGER_FRAME_HIDE', -- Makes sure it closes after interaction screen like flight master
 	'GOSSIP_CLOSED',	-- Close gossip frame
 	'GOSSIP_SHOW',		-- Show gossip options, can be a mix of gossip/quests
 	'QUEST_ACCEPTED', 	-- Use this event for on-the-fly quest text tracking.
