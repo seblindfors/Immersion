@@ -234,11 +234,11 @@ end
 
 function API:CanAutoSelectGossip(dontAutoSelect)
 	local gossip = self:GetGossipOptions()
-	if ( #gossip > 0) then
+	if ( #gossip > 0 and gossip[1].selectOptionWhenOnlyOption) then
 		if not dontAutoSelect then
 			self:SelectGossipOption(gossip[1].gossipOptionID)
 		end
-		return gossip[1].selectOptionWhenOnlyOption
+		return true
 	end
 end
 
