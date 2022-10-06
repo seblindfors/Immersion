@@ -67,7 +67,7 @@ end
 
 -- Quest pickup API
 function API:CloseQuest(...)
-	--return CloseQuest and CloseQuest(...)
+	return CloseQuest and CloseQuest(...)
 end
 
 function API:GetGreetingText(...)
