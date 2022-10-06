@@ -47,7 +47,6 @@ function NPC:QUEST_COMPLETE(...)
 end
 
 function NPC:QUEST_FINISHED(...)
-	API:CloseQuest()
 	self:PlayOutro()
 --	if self:IsGossipAvailable(true) then
 --		self:OnEvent('GOSSIP_SHOW')
