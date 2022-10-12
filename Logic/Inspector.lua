@@ -20,8 +20,11 @@ do local self = Inspector
 	self:SetScale(1.1)
 
 	local r, g, b = GetClassColor(select(2, UnitClass('player')))
+	local minColor = CreateColor(0, 0, 0, 0.75)
+	local maxColor = CreateColor(r / 5, g / 5, b / 5, 0.75)
+
 	self.Background:SetColorTexture(1, 1, 1)
-	self.Background:SetGradientAlpha('VERTICAL', 0, 0, 0, 0.75, r / 5, g / 5, b / 5, 0.75)
+	L.SetGradient(self.Background, 'VERTICAL', minColor, maxColor)
 
 	self.tooltipFramePool = CreateFramePool('GameTooltip', self, 'ImmersionItemTooltipTemplate', function(self, obj) obj:Hide() end)
 	self.tooltipFramePool.creationFunc = function(framePool)
@@ -33,7 +36,7 @@ do local self = Inspector
 			parent  = framePool.parent,
 			inherit = framePool.frameTemplate
 		})
-		L.SetBackdrop(tooltip.Hilite, L.Backdrops.GOSSIP_HILITE)
+		L.SetBackdrop(tooltip.Hilite, L.Backdrops.TOOLTIP_HILITE)
 		return tooltip
 	end
 end

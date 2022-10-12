@@ -64,6 +64,49 @@ function L.HideFrame(frame)
 	frame:ClearAllPoints()
 end
 
+function L.SetGradient(texture, orientation, ...)
+	local isOldFormat = (select('#', ...) == 8)
+	if texture.SetGradientAlpha then
+		if isOldFormat then 
+			return texture:SetGradientAlpha(orientation, ...)
+		end
+		local min, max = ...;
+		local minR, minG, minB, minA = ColorMixin.GetRGBA(min)
+		local maxR, maxG, maxB, maxA = ColorMixin.GetRGBA(max)
+		return texture:SetGradientAlpha(orientation, minR, minG, minB, minA, maxR, maxG, maxB, maxA)
+	end
+	if texture.SetGradient then
+		if isOldFormat then
+			local minColor = CreateColor(...)
+			local maxColor = CreateColor(select(5, ...))
+			return texture:SetGradient(orientation, minColor, maxColor)
+		end
+		local min, max = ...;
+		return texture:SetGradient(orientation, min, max)
+	end
+end
+
+function L.SetLight(model, enabled, lightValues)
+	if ImmersionAPI.IsWoW10 then
+		return model:SetLight(enabled, lightValues)
+	end
+
+	local dirX, dirY, dirZ = lightValues.point:GetXYZ()
+	local ambR, ambG, ambB = lightValues.ambientColor:GetRGB()
+	local difR, difG, difB = lightValues.diffuseColor:GetRGB()
+
+	return model:SetLight(enabled,
+		lightValues.omnidirectional,
+		dirX, dirY, dirZ,
+		lightValues.diffuseIntensity,
+		difR, difG, difB,
+		lightValues.ambientIntensity,
+		ambR, ambG, ambB
+	)
+end
+
+ImmersionAPI.SetGradient = L.SetGradient; -- for XML
+
 ----------------------------------
 -- Local backdrops
 ----------------------------------
@@ -71,18 +114,16 @@ L.Backdrops = {
 	GOSSIP_TITLE_BG = {
 		bgFile   = PT..'Backdrop_Gossip.tga',
 		edgeFile = PT..'Edge_Gossip_BG.blp',
-		edgeSize = 8,
-		insets   = { left = 2, right = 2, top = 8, bottom = 8 }
+		edgeSize = 4,
+		insets   = { left = 1, right = 2, top = 2, bottom = 2 }
 	},
 	GOSSIP_HILITE = {
 		edgeFile = PT..'Edge_Gossip_Hilite.blp',
-		edgeSize = 8,
-		insets   = { left = 5, right = 5, top = 5, bottom = 6 }
+		edgeSize = 4,
 	},
 	GOSSIP_NORMAL = {
 		edgeFile = PT..'Edge_Gossip_Normal.blp',
-		edgeSize = 8,
-		insets   = { left= 5, right = 5, top = -10, bottom = 7 }
+		edgeSize = 4,
 	},
 	TALKBOX = {
 		bgFile   = PT..'Backdrop_Talkbox.blp',
@@ -90,16 +131,18 @@ L.Backdrops = {
 		edgeSize = 16,
 		insets   = { left = 16, right = 16, top = 16, bottom = 16 }
 	},
+	TALKBOX_HILITE = {
+		edgeFile = PT..'Edge_Gossip_Hilite.blp',
+		edgeSize = 8,
+	},
 	TALKBOX_SOLID = {
 		bgFile   = PT..'Backdrop_Talkbox_Solid.blp',
 		edgeFile = PT..'Edge_Talkbox_BG_Solid.blp',
 		edgeSize = 16,
 		insets   = { left = 16, right = 16, top = 16, bottom = 16 }
 	},
-	TOOLTIP_BG = {
-		bgFile   = PT..'Backdrop_Talkbox.blp',
-		edgeFile = PT..'Edge_Talkbox_BG.blp',
+	TOOLTIP_HILITE = {
+		edgeFile = PT..'Edge_Gossip_Hilite.blp',
 		edgeSize = 8,
-		insets   = { left = 8, right = 8, top = 8, bottom = 8 }
 	},
 }

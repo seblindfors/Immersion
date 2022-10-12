@@ -42,7 +42,7 @@ for _, event in pairs({
 --	'MERCHANT_SHOW', 	-- Force close gossip on merchant interaction.
 	'NAME_PLATE_UNIT_ADDED', 	-- For nameplate mode
 	'NAME_PLATE_UNIT_REMOVED', 	-- For nameplate mode
-	ImmersionAPI:IsRetail() and 'SUPER_TRACKING_CHANGED',
+	ImmersionAPI.IsRetail and 'SUPER_TRACKING_CHANGED',
 }) do if event then
 		frame:RegisterEvent(event)
 	end
@@ -185,7 +185,7 @@ L.HideFrame(QuestFrame)
 ----------------------------------
 -- Set backdrops on elements
 ----------------------------------
-L.SetBackdrop(talkbox.Hilite, L.Backdrops.GOSSIP_HILITE)
+L.SetBackdrop(talkbox.Hilite, L.Backdrops.TALKBOX_HILITE)
 
 ----------------------------------
 -- Initiate titlebuttons
@@ -222,7 +222,7 @@ name:SetPoint('TOPLEFT', talkbox.PortraitFrame.Portrait, 'TOPRIGHT', 2, -19)
 -- Model script, light
 ----------------------------------
 local model = talkbox.MainFrame.Model
-model:SetLight(unpack(L.ModelMixin.LightValues))
+--L.SetLight(model, true, L.ModelMixin.LightValues)
 L.Mixin(model, L.ModelMixin)
 
 ----------------------------------
@@ -297,6 +297,7 @@ titles:SetUserPlaced(false)
 if CustomGossipFrameManager then
 	frame.gossipHandlers = CustomGossipFrameManager.handlers;
 	GossipFrame_HandleShow = nop; -- let's hope blizz doesn't call this anywhere else
+	GossipFrame.HandleShow = nop;
 else
 	frame.gossipHandlers = {}
 end
@@ -307,7 +308,7 @@ do
 	local function HookTalkingHead()
 		-- use this as assertion. if something else beat Immersion to it and manipulated the frame,
 		-- it shouldn't be moved, even if enabled by user. in essence, dummy protection.
-		if UIPARENT_MANAGED_FRAME_POSITIONS.TalkingHeadFrame then
+		if UIPARENT_MANAGED_FRAME_POSITIONS and UIPARENT_MANAGED_FRAME_POSITIONS.TalkingHeadFrame then
 			local managedFramePos = UIPARENT_MANAGED_FRAME_POSITIONS.TalkingHeadFrame
 			local alertFrameIndex, alertFrameSettings
 			local isTalkingHeadMoved, isDragging

@@ -201,19 +201,12 @@ Model.file = {
 }
 
 Model.LightValues = {
-	true, 	-- enabled
-	false, 	-- omni
-	-250,	-- dirX
-	0,		-- dirY
-	0,		-- dirZ
-	0.25,	-- dirIntensity
-	1,		-- ambR
-	1,		-- ambG
-	1,		-- ambB
-	75,		-- ambIntensity
-	1,		-- dirR
-	1,		-- dirG
-	1,		-- dirB
+	omnidirectional  = false;
+	point            = CreateVector3D(-250, 0, 0);
+	ambientIntensity = 75;
+	ambientColor     = CreateColor(1, 1, 1);
+	diffuseIntensity = 0.25;
+	diffuseColor     = CreateColor(1, 1, 1);
 }
 
 Model.premature = 0.5

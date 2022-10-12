@@ -130,7 +130,7 @@ function NPC:HandleGossipQuestOverlap(event)
 		if ( event == 'GOSSIP_SHOW' ) then
 		--	API:CloseQuest()
 		elseif self:IsObstructingQuestEvent(event) then
-			API:CloseGossip()
+			API:CloseGossip(true)
 		end
 	end
 end
@@ -153,8 +153,11 @@ function NPC:SetBackground(kit)
 		local backgroundAtlas = GetFinalNameFromTextureKit('QuestBG-%s', kit)
 		local atlasInfo = C_Texture.GetAtlasInfo(backgroundAtlas)
 		if atlasInfo then
+			local minColor = CreateColor(1, 1, 1, 0)
+			local maxColor = CreateColor(1, 1, 1, 0.5)
+
 			overlay:Show()
-			overlay:SetGradientAlpha('HORIZONTAL', 1, 1, 1, 0, 1, 1, 1, 0.5)
+			L.SetGradient(overlay, 'HORIZONTAL', minColor, maxColor)
 
 			overlay:SetSize(atlasInfo.width, atlasInfo.height)
 			overlay:SetTexture(atlasInfo.file)

@@ -202,7 +202,7 @@ function Titles:UpdateAvailableQuests(data)
 		----------------------------------
 		button:SetPriority(P_AVAILABLE_QUEST)
 		----------------------------------
-		button:SetID(i)
+		button:SetID(quest.questID)
 		button.type = 'Available'
 		----------------------------------
 		self.idx = self.idx + 1
@@ -222,7 +222,7 @@ function Titles:UpdateActiveQuests(data)
 		----------------------------------
 		button:SetPriority(quest.isComplete and P_COMPLETE_QUEST or P_INCOMPLETE_QUEST)
 		----------------------------------
-		button:SetID(i)
+		button:SetID(quest.questID)
 		button:SetType('Active')
 		----------------------------------
 		self.idx = self.idx + 1
@@ -234,10 +234,10 @@ function Titles:UpdateGossipOptions(data)
 		local button = self:GetButton(self.idx)
 		----------------------------------
 		button:SetText(option.name)
-		button:SetGossipIcon(option.type)
+		button:SetGossipIcon(option.type or option.icon)
 		button:SetPriority(P_AVAILABLE_GOSSIP)
 		----------------------------------
-		button:SetID(i)
+		button:SetID(option.gossipOptionID)
 		button:SetType('Gossip')
 		----------------------------------
 		self.idx = self.idx + 1
