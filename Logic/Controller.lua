@@ -31,12 +31,11 @@ do
 	-- For programming convenience, set all these functions to no-op
 	-- if ConsolePort isn't loaded, since they won't be doing anything useful.
 	if (not ConsolePortUIHandle) then
-		local function noop() end
 		for _, funcID in ipairs(HANDLE_functions) do
-			NPC[funcID] = noop
+			NPC[funcID] = nop
 		end
 		for _, funcID in ipairs(NPC_functions) do
-			NPC[funcID] = noop
+			NPC[funcID] = nop
 		end
 		return
 	else
