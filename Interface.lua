@@ -297,11 +297,15 @@ end
 
 -- Gossip/quest selectors API
 function API:SelectActiveQuest(...)
-	return (C_GossipInfo and C_GossipInfo.SelectActiveQuest or SelectActiveQuest)(...)
+	if SelectActiveQuest then
+		return SelectActiveQuest(...)
+	end
 end
 
 function API:SelectAvailableQuest(...)
-	return (C_GossipInfo and C_GossipInfo.SelectAvailableQuest or SelectAvailableQuest)(...)	
+	if SelectAvailableQuest then
+		return SelectAvailableQuest(...)
+	end
 end
 
 function API:SelectGossipOption(...)
