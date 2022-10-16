@@ -263,8 +263,8 @@ function Titles:QUEST_GREETING()
 	self.idx = 1
 	self.type = 'Quests'
 	self:Show()
-	self:UpdateActiveGreetingQuests(GetNumActiveQuests())
-	self:UpdateAvailableGreetingQuests(GetNumAvailableQuests())
+	self:UpdateActiveGreetingQuests(API:GetNumActiveQuests())
+	self:UpdateAvailableGreetingQuests(API:GetNumAvailableQuests())
 	for i = self.idx, #self.Buttons do
 		self.Buttons[i]:Hide()
 	end

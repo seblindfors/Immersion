@@ -295,6 +295,15 @@ function API:GetGossipOptions(...)
 	return C_GossipInfo.GetOptions(...)
 end
 
+-- Quest greeting API
+function API:GetNumActiveQuests(...)
+	return GetNumActiveQuests and GetNumActiveQuests(...) or 0
+end
+
+function API:GetNumAvailableQuests(...)
+	return GetNumAvailableQuests and GetNumAvailableQuests(...) or 0
+end
+
 -- Gossip/quest selectors API
 function API:SelectActiveQuest(...)
 	if SelectActiveQuest then
