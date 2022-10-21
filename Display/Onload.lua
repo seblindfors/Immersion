@@ -42,6 +42,7 @@ for _, event in pairs({
 --	'MERCHANT_SHOW', 	-- Force close gossip on merchant interaction.
 	'NAME_PLATE_UNIT_ADDED', 	-- For nameplate mode
 	'NAME_PLATE_UNIT_REMOVED', 	-- For nameplate mode
+	ImmersionAPI.IsRetail and 'PLAYER_INTERACTION_MANAGER_FRAME_HIDE', -- Makes sure it closes after interaction screen like flight master
 	ImmersionAPI.IsRetail and 'SUPER_TRACKING_CHANGED',
 }) do if event then
 		frame:RegisterEvent(event)
