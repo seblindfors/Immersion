@@ -8,6 +8,7 @@ function NPC:GOSSIP_SHOW(customGossipHandler)
 end
 
 function NPC:PLAYER_INTERACTION_MANAGER_FRAME_HIDE(...)
+	API:CloseGossip(true, ...)
 	self:PlayOutro()
 	L.ClickedTitleCache = nil
 end
