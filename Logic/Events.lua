@@ -130,3 +130,9 @@ function NPC:SUPER_TRACKING_CHANGED()
 	self:PlaySuperTrackedQuestToast(ImmersionAPI:GetSuperTrackedQuestID())
 	return self.lastEvent
 end
+
+function NPC:PLAYER_INTERACTION_MANAGER_FRAME_SHOW(type)
+	if API:ShouldCloseOnInteraction(type) then
+		self:ForceClose(false)
+	end
+end

@@ -392,3 +392,41 @@ function API:GetQuestItemInfoLootType(...)
 		return GetQuestItemInfoLootType(...)
 	end
 end
+
+-- Interaction manager, events from PlayerInteractionFrameManager.lua
+local CloseOnInteractionTypes = Enum and Enum.PlayerInteractionType and {
+	[Enum.PlayerInteractionType.AdventureJournal] = true;
+	[Enum.PlayerInteractionType.AlliedRaceDetailsGiver] = true;
+	[Enum.PlayerInteractionType.Auctioneer] = true;
+	[Enum.PlayerInteractionType.AzeriteForge] = true;
+	[Enum.PlayerInteractionType.AzeriteRespec] = true;
+	[Enum.PlayerInteractionType.Banker] = true;
+	[Enum.PlayerInteractionType.BlackMarketAuctioneer] = true;
+	[Enum.PlayerInteractionType.ChromieTime] = true;
+	[Enum.PlayerInteractionType.ContributionCollector] = true;
+	[Enum.PlayerInteractionType.CovenantSanctum] = true;
+	[Enum.PlayerInteractionType.GarrArchitect] = true;
+	[Enum.PlayerInteractionType.GuildBanker] = true;
+	[Enum.PlayerInteractionType.IslandQueue] = true;
+	[Enum.PlayerInteractionType.ItemInteraction] = true;
+	[Enum.PlayerInteractionType.ItemUpgrade] = true;
+	[Enum.PlayerInteractionType.MailInfo] = true;
+	[Enum.PlayerInteractionType.MajorFactionRenown] = true;
+	[Enum.PlayerInteractionType.Merchant] = true;
+	[Enum.PlayerInteractionType.ObliterumForge] = true;
+	[Enum.PlayerInteractionType.Registrar] = true;
+	[Enum.PlayerInteractionType.Renown] = true;
+	[Enum.PlayerInteractionType.ScrappingMachine] = true;
+	[Enum.PlayerInteractionType.Soulbind] = true;
+	[Enum.PlayerInteractionType.TabardVendor] = true;
+	[Enum.PlayerInteractionType.Trainer] = true;
+	[Enum.PlayerInteractionType.Transmogrifier] = true;
+	[Enum.PlayerInteractionType.Trophy] = true;
+	[Enum.PlayerInteractionType.VoidStorageBanker] = true;
+	[Enum.PlayerInteractionType.WeeklyRewards] = true;
+	[Enum.PlayerInteractionType.WorldMap] = true;
+} or {};
+
+function API:ShouldCloseOnInteraction(type)
+	return CloseOnInteractionTypes[type];
+end

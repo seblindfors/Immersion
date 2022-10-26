@@ -43,6 +43,7 @@ for _, event in pairs({
 	'NAME_PLATE_UNIT_ADDED', 	-- For nameplate mode
 	'NAME_PLATE_UNIT_REMOVED', 	-- For nameplate mode
 	ImmersionAPI.IsRetail and 'SUPER_TRACKING_CHANGED',
+	ImmersionAPI.IsWoW10 and 'PLAYER_INTERACTION_MANAGER_FRAME_SHOW',
 }) do if event then
 		frame:RegisterEvent(event)
 	end
