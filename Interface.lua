@@ -231,10 +231,15 @@ function API:ForceGossip(...)
 end
 
 function API:CanAutoSelectGossip(dontAutoSelect)
-	local gossip = self:GetGossipOptions()
-	if ( #gossip > 0  and gossip[1].type:lower() ~= 'gossip') then
+	local gossip, option = self:GetGossipOptions()
+	if ( #gossip > 0 ) then
+		local firstOption = gossip[1];
+		option = firstOption.selectOptionWhenOnlyOption and firstOption.gossipOptionID;
+		option = option or (firstOption.type and firstOption.type:lower() ~= 'gossip' and 1)
+	end
+	if option then
 		if not dontAutoSelect then
-			self:SelectGossipOption(1)
+			self:SelectGossipOption(option)
 		end
 		return true
 	end
