@@ -92,13 +92,13 @@ end
 
 function Button:SetGossipQuestIcon(texture, vertex)
 	vertex = vertex or 1
-	self.Icon:SetTexture(([[Interface\GossipFrame\%s]]):format(texture or ''))
+	self.Icon:SetTexture(tonumber(texture) or ([[Interface\GossipFrame\%s]]):format(texture or ''))
 	self.Icon:SetVertexColor(vertex, vertex, vertex)
 end
 
 function Button:SetGossipIcon(texture, vertex)
 	vertex = vertex or 1
-	self.Icon:SetTexture(([[Interface\GossipFrame\%sGossipIcon]]):format(texture or ''))
+	self.Icon:SetTexture(tonumber(texture) or ([[Interface\GossipFrame\%sGossipIcon]]):format(texture or ''))
 	self.Icon:SetVertexColor(vertex, vertex, vertex)
 end
 
