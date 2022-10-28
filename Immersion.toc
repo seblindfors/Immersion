@@ -32,14 +32,14 @@ Interface.lua
 Utils.lua
 Config.lua
 
-# Mixins
-Mixins\Scaler.lua
-Mixins\Titles.lua
-Mixins\Text.lua
-Mixins\Model.lua
-Mixins\Button.lua
-Mixins\Tooltip.lua
-Mixins\Elements.lua
+# Components
+Components\Scaler.lua
+Components\Titles.lua
+Components\Text.lua
+Components\Model.lua
+Components\Button.lua
+Components\Tooltip.lua
+Components\Elements.lua
 
 # Display
 Display\Animation.lua
@@ -48,7 +48,9 @@ Display\Onload.lua
 Display\Fademgr.lua
 
 # Logic
-Logic\Logic.lua
+Logic\Input.lua
+Logic\Frame.lua
+Logic\Talkbox.lua
 Logic\Events.lua
 Logic\Inspector.lua
 Logic\Controller.lua

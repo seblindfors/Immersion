@@ -1,24 +1,24 @@
 local _, L = ...
-local NPC, API = L.frame, ImmersionAPI
+local Events, API = L.frame, ImmersionAPI
 ----------------------------------
 -- Events
 ----------------------------------
-function NPC:GOSSIP_SHOW(customGossipHandler)
+function Events:GOSSIP_SHOW(customGossipHandler)
 	self:HandleGossipOpenEvent(customGossipHandler)
 end
 
-function NPC:GOSSIP_CLOSED(...)
+function Events:GOSSIP_CLOSED(...)
 	API:CloseGossip(true, ...)
 	self:PlayOutro()
 	L.ClickedTitleCache = nil
 end
 
-function NPC:QUEST_GREETING(...)
+function Events:QUEST_GREETING(...)
 	self:PlayIntro('QUEST_GREETING')
 	self:UpdateTalkingHead(API:GetUnitName('questnpc') or API:GetUnitName('npc'), API:GetGreetingText(), 'AvailableQuest')
 end
 
-function NPC:QUEST_PROGRESS(...) -- special case, doesn't use QuestInfo
+function Events:QUEST_PROGRESS(...) -- special case, doesn't use QuestInfo
 	self:PlayIntro('QUEST_PROGRESS')
 	self:AddHint('CROSS', CONTINUE)
 	self:ToggleHintState('CROSS', API:IsQuestCompletable())
@@ -35,14 +35,14 @@ function NPC:QUEST_PROGRESS(...) -- special case, doesn't use QuestInfo
 	self:ResetElements()
 end
 
-function NPC:QUEST_COMPLETE(...)
+function Events:QUEST_COMPLETE(...)
 	self:PlayIntro('QUEST_COMPLETE')
 	self:UpdateTalkingHead(API:GetTitleText(), API:GetRewardText(), 'ActiveQuest')
 	self:AddQuestInfo('QUEST_REWARD')
 	self:AddHint('CROSS', COMPLETE_QUEST)
 end
 
-function NPC:QUEST_FINISHED(...)
+function Events:QUEST_FINISHED(...)
 	API:CloseQuest(true)
 	self:PlayOutro()
 --	if self:IsGossipAvailable(true) then
@@ -51,7 +51,7 @@ function NPC:QUEST_FINISHED(...)
 --	end
 end
 
-function NPC:QUEST_DETAIL(...)
+function Events:QUEST_DETAIL(...)
 	if self:IsQuestAutoAccepted(...) then
 		self:PlayOutro()
 		return
@@ -63,7 +63,7 @@ function NPC:QUEST_DETAIL(...)
 end
 
 
-function NPC:QUEST_ITEM_UPDATE()
+function Events:QUEST_ITEM_UPDATE()
 	local questEvent = (self.lastEvent ~= 'QUEST_ITEM_UPDATE') and self.lastEvent or self.questEvent
 	self.questEvent = questEvent
 
@@ -73,7 +73,7 @@ function NPC:QUEST_ITEM_UPDATE()
 	end
 end
 
-function NPC:ITEM_TEXT_BEGIN()
+function Events:ITEM_TEXT_BEGIN()
 	local title = ItemTextGetItem()
 	local creator = ItemTextGetCreator()
 	if creator then
@@ -85,7 +85,7 @@ function NPC:ITEM_TEXT_BEGIN()
 	self:UpdateTalkingHead(title, '', 'TrainerGossip', 'player')
 end
 
-function NPC:ITEM_TEXT_READY()
+function Events:ITEM_TEXT_READY()
 	-- special case: pages need to be concatened together before displaying them.
 	-- each new page re-triggers this event, so keep changing page until we run out.
 	self.itemText = (self.itemText or '') .. '\n' .. (ItemTextGetText() or '')
@@ -98,7 +98,7 @@ function NPC:ITEM_TEXT_READY()
 end
 
 
-function NPC:ITEM_TEXT_CLOSED()
+function Events:ITEM_TEXT_CLOSED()
 	local time = GetTime()
 	if not self.readEmoteCancelled and ( self.lastTextClosed ~= time ) then
 		DoEmote('read')
@@ -110,28 +110,28 @@ function NPC:ITEM_TEXT_CLOSED()
 	self:PlayOutro()
 end
 
-function NPC:PLAYER_STARTED_MOVING()
+function Events:PLAYER_STARTED_MOVING()
 	self.readEmoteCancelled = true
 	return 'ITEM_TEXT_READY'
 end
 
 
-function NPC:NAME_PLATE_UNIT_ADDED()
+function Events:NAME_PLATE_UNIT_ADDED()
 	self.TalkBox:UpdateNameplateAnchor()
 	return self.lastEvent
 end
 
-function NPC:NAME_PLATE_UNIT_REMOVED()
+function Events:NAME_PLATE_UNIT_REMOVED()
 	self.TalkBox:UpdateNameplateAnchor()
 	return self.lastEvent
 end
 
-function NPC:SUPER_TRACKING_CHANGED()
+function Events:SUPER_TRACKING_CHANGED()
 	self:PlaySuperTrackedQuestToast(ImmersionAPI:GetSuperTrackedQuestID())
 	return self.lastEvent
 end
 
-function NPC:PLAYER_INTERACTION_MANAGER_FRAME_SHOW(type)
+function Events:PLAYER_INTERACTION_MANAGER_FRAME_SHOW(type)
 	if API:ShouldCloseOnInteraction(type) then
 		self:ForceClose(false)
 	end
