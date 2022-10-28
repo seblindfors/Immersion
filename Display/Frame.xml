@@ -1079,42 +1079,6 @@
 								</Texture>
 							</Layer>
 						</Layers>
-						<Scripts>
-							<OnLoad>
-								self:SetStatusBarTexture(1, 1, 1, "BORDER", -1);
-
-								local minColor = CreateColor(8/255, 93/255, 72/255, 1);
-								local maxColor = CreateColor(11/255, 136/255, 105/255, 1);
-								ImmersionAPI.SetGradient(self:GetStatusBarTexture(), 'VERTICAL', minColor, maxColor);
-
-								self:SetStatusBarColor(0.5, 0.7, 1);
-							</OnLoad>
-							<OnEnter>
-								ShowFriendshipReputationTooltip(nil, self, "ANCHOR_BOTTOMRIGHT");
-							</OnEnter>
-							<OnLeave>
-								GameTooltip:Hide();
-							</OnLeave>
-							<OnShow>
-								local id, rep, maxRep, name, text, texture, reaction, threshold, nextThreshold = ImmersionAPI:GetFriendshipReputation();
-								if ( id and id > 0 ) then
-									-- if max rank, make it look like a full bar
-									if ( not nextThreshold ) then
-										threshold, nextThreshold, rep = 0, 1, 1;
-									end
-									if ( texture ) then
-										self.icon:SetTexture(texture);
-									else
-										self.icon:SetTexture("Interface\\Common\\friendship-heart");
-									end
-									self:SetMinMaxValues(threshold, nextThreshold);
-									self:SetValue(rep);
-									self:Show();
-								else
-									self:Hide();
-								end
-							</OnShow>
-						</Scripts>
 					</StatusBar>
 				</Frames>
 			</Button>

@@ -339,13 +339,6 @@ function API:GetUnitName(...)
 	return GetUnitName and GetUnitName(...)
 end
 
-function API:GetFriendshipReputation(...)
-	if GetFriendshipReputation then
-		return GetFriendshipReputation(...)
-	end
-	return 0
-end
-
 function API:GetPortraitAtlas()
 	if GetAtlasInfo and GetAtlasInfo('TalkingHeads-PortraitFrame') then
 		return 'TalkingHeads-PortraitFrame';

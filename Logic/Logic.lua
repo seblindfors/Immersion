@@ -198,7 +198,7 @@ function NPC:UpdateTalkingHead(title, text, npcType, explicitUnit, isToastPlayba
 	end
 	local talkBox = self.TalkBox
 	talkBox:SetExtraOffset(0)
-	talkBox.ReputationBar:Show()
+	talkBox.ReputationBar:Update()
 	talkBox.MainFrame.Indicator:SetTexture('Interface\\GossipFrame\\' .. npcType .. 'Icon')
 	talkBox.MainFrame.Model:SetUnit(unit)
 	talkBox.NameFrame.Name:SetText(title)
