@@ -203,7 +203,9 @@ L.Mixin(elements, L.ElementsMixin)
 ----------------------------------
 L.Mixin(talkbox.ReputationBar, NPCFriendshipStatusBarMixin or {})
 talkbox.ReputationBar.Update = talkbox.ReputationBar.Update or nop;
-talkbox.ReputationBar:SetColorFill(1, 1, 1)
+if talkbox.ReputationBar.SetColorFill then
+	talkbox.ReputationBar:SetColorFill(1, 1, 1)
+end
 
 ----------------------------------
 -- Set up dynamically sized frames
