@@ -1,7 +1,7 @@
 local TalkBox, GetOffset, _, L = {}, UIParent.GetBottom, ...
 
 ----------------------------------
--- TalkBox "button"
+-- Offsets
 ----------------------------------
 function TalkBox:SetOffset(x, y)
 --[[if self:UpdateNameplateAnchor() then
@@ -73,6 +73,9 @@ function TalkBox:UpdateNameplateAnchor()
 	end
 end
 
+----------------------------------
+-- Scripts
+----------------------------------
 function TalkBox:OnEnter()
 	-- Highlight the button when it can be clicked
 	if not L('disableboxhighlight') then
