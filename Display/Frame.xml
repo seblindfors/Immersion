@@ -202,8 +202,8 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Frame parentKey="Overlay" alpha="1" setAllPoints="true"/>
-			<Frame parentKey="Hilite" alpha="0.01" setAllPoints="true"/>
+			<Frame parentKey="Overlay" alpha="1" setAllPoints="true" frameLevel="2"/>
+			<Frame parentKey="Hilite" alpha="0.01" setAllPoints="true" frameLevel="3"/>
 		</Frames>
 		<HighlightTexture parentKey="HighlightTexture" file="Interface\PVPFrame\PvPMegaQueue" alphaMode="ADD">
 			<TexCoords left="0.00195313" right="0.63867188" top="0.70703125" bottom="0.76757813"/>
