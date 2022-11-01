@@ -46,15 +46,19 @@ local function GetItemButton(parentFrame, index, buttonType)
 	return rewardButtons[index]
 end
 
-local function UpdateItemInfo(self)
+local function UpdateItemInfo(self, showMissing)
 	assert(self.type)
 	assert(self:GetID())
 
 	if self.objectType == 'item' then
 		local name, texture, amount, quality, isUsable = GetQuestItemInfo(self.type, self:GetID())
-		local missingAmount = amount > 1 and amount - GetItemCount(name)
-		local hasMissingAmount = missingAmount and missingAmount > 0
-		local displayText = hasMissingAmount and ('%s\n|cff757575%s|r'):format(name, ITEM_MISSING:format(missingAmount)) or name
+		local displayText;
+		if showMissing then
+			local missingAmount = amount > 1 and amount - GetItemCount(name)
+			local hasMissingAmount = missingAmount and missingAmount > 0
+			displayText = hasMissingAmount and ('%s\n|cff757575%s|r'):format(name, ITEM_MISSING:format(missingAmount))
+		end
+		displayText = displayText or name;
 		-- For the tooltip
 		self.Name:SetText(displayText)
 		self.itemTexture = texture
@@ -759,7 +763,7 @@ function Elements:ShowProgress(material)
 				requiredItem:SetID(i)
 				requiredItem:Show()
 
-				UpdateItemInfo(requiredItem)
+				UpdateItemInfo(requiredItem, true)
 
 				if ( buttonIndex > 1 ) then
 					if ( mod(buttonIndex, ITEMS_PER_ROW) == 1 ) then

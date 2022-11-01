@@ -154,21 +154,21 @@ L.options = {
 					order = 1,
 					args = {
 						delaydivisor = {
-						type = 'range',
-						name = 'Text speed',
-						desc = L['Change the speed of text delivery.'] .. '\n\n' ..
-							MINIMUM .. '\n"' ..  L['How are you doing today?'] .. '"\n  -> ' .. 
-							format(D_SECONDS, (strlen(L['How are you doing today?']) / 5) + 2)  .. '\n\n' .. 
-							MAXIMUM .. '\n"' .. L['How are you doing today?'] .. '"\n  -> ' .. 
-							format(D_SECONDS, (strlen(L['How are you doing today?']) / 40) + 2),
-						min = 5,
-						max = 40,
-						step = 5,
-						order = 1,
-						get = L.GetFromDefaultOrSV,
-						set = function(self, val) 
-							L.cfg.delaydivisor = val
-						end,
+							type = 'range',
+							name = 'Text speed',
+							desc = L['Change the speed of text delivery.'] .. '\n\n' ..
+								MINIMUM .. '\n"' ..  L['How are you doing today?'] .. '"\n  -> ' .. 
+								format(D_SECONDS, (strlen(L['How are you doing today?']) / 5) + 2)  .. '\n\n' .. 
+								MAXIMUM .. '\n"' .. L['How are you doing today?'] .. '"\n  -> ' .. 
+								format(D_SECONDS, (strlen(L['How are you doing today?']) / 40) + 2),
+							min = 5,
+							max = 40,
+							step = 5,
+							order = 1,
+							get = L.GetFromDefaultOrSV,
+							set = function(self, val) 
+								L.cfg.delaydivisor = val
+							end,
 						},
 						disableprogression = {
 							type = 'toggle',
