@@ -270,6 +270,10 @@ function text:OnDisplayLineCallback(text)
 		if L('disableprogression') then
 			self:PauseTimer()
 		end
+
+		if(text and L('texttospeech')) then
+            C_VoiceChat.SpeakText(0, text, Enum.VoiceTtsDestination.LocalPlayback, 0, 100) 
+        end
 	end
 end
 

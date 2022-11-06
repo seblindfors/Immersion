@@ -81,6 +81,8 @@ L.defaults = {
 	delaydivisor = 15,
 	anidivisor = 5,
 
+	texttospeech = false,
+
 	inspect = 'SHIFT',
 	accept = 'SPACE',
 	reset = 'BACKSPACE',
@@ -293,6 +295,19 @@ L.options = {
 							fontSize = 'medium',
 							order = 3,
 							name = L["When a quest is supertracked (clicked on in the objective tracker, or set automatically by proximity), the quest text will play if nothing else is obstructing it."],
+						},
+						texttospeech = {
+							type = 'toggle',
+							name = TEXT_TO_SPEECH,
+							order = 4,
+							get = L.GetFromSV,
+							set = function(_, val) L.cfg.texttospeech = val end,
+						},
+						texttospeechdesc = {
+							type = 'description',
+							fontSize = 'medium',
+							order = 5,
+							name = L["Reads quest text aloud using text-to-speech based on options selected."],
 						},
 					},
 				},
