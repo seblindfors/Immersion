@@ -271,8 +271,8 @@ function text:OnDisplayLineCallback(text)
 			self:PauseTimer()
 		end
 
-		if(text and L('texttospeech')) then
-			C_VoiceChat.SpeakText(0, text, Enum.VoiceTtsDestination.LocalPlayback, 0, 100) 
+		if(text and L('texttospeechenabled')) then
+			C_VoiceChat.SpeakText(0, text, Enum.VoiceTtsDestination.LocalPlayback, L('texttospeechrate'), L('texttospeechvolume')) 
 		end
 	end
 end

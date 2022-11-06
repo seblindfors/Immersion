@@ -81,7 +81,9 @@ L.defaults = {
 	delaydivisor = 15,
 	anidivisor = 5,
 
-	texttospeech = false,
+	texttospeechenabled = false,
+    texttospeechrate = 0,
+    texttospeechvolume = 100,
 
 	inspect = 'SHIFT',
 	accept = 'SPACE',
@@ -296,26 +298,58 @@ L.options = {
 							order = 3,
 							name = L["When a quest is supertracked (clicked on in the objective tracker, or set automatically by proximity), the quest text will play if nothing else is obstructing it."],
 						},
-						texttospeech = {
+					},
+				},
+                texttospeech = {
+					type = 'group',
+					name = TEXT_TO_SPEECH,
+					inline = true,
+					order = 5,
+					args = {
+						texttospeechenabled = {
 							type = 'toggle',
 							name = TEXT_TO_SPEECH,
-							order = 4,
+							order = 1,
 							get = L.GetFromSV,
-							set = function(_, val) L.cfg.texttospeech = val end,
+							set = function(_, val) L.cfg.texttospeechenabled = val end,
 						},
 						texttospeechdesc = {
 							type = 'description',
 							fontSize = 'medium',
-							order = 5,
+							order = 2,
 							name = L["Reads quest text aloud using text-to-speech based on options selected."],
 						},
+                        texttospeechvolume = {
+                            type = 'range',
+                            name = TEXT_TO_SPEECH_ADJUST_VOLUME,
+                            min = 1,
+                            max = 100,
+                            step = 1,
+                            order = 3,
+                            get = L.GetFromDefaultOrSV,
+							set = function(self, val) 
+								L.cfg.texttospeechvolume = val
+							end,
+                        },
+                        texttospeechrate = {
+                            type = 'range',
+                            name = TEXT_TO_SPEECH_ADJUST_RATE,
+                            min = -5,
+                            max = 5,
+                            step = 0.1,
+                            order = 4,
+                            get = L.GetFromDefaultOrSV,
+							set = function(self, val) 
+								L.cfg.texttospeechrate = val
+							end,
+                        },
 					},
 				},
 				talkinghead = {
 					type = 'group',
 					name = L['Hook talking head'],
 					inline = true,
-					order = 5,
+					order = 6,
 					args = {
 						movetalkinghead = {
 							type = 'toggle',
