@@ -133,7 +133,7 @@ function frame:FadeIn(fadeTime, playAnimations, ignoreFrameFade)
 	end
 
 	if L('hideui') and L('camerarotationenabled') then 
-		MoveViewRightStart(0.1)
+		MoveViewRightStart(0.02)
 	end
 end
 
@@ -147,7 +147,7 @@ function frame:FadeOut(fadeTime, ignoreOnTheFly)
 	end
 	RestoreFadedFrames(self)
 	if L('hideui') and L('camerarotationenabled') then 
-		MoveViewRightStop(0)
+		MoveViewRightStop()
 	end
 end
 
