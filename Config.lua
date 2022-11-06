@@ -82,8 +82,8 @@ L.defaults = {
 	anidivisor = 5,
 
 	texttospeechenabled = false,
-    texttospeechrate = 0,
-    texttospeechvolume = 100,
+	texttospeechrate = 0,
+	texttospeechvolume = 100,
 
 	inspect = 'SHIFT',
 	accept = 'SPACE',
@@ -300,7 +300,7 @@ L.options = {
 						},
 					},
 				},
-                texttospeech = {
+				texttospeech = {
 					type = 'group',
 					name = TEXT_TO_SPEECH,
 					inline = true,
@@ -319,30 +319,30 @@ L.options = {
 							order = 2,
 							name = L["Reads quest text aloud using text-to-speech based on options selected."],
 						},
-                        texttospeechvolume = {
-                            type = 'range',
-                            name = TEXT_TO_SPEECH_ADJUST_VOLUME,
-                            min = 1,
-                            max = 100,
-                            step = 1,
-                            order = 3,
-                            get = L.GetFromDefaultOrSV,
+						texttospeechvolume = {
+							type = 'range',
+							name = TEXT_TO_SPEECH_ADJUST_VOLUME,
+							min = 1,
+							max = 100,
+							step = 1,
+							order = 3,
+							get = L.GetFromDefaultOrSV,
 							set = function(self, val) 
 								L.cfg.texttospeechvolume = val
 							end,
-                        },
-                        texttospeechrate = {
-                            type = 'range',
-                            name = TEXT_TO_SPEECH_ADJUST_RATE,
-                            min = -5,
-                            max = 5,
-                            step = 0.1,
-                            order = 4,
-                            get = L.GetFromDefaultOrSV,
+						},
+						texttospeechrate = {
+							type = 'range',
+							name = TEXT_TO_SPEECH_ADJUST_RATE,
+							min = -5,
+							max = 5,
+							step = 0.1,
+							order = 4,
+							get = L.GetFromDefaultOrSV,
 							set = function(self, val) 
 								L.cfg.texttospeechrate = val
 							end,
-                        },
+						},
 					},
 				},
 				talkinghead = {
