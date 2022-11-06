@@ -76,6 +76,8 @@ L.defaults = {
 	boxlock = true,
 	boxpoint = 'Bottom',
 
+	camerarotationenabled = false,
+
 	disableprogression = false,
 	flipshortcuts = false,
 	delaydivisor = 15,
@@ -258,6 +260,16 @@ L.options = {
 							get = L.GetFromSV,
 							set = function(_, val)
 								L.cfg.hidetooltip = val
+							end,
+						},
+						camerarotationenabled = {
+							type = 'toggle',
+							name = L['Rotate camera'],
+							disabled = function() return not L('hideui') end,
+							order = 1,
+							get = L.GetFromSV,
+							set = function(_, val)
+								L.cfg.camerarotationenabled = val
 							end,
 						},
 					},
