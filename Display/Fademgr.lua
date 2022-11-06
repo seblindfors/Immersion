@@ -131,6 +131,10 @@ function frame:FadeIn(fadeTime, playAnimations, ignoreFrameFade)
 
 		self.ignoredFadeFrames = framesToIgnore
 	end
+
+	if L('hideui') and L('camerarotationenabled') then 
+		MoveViewRightStart(0.1)
+	end
 end
 
 function frame:FadeOut(fadeTime, ignoreOnTheFly)
@@ -142,6 +146,9 @@ function frame:FadeOut(fadeTime, ignoreOnTheFly)
 		self.fadeState = 'out'
 	end
 	RestoreFadedFrames(self)
+	if L('hideui') and L('camerarotationenabled') then 
+		MoveViewRightStop(0)
+	end
 end
 
 ----------------------------------
