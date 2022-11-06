@@ -9,6 +9,7 @@ L["Disable automatic text progress"] = "Automatischen Textfortschritt deaktivier
 L["Disable horizontal drag"] = "Horizontales Ziehen deaktivieren"
 L["Disable model animations"] = "Modellanimationen deaktivieren"
 L["Disable mouseover highlight"] = "Mouseover-Effekt deaktivieren"
+L["Disable overlay backgrounds"] = "Overlay Hintergrund deaktivieren"
 L["Disable portrait border"] = "Porträtrahmen deaktivieren"
 L["Disable sheen animation"] = "Glänzenden Rahmen deaktivieren"
 L["Dynamic offset"] = "Dynamischer Versatz"
