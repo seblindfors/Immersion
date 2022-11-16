@@ -160,6 +160,14 @@ do 	local function GameTooltipAlphaHandler(self)
 	end
 
 	GameTooltip:HookScript('OnTooltipSetDefaultAnchor', GameTooltipAlphaHandler)
-	GameTooltip:HookScript('OnTooltipSetItem', GameTooltipAlphaHandler)
 	GameTooltip:HookScript('OnShow', GameTooltipAlphaHandler)
+
+	if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall then
+		TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(self)
+			if self ~= GameTooltip then return end;
+			GameTooltipAlphaHandler(self)
+		end)
+	else
+		GameTooltip:HookScript('OnTooltipSetItem', GameTooltipAlphaHandler)
+	end
 end

@@ -274,13 +274,13 @@
 					self.NineSlice:SetCenterColor(TOOLTIP_DEFAULT_BACKGROUND_COLOR.r, TOOLTIP_DEFAULT_BACKGROUND_COLOR.g, TOOLTIP_DEFAULT_BACKGROUND_COLOR.b);
 				end
 			</OnLoad>
-			<OnTooltipSetItem>
+			<OnShow>
 				-- Readjust tooltip size to fit the icon
 				C_Timer.After(0, function()
 					local width, height = self:GetSize()
 					self:SetSize(width + 30, height + 4)
 				end)
-			</OnTooltipSetItem>
+			</OnShow>
 		</Scripts>
 	</GameTooltip>
 
