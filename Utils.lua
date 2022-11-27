@@ -62,6 +62,7 @@ function L.HideFrame(frame)
 	frame:EnableKeyboard(false)
 	frame:SetAlpha(0)
 	frame:ClearAllPoints()
+	UIPanelWindows[frame:GetName()] = nil;
 end
 
 function L.SetGradient(texture, orientation, ...)
