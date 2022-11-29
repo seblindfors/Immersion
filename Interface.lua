@@ -415,6 +415,7 @@ local CloseOnInteractionTypes = Enum and Enum.PlayerInteractionType and {
 	[Enum.PlayerInteractionType.TabardVendor] = true;
 	[Enum.PlayerInteractionType.TaxiNode] = true;
 	[Enum.PlayerInteractionType.Trainer] = true;
+	[Enum.PlayerInteractionType.TraitSystem] = true;
 	[Enum.PlayerInteractionType.Transmogrifier] = true;
 	[Enum.PlayerInteractionType.Trophy] = true;
 	[Enum.PlayerInteractionType.VoidStorageBanker] = true;
