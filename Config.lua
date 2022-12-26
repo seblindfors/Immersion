@@ -84,6 +84,8 @@ L.defaults = {
 	inspect = 'SHIFT',
 	accept = 'SPACE',
 	reset = 'BACKSPACE',
+
+	gossipsort = 'NONE'
 }---------------------------------
 
 local stratas = {
@@ -115,6 +117,11 @@ local titleanis = {
 	[1]  = SPELL_CAST_TIME_INSTANT,
 	[5]  = FAST,
 	[10] = SLOW,
+}
+
+local gossipsortoptions = {
+	NONE = L['None'],
+	BLIZZARD = 'Blizzard'
 }
 
 L.options = {
@@ -531,6 +538,17 @@ L.options = {
 								L.cfg.titlescale = val
 								L.frame.TitleButtons:SetScale(val)
 							end,
+						},
+						gossipsort = {
+							type = 'select',
+							name = L['Sort gossip options'],
+							order = 2,
+							values = gossipsortoptions,
+							get = L.GetFromDefaultOrSV,
+							set = function(_, val)
+								L.cfg.gossipsort = val
+							end,
+							style = 'dropdown',
 						},
 					},
 				},

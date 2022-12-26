@@ -230,6 +230,9 @@ function Titles:UpdateActiveQuests(data)
 end
 
 function Titles:UpdateGossipOptions(data)
+	if L('gossipsort') == 'BLIZZARD' then
+		table.sort(data, GossipOptionSort)
+	end
 	for i, option in ipairs(data) do
 		local button = self:GetButton(self.idx)
 		----------------------------------
