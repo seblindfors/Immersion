@@ -55,14 +55,14 @@ function L.Mixin(object, ...)
 	return object
 end
 
+L.UIHider = CreateFrame('Frame', _ .. 'UIHider')
+L.UIHider:Hide()
 function L.HideFrame(frame)
 	frame:UnregisterAllEvents()
-	frame:SetSize(1, 1)
-	frame:EnableMouse(false)
-	frame:EnableKeyboard(false)
-	frame:SetAlpha(0)
-	frame:ClearAllPoints()
-	UIPanelWindows[frame:GetName()] = nil;
+	frame:SetParent(L.UIHider)
+	if UIPanelWindows then
+		UIPanelWindows[frame:GetName()] = nil;
+	end
 end
 
 function L.SetGradient(texture, orientation, ...)
