@@ -297,6 +297,12 @@ function API:GetGossipOptions(...)
 			GetGossipOptions(...)
 		)
 	end
+	assert(C_GossipInfo.GetOptions, 'C_GossipInfo.GetOptions does not exist.')
+	if GossipOptionSort then
+		local gossipOptions = C_GossipInfo.GetOptions(...)
+		table.sort(gossipOptions, GossipOptionSort)
+		return gossipOptions
+	end
 	return C_GossipInfo.GetOptions(...)
 end
 
