@@ -3,7 +3,7 @@ local API = {}; ImmersionAPI = API;
 local IS_VANILLA = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC or nil;
 local IS_RETAIL  = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE or nil;
 local IS_CLASSIC = WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC or nil;
-local IS_WOW10   = select(4, GetBuildInfo()) >= 100000 or nil;
+local IS_WOW10   = select(4, GetBuildInfo()) >= 30401 or nil;
 
 API.IsRetail = IS_RETAIL;
 API.IsWoW10  = IS_WOW10;
