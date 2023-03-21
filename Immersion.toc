@@ -1,10 +1,10 @@
-## Interface: 100005
+## Interface: 100007
 ## Interface-Classic: 11403
 ## Interface-BCC: 20504
 ## Interface-Wrath: 30401
 ## Title: Immersion
 ## Notes: Immersive replacement for quest & gossip
-## Version: 1.4.21
+## Version: 1.4.22
 
 ## Author: Sebastian Lindfors
 ## X-Website: https://github.com/seblindfors/Immersion
