@@ -9,6 +9,7 @@ L["Disable automatic text progress"] = "Automatischen Textfortschritt deaktivier
 L["Disable horizontal drag"] = "Horizontales Ziehen deaktivieren"
 L["Disable model animations"] = "Modellanimationen deaktivieren"
 L["Disable mouseover highlight"] = "Mouseover-Effekt deaktivieren"
+L["Disable overlay backgrounds"] = "Overlay Hintergrund deaktivieren"
 L["Disable portrait border"] = "Porträtrahmen deaktivieren"
 L["Disable sheen animation"] = "Glänzenden Rahmen deaktivieren"
 L["Dynamic offset"] = "Dynamischer Versatz"
@@ -41,3 +42,5 @@ L["The quest/gossip text doesn't vanish when you stop interacting with the NPC o
 L["The regular talking head frame appears in the same place as Immersion when you're not interacting with anything and on top of Immersion if they are visible at the same time."] = "Der normale sprechende Kopf erscheint an der gleichen Stelle wie Immersion, beziehungsweise überdeckt Immersion, wenn man mit nichts interagiert und beide zur gleichen Zeit sichtbar sind."
 L["Tooltip"] = "Tooltip"
 L["Use your primary mouse button to read through text, accept/turn in quests and select the best available gossip option."] = "Benutze deine primäre Maustaste um Texte durchzulesen, Quests zu akzeptieren und die beste Gesprächsoption auszuwählen."
+L["When a quest is supertracked (clicked on in the objective tracker, or set automatically by proximity), the quest text will play if nothing else is obstructing it."] = "Wenn eine Quest verfolgt wird (in der Zielverfolgung angeklickt oder automatisch durch Nähe gesetzt), wird der Questtext abgespielt, wenn nichts anderes ihn behindert."
+L["Reads quest text aloud using text-to-speech based on options selected."] = "Liest Questtext entsprechend den gewählten Optionen mithilfe von Text-to-Speech laut vor"

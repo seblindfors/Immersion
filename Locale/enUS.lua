@@ -43,3 +43,4 @@ L["The regular talking head frame appears in the same place as Immersion when yo
 L["Tooltip"] = "Tooltip"
 L["Use your primary mouse button to read through text, accept/turn in quests and select the best available gossip option."] = "Use your primary mouse button to read through text, accept/turn in quests and select the best available gossip option."
 L["When a quest is supertracked (clicked on in the objective tracker, or set automatically by proximity), the quest text will play if nothing else is obstructing it."] = "When a quest is supertracked (clicked on in the objective tracker, or set automatically by proximity), the quest text will play if nothing else is obstructing it."
+L["Reads quest text aloud using text-to-speech based on options selected."] = "Reads quest text aloud using text-to-speech based on options selected."
