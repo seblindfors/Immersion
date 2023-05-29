@@ -81,9 +81,10 @@ L.defaults = {
 	delaydivisor = 15,
 	anidivisor = 5,
 
-	texttospeechenabled = false,
-	texttospeechrate = 0,
-	texttospeechvolume = 100,
+	ttsenabled = false,
+	ttsrate = 0,
+	ttsvolume = 100,
+	ttsvoice = 1,
 
 	inspect = 'SHIFT',
 	accept = 'SPACE',
@@ -300,26 +301,26 @@ L.options = {
 						},
 					},
 				},
-				texttospeech = {
+				tts = {
 					type = 'group',
 					name = TEXT_TO_SPEECH,
 					inline = true,
 					order = 5,
 					args = {
-						texttospeechenabled = {
+						ttsenabled = {
 							type = 'toggle',
 							name = TEXT_TO_SPEECH,
 							order = 1,
 							get = L.GetFromSV,
-							set = function(_, val) L.cfg.texttospeechenabled = val end,
+							set = function(_, val) L.cfg.ttsenabled = val end,
 						},
-						texttospeechdesc = {
+						ttsdesc = {
 							type = 'description',
 							fontSize = 'medium',
 							order = 2,
 							name = L["Reads quest text aloud using text-to-speech based on options selected."],
 						},
-						texttospeechvolume = {
+						ttsvolume = {
 							type = 'range',
 							name = TEXT_TO_SPEECH_ADJUST_VOLUME,
 							min = 1,
@@ -328,10 +329,11 @@ L.options = {
 							order = 3,
 							get = L.GetFromDefaultOrSV,
 							set = function(self, val) 
-								L.cfg.texttospeechvolume = val
+								L.cfg.ttsvolume = val
 							end,
+							disabled = function() return not L('ttsenabled') end,
 						},
-						texttospeechrate = {
+						ttsrate = {
 							type = 'range',
 							name = TEXT_TO_SPEECH_ADJUST_RATE,
 							min = -5,
@@ -340,8 +342,27 @@ L.options = {
 							order = 4,
 							get = L.GetFromDefaultOrSV,
 							set = function(self, val) 
-								L.cfg.texttospeechrate = val
+								L.cfg.ttsrate = val
 							end,
+							disabled = function() return not L('ttsenabled') end,
+						},
+						ttsvoice = {
+							type = 'select',
+							name = VOICE,
+							order = 5,
+							style = 'dropdown',
+							values = function()
+								local list, voices = {}, C_VoiceChat.GetTtsVoices()
+								for i, voice in ipairs(voices) do
+									list[voice.voiceID + 1] = voice.name
+								end
+								return list
+							end,
+							get = L.GetFromDefaultOrSV,
+							set = function(_, val)
+								L.cfg.ttsvoice = val
+							end,
+							disabled = function() return not L('ttsenabled') end,
 						},
 					},
 				},

@@ -248,10 +248,15 @@ function text:OnDisplayLineCallback(text)
 			self:PauseTimer()
 		end
 		
-		if(text and L('texttospeechenabled')) then
+		if ( text and L('ttsenabled') ) then
 			C_VoiceChat.StopSpeakingText()
 			C_Timer.After(0, function()
-				C_VoiceChat.SpeakText(0, text, Enum.VoiceTtsDestination.LocalPlayback, L('texttospeechrate'), L('texttospeechvolume')) 
+				C_VoiceChat.SpeakText(
+					(L('ttsvoice') or 1) -1,
+					text,
+					Enum.VoiceTtsDestination.LocalPlayback,
+					L('ttsrate'),
+					L('ttsvolume')) 
 			end)
 		end
 	end
