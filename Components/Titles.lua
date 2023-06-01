@@ -237,7 +237,7 @@ function Titles:UpdateGossipOptions(data)
 		button:SetGossipIcon(option.type or option.icon)
 		button:SetPriority(P_AVAILABLE_GOSSIP)
 		----------------------------------
-		button:SetID(option.gossipOptionID or i)
+		button:SetID(API:GetGossipOptionID(option))
 		button:SetType('Gossip')
 		----------------------------------
 		self.idx = self.idx + 1

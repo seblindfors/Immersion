@@ -58,7 +58,7 @@ function API:MapGossipOptions(i, idx, ...)
 	return {
 		name           = name,
 		type           = icon,
-		gossipOptionID = idx,
+		orderIndex     = idx,
 	}
 end
 
@@ -234,7 +234,7 @@ function API:CanAutoSelectGossip(dontAutoSelect)
 	local gossip, option = self:GetGossipOptions()
 	if ( #gossip > 0 ) then
 		local firstOption = gossip[1];
-		option = firstOption.selectOptionWhenOnlyOption and firstOption.gossipOptionID;
+		option = firstOption.selectOptionWhenOnlyOption and (firstOption.orderIndex or firstOption.gossipOptionID);
 		option = option or (firstOption.type and firstOption.type:lower() ~= 'gossip' and 1)
 	end
 	if option then
@@ -306,6 +306,13 @@ function API:GetGossipOptions(...)
 	return C_GossipInfo.GetOptions(...)
 end
 
+function API:GetGossipOptionID(option)
+	if IS_CLASSIC then
+		return option.gossipOptionID;
+	end
+	return option.orderIndex;
+end
+
 -- Quest greeting API
 function API:GetNumActiveQuests(...)
 	return GetNumActiveQuests and GetNumActiveQuests(...) or 0
@@ -329,7 +336,7 @@ function API:SelectAvailableQuest(...)
 end
 
 function API:SelectGossipOption(...)
-	return (C_GossipInfo and C_GossipInfo.SelectOption or SelectGossipOption)(...)
+	return (C_GossipInfo and (C_GossipInfo.SelectOptionByIndex or C_GossipInfo.SelectOption) or SelectGossipOption)(...)
 end
 
 function API:SelectGossipActiveQuest(...)
