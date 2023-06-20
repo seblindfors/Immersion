@@ -307,9 +307,6 @@ function API:GetGossipOptions(...)
 end
 
 function API:GetGossipOptionID(option)
-	if IS_CLASSIC then
-		return option.gossipOptionID;
-	end
 	return option.orderIndex;
 end
 
