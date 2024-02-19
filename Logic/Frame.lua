@@ -408,10 +408,14 @@ function Frame:OnKeyDown(button)
 		self:ForceClose()
 		return
 	elseif self:ParseControllerCommand(button) then
-		self:SetPropagateKeyboardInput(false)
+		if not InCombatLockdown() then
+			self:SetPropagateKeyboardInput(false)
+		end
 		return
 	elseif self:IsInspectModifier(button) and self.hasItems then
-		self:SetPropagateKeyboardInput(false)
+		if not InCombatLockdown() then
+			self:SetPropagateKeyboardInput(false)
+		end
 		self:ShowItems()
 		return
 	end
@@ -425,12 +429,18 @@ function Frame:OnKeyDown(button)
 	end
 	if input then
 		input(self)
-		self:SetPropagateKeyboardInput(false)
+		if not InCombatLockdown() then
+			self:SetPropagateKeyboardInput(false)
+		end
 	elseif L.cfg.enablenumbers and tonumber(button) then
 		inputs.number(self, tonumber(button))
-		self:SetPropagateKeyboardInput(false)
+		if not InCombatLockdown() then
+			self:SetPropagateKeyboardInput(false)
+		end
 	else
-		self:SetPropagateKeyboardInput(true)
+		if not InCombatLockdown() then
+			self:SetPropagateKeyboardInput(true)
+		end
 	end
 end
 
