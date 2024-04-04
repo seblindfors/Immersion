@@ -355,7 +355,7 @@ function API:GetUnitName(...)
 end
 
 function API:GetPortraitAtlas()
-	if GetAtlasInfo and GetAtlasInfo('TalkingHeads-PortraitFrame') then
+	if C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo('TalkingHeads-PortraitFrame') then
 		return 'TalkingHeads-PortraitFrame';
 	end
 	return 'TalkingHeads-Alliance-PortraitFrame';
