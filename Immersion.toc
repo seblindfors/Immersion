@@ -1,11 +1,11 @@
 ## Interface: 100205
-## Interface-Classic: 11404
+## Interface-Classic: 11502
 ## Interface-BCC: 20504
 ## Interface-Wrath: 30403
 ## IconTexture: Interface\AddOns\Immersion\Textures\Logo
 ## Title: Immersion
 ## Notes: Immersive replacement for quest & gossip
-## Version: 1.4.31
+## Version: 1.4.33
 
 ## Author: Sebastian Lindfors
 ## X-Website: https://github.com/seblindfors/Immersion
