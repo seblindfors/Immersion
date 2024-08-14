@@ -1,6 +1,6 @@
 local _, L = ...
 local Tooltip = {}
-local isConsolePortLoaded = IsAddOnLoaded('ConsolePort')
+local isConsolePortLoaded = C_AddOns.IsAddOnLoaded('ConsolePort')
 L.TooltipMixin = Tooltip
 
 function Tooltip:OnShow()

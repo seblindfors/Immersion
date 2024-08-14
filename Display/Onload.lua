@@ -144,9 +144,9 @@ function frame:ADDON_LOADED(name)
 		-- If the addon in question is already loaded, run the function and remove from list.
 		for addOn, func in pairs(L.compat) do
 			-- denotes if existing and loadable at any point
-			if select(4, GetAddOnInfo(addOn)) then
+			if select(4, C_AddOns.GetAddOnInfo(addOn)) then
 				-- is it actually loaded at this point?
-				if IsAddOnLoaded(addOn) then
+				if C_AddOns.IsAddOnLoaded(addOn) then
 					func(self)
 					L.compat[addOn] = nil
 				end
@@ -167,7 +167,7 @@ function frame:ADDON_LOADED(name)
 	end
 
 	-- Immersion is loaded, no more addons to track. Garbage collect this function.
-	if not L.compat and IsAddOnLoaded(_) then
+	if not L.compat and C_AddOns.IsAddOnLoaded(_) then
 		self:UnregisterEvent('ADDON_LOADED')
 		self.ADDON_LOADED = nil
 	end
@@ -392,7 +392,7 @@ end
 do  -- Azerite Empowered Item UI
 	local loaded = false
 	local function ignoreAzeriteItemUI()
-		if not loaded and IsAddOnLoaded('Blizzard_AzeriteUI') then
+		if not loaded and C_AddOns.IsAddOnLoaded('Blizzard_AzeriteUI') then
 			loaded = true
 			L.ToggleIgnoreFrame(AzeriteEmpoweredItemUI, true)
 		end
