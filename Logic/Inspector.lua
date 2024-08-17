@@ -26,18 +26,38 @@ do local self = Inspector
 	self.Background:SetColorTexture(1, 1, 1)
 	L.SetGradient(self.Background, 'VERTICAL', minColor, maxColor)
 
-	self.tooltipFramePool = CreateFramePool('GameTooltip', self, 'ImmersionItemTooltipTemplate', function(self, obj) obj:Hide() end)
-	self.tooltipFramePool.creationFunc = function(framePool)
-		local index = #framePool.inactiveObjects + framePool.numActiveObjects + 1
-		local tooltip = L.Create({
-			type    = framePool.frameType,
+	self.tooltipFramePool = { count = 0, active = {}, inactive = {} };
+
+	function self.tooltipFramePool:Acquire()
+		local tooltip = next(self.inactive)
+		if tooltip then
+			self.inactive[tooltip] = nil
+			self.active[tooltip] = true
+			return tooltip
+		end
+		self.count = self.count + 1
+		tooltip = L.Create({
+			type    = 'GameTooltip',
 			name    = 'GameTooltip',
-			index   = index,
-			parent  = framePool.parent,
-			inherit = framePool.frameTemplate
+			index   = self.count,
+			parent  = Inspector,
+			inherit = 'ImmersionItemTooltipTemplate'
 		})
 		L.SetBackdrop(tooltip.Hilite, L.Backdrops.TOOLTIP_HILITE)
+		self.active[tooltip] = true
 		return tooltip
+	end
+
+	function self.tooltipFramePool:ReleaseAll()
+		for tooltip in pairs(self.active) do
+			self.inactive[tooltip] = true
+			tooltip:Hide()
+		end
+		wipe(self.active)
+	end
+
+	function self.tooltipFramePool:EnumerateActive()
+		return pairs(self.active)
 	end
 end
 
