@@ -6,12 +6,14 @@
 	<Button name="ImmersionRewardSpellCodeTemplate" virtual="true">
 		<Scripts>
 			<OnEnter>
+				local isPet = nil;
+				local showSubtext = true;
 				GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-				GameTooltip:SetQuestRewardSpell(self.rewardSpellIndex);
+				GameTooltip:SetSpellByID(self.rewardSpellID, isPet, showSubtext);
 			</OnEnter>
 			<OnClick>
 				if ( IsModifiedClick("CHATLINK") ) then
-					ChatEdit_InsertLink(GetQuestSpellLink(self.rewardSpellIndex));
+					ChatEdit_InsertLink((GetSpellLink or C_Spell.GetSpellLink)(self.rewardSpellID));
 				end
 			</OnClick>
 			<OnLeave>
@@ -31,6 +33,11 @@
 				elseif (self.objectType == "currency") then
 					GameTooltip:SetQuestCurrency(self.type, self:GetID());
 				end
+				if (self.rewardContextLine) then
+					GameTooltip_AddBlankLineToTooltip(GameTooltip);
+					GameTooltip_AddColoredLine(GameTooltip, self.rewardContextLine, QUEST_REWARD_CONTEXT_FONT_COLOR);
+				end
+				GameTooltip:Show();
 				CursorUpdate(self);
 			</OnEnter>
 			<OnClick>
@@ -110,6 +117,14 @@
 					</MaskedTextures>
 				</MaskTexture>
 			</Layer>
+			<Layer level="OVERLAY">
+				<Texture parentKey="QuestRewardContextIcon" hidden="true">
+					<Size x="16" y="21"/>
+					<Anchors>
+						<Anchor point="TOPRIGHT" relativeKey="$parent.Name" relativePoint="TOPRIGHT" x="3" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
 		</Layers>									
 		<Animations>
 			<AnimationGroup parentKey="InAnim" setToFinalAlpha="true">
@@ -169,7 +184,7 @@
 			</OnLeave>
 			<OnClick>
 				if ( IsModifiedClick("CHATLINK") and self.spellID) then
-					local spellLink = GetSpellLink(self.spellID);
+					local spellLink = (GetSpellLink or C_Spell.GetSpellLink)(self.spellID);
 					ChatEdit_InsertLink(spellLink);
 				end
 			</OnClick>

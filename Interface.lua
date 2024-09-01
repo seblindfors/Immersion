@@ -146,7 +146,7 @@ end
 
 -- Quest content API
 function API:GetSuggestedGroupNum(...)
-	return GetSuggestedGroupNum and GetSuggestedGroupNum(...) or 0
+	return (C_QuestLog and C_QuestLog.GetSuggestedGroupSize or GetSuggestedGroupNum)(...) or 0
 end
 
 function API:GetNumQuestRewards(...)
@@ -158,7 +158,41 @@ function API:GetNumQuestChoices(...)
 end
 
 function API:GetNumRewardCurrencies(...)
-	return GetNumRewardCurrencies and GetNumRewardCurrencies(...) or 0
+	if GetNumRewardCurrencies then
+		return GetNumRewardCurrencies(...) or 0
+	end
+	return #(C_QuestInfoSystem and C_QuestInfoSystem.GetQuestRewardCurrencies(...) or {})
+end
+
+function API:GetQuestCurrencyInfo(itemType, index)
+	if C_QuestOffer and C_QuestOffer.GetQuestRequiredCurrencyInfo then
+		local currencyInfo
+		if itemType == 'required' then
+			currencyInfo = C_QuestOffer.GetQuestRequiredCurrencyInfo(index)
+		else
+			currencyInfo = C_QuestOffer.GetQuestRewardCurrencyInfo(itemType, index)
+		end
+		if currencyInfo then
+			currencyInfo.displayedAmount = (itemType == 'required') and currencyInfo.requiredAmount or currencyInfo.totalRewardAmount
+			return currencyInfo
+		end
+	elseif GetQuestCurrencyInfo then
+		local name, texture, amount, quality = GetQuestCurrencyInfo(itemType, index)
+		local currencyID = GetQuestCurrencyID(itemType, index)
+		if name and currencyID then
+			return {
+				texture = texture,
+				name = name,
+				currencyID = currencyID,
+				quality = quality or 0,
+				baseRewardAmount = amount,
+				bonusRewardAmount = 0,
+				totalRewardAmount = amount,
+				questRewardContextFlags = nil,
+				displayedAmount = amount
+			}
+		end
+	end
 end
 
 function API:GetRewardMoney(...)
@@ -185,8 +219,12 @@ function API:GetRewardTitle(...)
 	return GetRewardTitle and GetRewardTitle(...)
 end
 
-function API:GetNumRewardSpells(...)
-	return GetNumRewardSpells and GetNumRewardSpells(...) or 0
+function API:GetQuestRewardSpells(...)
+	return C_QuestInfoSystem and C_QuestInfoSystem.GetQuestRewardSpells(...) or {}
+end
+
+function API:GetQuestRewardSpellInfo(...)
+	return C_QuestInfoSystem and C_QuestInfoSystem.GetQuestRewardSpellInfo(...) or {}
 end
 
 function API:GetMaxRewardCurrencies(...)

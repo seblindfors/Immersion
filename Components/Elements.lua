@@ -20,12 +20,77 @@ local LOOT_ITEM_TYPES = {
 ----------------------------------
 -- Helper functions
 ----------------------------------
-local function AddSpellToBucket(spellBuckets, type, rewardSpellIndex)
-	if not spellBuckets[type] then
-		spellBuckets[type] = {}
+local Enum_QuestCompleteSpellType = {
+	LegacyBehavior = 0,
+	Follower = 1,
+	Tradeskill = 2,
+	Ability = 3,
+	Aura = 4,
+	Spell = 5,
+	Unlock = 6,
+	Companion = 7,
+	QuestlineUnlock = 8,
+	QuestlineReward = 9,
+	QuestlineUnlockPart = 10
+}
+
+local QUEST_INFO_SPELL_REWARD_ORDERING = {
+	Enum_QuestCompleteSpellType.Follower,
+	Enum_QuestCompleteSpellType.Companion,
+	Enum_QuestCompleteSpellType.Tradeskill,
+	Enum_QuestCompleteSpellType.Ability,
+	Enum_QuestCompleteSpellType.Aura,
+	Enum_QuestCompleteSpellType.Spell,
+	Enum_QuestCompleteSpellType.Unlock,
+	Enum_QuestCompleteSpellType.QuestlineUnlock,
+	Enum_QuestCompleteSpellType.QuestlineReward,
+	Enum_QuestCompleteSpellType.QuestlineUnlockPart,
+}
+
+local QUEST_INFO_SPELL_REWARD_TO_HEADER = {
+	[Enum_QuestCompleteSpellType.Follower] = REWARD_FOLLOWER,
+	[Enum_QuestCompleteSpellType.Companion] = REWARD_COMPANION,
+	[Enum_QuestCompleteSpellType.Tradeskill] = REWARD_TRADESKILL_SPELL,
+	[Enum_QuestCompleteSpellType.Ability] = REWARD_ABILITY,
+	[Enum_QuestCompleteSpellType.Aura] = REWARD_AURA,
+	[Enum_QuestCompleteSpellType.Spell] = REWARD_SPELL,
+	[Enum_QuestCompleteSpellType.Unlock] = REWARD_UNLOCK,
+	[Enum_QuestCompleteSpellType.QuestlineUnlock] = REWARD_QUESTLINE_UNLOCK,
+	[Enum_QuestCompleteSpellType.QuestlineReward] = REWARD_QUESTLINE_REWARD,
+	[Enum_QuestCompleteSpellType.QuestlineUnlockPart] = REWARD_QUESTLINE_UNLOCK_PART,
+}
+
+local function GetRewardSpellBucketType(spellInfo)
+	if spellInfo.type and spellInfo.type ~= Enum_QuestCompleteSpellType.LegacyBehavior then
+		return spellInfo.type
+	elseif spellInfo.isTradeskillSpell then
+		return Enum_QuestCompleteSpellType.Tradeskill
+	elseif spellInfo.isBoostSpell then
+		return Enum_QuestCompleteSpellType.Ability
+	elseif spellInfo.garrFollowerID then
+		local followerInfo = C_Garrison.GetFollowerInfo(spellInfo.garrFollowerID)
+		if followerInfo and followerInfo.followerTypeID == Enum.GarrisonFollowerType.FollowerType_9_0_GarrisonFollower then
+			return Enum_QuestCompleteSpellType.Companion
+		else
+			return Enum_QuestCompleteSpellType.Follower
+		end
+	elseif spellInfo.isSpellLearned then
+		return Enum_QuestCompleteSpellType.Spell
+	elseif spellInfo.genericUnlock then
+		return Enum_QuestCompleteSpellType.Unlock
 	end
-	local spellBucket = spellBuckets[type]
-	spellBucket[#spellBucket + 1] = rewardSpellIndex
+
+	return Enum_QuestCompleteSpellType.Aura
+end
+
+local function AddSpellToBucket(buckets, spellInfo)
+	local subType = GetRewardSpellBucketType(spellInfo)
+
+	if not buckets[subType] then
+		buckets[subType] = {}
+	end
+
+	table.insert(buckets[subType], spellInfo)
 end
 
 local function IsValidSpellReward(texture, knownSpell, isBoostSpell, garrFollowerID)
@@ -33,6 +98,81 @@ local function IsValidSpellReward(texture, knownSpell, isBoostSpell, garrFollowe
 	return  texture and not knownSpell and
 			(not isBoostSpell or API:IsCharacterNewlyBoosted()) and
 			(not garrFollowerID or not API:IsFollowerCollected(garrFollowerID))
+end
+
+local Enum_QuestRewardContextFlags = {
+	None = 0,
+	FirstCompletionBonus = 1,
+	RepeatCompletionBonus = 2
+}
+
+local function GetBestItemRewardContextDescription(questRewardContextFlags)
+	if (FlagsUtil.IsSet(questRewardContextFlags, Enum_QuestRewardContextFlags.FirstCompletionBonus)) then
+		return ACCOUNT_FIRST_TIME_QUEST_BONUS_TOOLTIP
+	elseif (FlagsUtil.IsSet(questRewardContextFlags, Enum_QuestRewardContextFlags.RepeatCompletionBonus)) then
+		return ACCOUNT_PREVIOUSLY_COMPLETED_QUEST_BONUS_TOOLTIP
+	end
+end
+
+local function GetBestCurrencyRewardContextDescription(currencyInfo, questRewardContextFlags)
+	local entireAmountIsBonus = currencyInfo.bonusRewardAmount == currencyInfo.totalRewardAmount
+	local isReputationReward = C_CurrencyInfo.GetFactionGrantedByCurrency(currencyInfo.currencyID) ~= nil
+	if (FlagsUtil.IsSet(questRewardContextFlags, Enum_QuestRewardContextFlags.FirstCompletionBonus)) then
+		if entireAmountIsBonus then
+			return ACCOUNT_FIRST_TIME_QUEST_BONUS_TOOLTIP
+		end
+
+		local bonusString = isReputationReward and ACCOUNT_FIRST_TIME_QUEST_BONUS_REP_TOOLTIP or ACCOUNT_FIRST_TIME_QUEST_BONUS_CURRENCY_TOOLTIP
+		return bonusString:format(currencyInfo.baseRewardAmount, currencyInfo.bonusRewardAmount)
+	end
+
+	if (FlagsUtil.IsSet(questRewardContextFlags, Enum_QuestRewardContextFlags.RepeatCompletionBonus)) then
+		if entireAmountIsBonus then
+			return ACCOUNT_PREVIOUSLY_COMPLETED_QUEST_BONUS_TOOLTIP
+		end
+
+		local bonusString = isReputationReward and ACCOUNT_PREVIOUSLY_COMPLETED_QUEST_REP_BONUS_TOOLTIP or ACCOUNT_PREVIOUSLY_COMPLETED_QUEST_CURRENCY_BONUS_TOOLTIP
+		return bonusString:format(currencyInfo.baseRewardAmount, currencyInfo.bonusRewardAmount)
+	end
+end
+
+local function GetBestQuestRewardContextDescription(self)
+	if not self.questRewardContextFlags then
+		return nil
+	end
+
+	if self.objectType == "item" then
+		return GetBestItemRewardContextDescription(self.questRewardContextFlags)
+	elseif self.objectType == "currency" and self.currencyInfo then
+		return GetBestCurrencyRewardContextDescription(self.currencyInfo, self.questRewardContextFlags)
+	end
+end
+
+local QUEST_REWARD_CONTEXT_ICONS = {
+	[Enum_QuestRewardContextFlags.FirstCompletionBonus] = "warbands-icon",
+	[Enum_QuestRewardContextFlags.RepeatCompletionBonus] = "warbands-icon",
+}
+
+local function GetBestQuestRewardContextIcon(self)
+	if not self.questRewardContextFlags then
+		return nil
+	end
+
+	if (FlagsUtil.IsSet(self.questRewardContextFlags, Enum_QuestRewardContextFlags.FirstCompletionBonus)) then
+		return QUEST_REWARD_CONTEXT_ICONS[Enum_QuestRewardContextFlags.FirstCompletionBonus]
+	elseif (FlagsUtil.IsSet(self.questRewardContextFlags, Enum_QuestRewardContextFlags.RepeatCompletionBonus)) then
+		return QUEST_REWARD_CONTEXT_ICONS[Enum_QuestRewardContextFlags.RepeatCompletionBonus]
+	end
+
+	return nil
+end
+
+local function UpdateQuestRewardContextFlags(self, questRewardContextFlags)
+	self.questRewardContextFlags = questRewardContextFlags
+	local contextIcon = GetBestQuestRewardContextIcon(self)
+	self.QuestRewardContextIcon:SetAtlas(contextIcon)
+	self.QuestRewardContextIcon:SetShown(contextIcon ~= nil)
+	self.rewardContextLine = GetBestQuestRewardContextDescription(self)
 end
 
 local function GetItemButton(parentFrame, index, buttonType)
@@ -51,10 +191,10 @@ local function UpdateItemInfo(self, showMissing)
 	assert(self:GetID())
 
 	if self.objectType == 'item' then
-		local name, texture, amount, quality, isUsable = GetQuestItemInfo(self.type, self:GetID())
+		local name, texture, amount, quality, isUsable, itemID, questRewardContextFlags = GetQuestItemInfo(self.type, self:GetID())
 		local displayText;
-		if showMissing then
-			local missingAmount = amount > 1 and amount - GetItemCount(name)
+		if showMissing and not API.IsRetail then
+			local missingAmount = amount > 1 and amount - (GetItemCount or C_Item.GetItemCount)(name)
 			local hasMissingAmount = missingAmount and missingAmount > 0
 			displayText = hasMissingAmount and ('%s\n|cff757575%s|r'):format(name, ITEM_MISSING:format(missingAmount))
 		end
@@ -72,21 +212,25 @@ local function UpdateItemInfo(self, showMissing)
 			SetItemButtonTextureVertexColor(self, 0.9, 0, 0)
 			SetItemButtonNameFrameVertexColor(self, 0.9, 0, 0)
 		end
+		UpdateQuestRewardContextFlags(self, questRewardContextFlags)
 		self:Show()
 		return true
 	elseif self.objectType == 'currency' then
-		local name, texture, amount, quality = GetQuestCurrencyInfo(self.type, self:GetID())
-		local currencyID = GetQuestCurrencyID(self.type, self:GetID())
-		name, texture, amount, quality = CurrencyContainerUtil.GetCurrencyContainerInfo(currencyID, amount, name, texture, quality)
-		-- For the tooltip
-		self.Name:SetText(name)
-		self.itemTexture = texture
-		SetItemButtonCount(self, amount, true)
-		SetItemButtonTexture(self, texture)
-		SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0)
-		SetItemButtonNameFrameVertexColor(self, 1.0, 1.0, 1.0)
-		self:Show()
-		return true
+		local currencyInfo = API:GetQuestCurrencyInfo(self.type, self:GetID())
+		if currencyInfo then
+			local name, texture, amount, quality = CurrencyContainerUtil.GetCurrencyContainerInfo(currencyInfo.currencyID, currencyInfo.displayedAmount, currencyInfo.name, currencyInfo.texture, currencyInfo.quality)
+			-- For the tooltip
+			self.Name:SetText(name)
+			self.itemTexture = texture
+			self.currencyInfo = currencyInfo
+			SetItemButtonCount(self, amount, true)
+			SetItemButtonTexture(self, texture)
+			SetItemButtonTextureVertexColor(self, 1.0, 1.0, 1.0)
+			SetItemButtonNameFrameVertexColor(self, 1.0, 1.0, 1.0)
+			UpdateQuestRewardContextFlags(self, currencyInfo.questRewardContextFlags)
+			self:Show()
+			return true
+		end
 	end
 end
 
@@ -246,7 +390,7 @@ function Elements:ShowObjectivesText()
 end
 
 function Elements:ShowGroupSize()
-	local groupNum = API:GetSuggestedGroupNum()
+	local groupNum = API:GetSuggestedGroupNum(GetQuestID())
 	local groupSize = self.Content.GroupSize
 	if ( groupNum > 0 ) then
 		groupSize:SetText(QUEST_SUGGESTED_GROUP_NUM:format(groupNum))
@@ -284,34 +428,38 @@ function Elements:ShowRewards()
 			skillName, skillPoints, skillIcon,
 			xp, artifactXP, artifactCategory, honor,
 			playerTitle,
-			numSpellRewards
+			spellRewards
 			
 	local numQuestSpellRewards = 0
 	local totalHeight = 0
-	local GetSpell = GetRewardSpell
+	local spellBuckets = {}
 
 	do  -- Get data
 		questID = GetQuestID()
 		numQuestRewards = API:GetNumQuestRewards()
 		numQuestChoices = API:GetNumQuestChoices()
-		numQuestCurrencies = API:GetNumRewardCurrencies()
+		numQuestCurrencies = API:GetNumRewardCurrencies(questID)
 		money = API:GetRewardMoney()
 		skillName, skillIcon, skillPoints = API:GetRewardSkillPoints()
 		xp = API:GetRewardXP()
 		artifactXP, artifactCategory = API:GetRewardArtifactXP()
 		honor = API:GetRewardHonor()
 		playerTitle = API:GetRewardTitle()
-		numSpellRewards = API:GetNumRewardSpells()
+		spellRewards = API:GetQuestRewardSpells(questID)
 	end
 
 	do -- Spell rewards
-		for rewardSpellIndex = 1, numSpellRewards do
-			local texture, name, isTradeskillSpell, isSpellLearned, hideSpellLearnText, isBoostSpell, garrFollowerID, genericUnlock, spellID = GetSpell(rewardSpellIndex)
-			local knownSpell = tonumber(spellID) and IsSpellKnownOrOverridesKnown(spellID)
+		for _, spellID in ipairs(spellRewards) do
+			if spellID > 0 then
+				local spellInfo = API:GetQuestRewardSpellInfo(questID, spellID)
+				local knownSpell = IsSpellKnownOrOverridesKnown(spellID)
 
-			-- only allow the spell reward if user can learn it
-			if IsValidSpellReward(texture, knownSpell, isBoostSpell, garrFollowerID) then
-				numQuestSpellRewards = numQuestSpellRewards + 1
+				-- only allow the spell reward if user can learn it
+				if spellInfo and IsValidSpellReward(spellInfo.texture, knownSpell, spellInfo.isBoostSpell, spellInfo.garrFollowerID) then
+					numQuestSpellRewards = numQuestSpellRewards + 1
+					spellInfo.spellID = spellID
+					AddSpellToBucket(spellBuckets, spellInfo)
+				end
 			end
 		end
 	end
@@ -393,7 +541,7 @@ function Elements:ShowRewards()
 				local vendorValue
 				if (questItem.objectType == 'item') then
 					local link = GetQuestItemLink(questItem.type, i)
-					vendorValue = link and select(11, GetItemInfo(link))
+					vendorValue = link and select(11, (GetItemInfo or C_Item.GetItemInfo)(link))
 				end
 				
 				if vendorValue and ( not highestValue or vendorValue > highestValue ) then
@@ -447,29 +595,13 @@ function Elements:ShowRewards()
 
 	do -- Setup spell rewards
 		if ( numQuestSpellRewards > 0 ) then
-			local spellBuckets = {}
-
-			-- Generate spell buckets
-			for rewardSpellIndex = 1, numSpellRewards do
-				local texture, name, isTradeskillSpell, isSpellLearned, hideSpellLearnText, isBoostSpell, garrFollowerID, genericUnlock, spellID = GetSpell(rewardSpellIndex)
-				local knownSpell = IsSpellKnownOrOverridesKnown(spellID)
-				if IsValidSpellReward(texture, knownSpell, isBoostSpell, garrFollowerID) then
-					local bucket = 	isTradeskillSpell 	and QUEST_SPELL_REWARD_TYPE_TRADESKILL_SPELL or
-									isBoostSpell 		and QUEST_SPELL_REWARD_TYPE_ABILITY or
-									garrFollowerID 		and QUEST_SPELL_REWARD_TYPE_FOLLOWER or
-									isSpellLearned 		and QUEST_SPELL_REWARD_TYPE_SPELL or
-									genericUnlock 		and QUEST_SPELL_REWARD_TYPE_UNLOCK or QUEST_SPELL_REWARD_TYPE_AURA
-					
-					AddSpellToBucket(spellBuckets, bucket, rewardSpellIndex)
-				end
-			end
 
 			-- Sort buckets in the correct order
 			for orderIndex, spellBucketType in ipairs(QUEST_INFO_SPELL_REWARD_ORDERING) do
 				local spellBucket = spellBuckets[spellBucketType]
 				if spellBucket then
-					for i, rewardSpellIndex in ipairs(spellBucket) do
-						local texture, name, isTradeskillSpell, isSpellLearned, _, isBoostSpell, garrFollowerID = GetSpell(rewardSpellIndex)
+					for i, spellInfo in ipairs(spellBucket) do
+						local texture, name, spellID, garrFollowerID = spellInfo.texture, spellInfo.name, spellInfo.spellID, spellInfo.garrFollowerID
 						if i == 1 then
 							local header = self.spellHeaderPool:Acquire()
 							header:SetText(QUEST_INFO_SPELL_REWARD_TO_HEADER[spellBucketType])
@@ -498,7 +630,7 @@ function Elements:ShowRewards()
 							local spellRewardFrame = self.spellRewardPool:Acquire()
 							spellRewardFrame.Icon:SetTexture(texture)
 							spellRewardFrame.Name:SetText(name)
-							spellRewardFrame.rewardSpellIndex = rewardSpellIndex
+							spellRewardFrame.rewardSpellID = spellID
 							spellRewardFrame:Show()
 
 							anchorFrame = spellRewardFrame
