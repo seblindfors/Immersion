@@ -227,7 +227,12 @@ function Frame:SetItemTooltip(tooltip, item)
 	elseif objType == 'currency' then
 		tooltip:SetQuestCurrency(item.type, item:GetID())
 	end
+	if item.rewardContextLine then
+		GameTooltip_AddBlankLineToTooltip(tooltip)
+		GameTooltip_AddColoredLine(tooltip, item.rewardContextLine, QUEST_REWARD_CONTEXT_FONT_COLOR)
+	end
 	tooltip.Icon.Texture:SetTexture(item.itemTexture or item.Icon:GetTexture())
+	tooltip:Show()
 end
 
 function Frame:GetItemColumn(owner, id)
