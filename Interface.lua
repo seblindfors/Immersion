@@ -149,6 +149,10 @@ function API:GetSuggestedGroupNum(...)
 	return (C_QuestLog and C_QuestLog.GetSuggestedGroupSize or GetSuggestedGroupNum)(...) or 0
 end
 
+function API:GetAccountCompleted(...)
+	return (C_QuestLog and C_QuestLog.IsQuestFlaggedCompletedOnAccount)(...) or nil
+end
+
 function API:GetNumQuestRewards(...)
 	return GetNumQuestRewards and GetNumQuestRewards(...) or 0
 end

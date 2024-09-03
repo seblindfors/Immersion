@@ -319,6 +319,7 @@ function Elements:SetMaterial(material)
 		content.ObjectivesText:SetTextColor(r, g, b)
 		content.GroupSize:SetTextColor(r, g, b)
 		content.RewardText:SetTextColor(r, g, b)
+		content.QuestInfoAccountCompletedNotice:SetTextColor(r, g, b)
 		-- Progress text
 		progress.MoneyText:SetTextColor(r, g, b)
 		-- Reward frame text
@@ -387,6 +388,17 @@ function Elements:ShowObjectivesText()
 	objectivesText:SetText(questObjectives)
 	objectivesText:SetWidth(ACTIVE_TEMPLATE.contentWidth)
 	return objectivesText
+end
+
+function Elements:ShowAccountCompleted()
+	local startingAccountCompletedQuest  = API:GetAccountCompleted(GetQuestID())
+	local completeNotice = self.Content.QuestInfoAccountCompletedNotice
+	if startingAccountCompletedQuest then
+		completeNotice:Show()
+		return completeNotice
+	else
+		return completeNotice:Hide()
+	end
 end
 
 function Elements:ShowGroupSize()
@@ -953,6 +965,7 @@ TEMPLATE.QUEST_DETAIL = { chooseItems = nil, contentWidth = 507,
 		Elements.ShowGroupSize, 0, -10,
 		Elements.ShowRewards, 0, -15,
 		Elements.ShowSeal, 0, 0,
+		Elements.ShowAccountCompleted, 0, -15,
 	}
 }
 
