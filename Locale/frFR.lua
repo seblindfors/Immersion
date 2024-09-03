@@ -35,3 +35,6 @@ L["Text speed"] = [=[Vitesse du texte]=]
 L["The quest/gossip text doesn't vanish when you stop interacting with the NPC or when accepting a new quest. Instead, it vanishes at the end of the text sequence. This allows you to maintain your immersive experience when speed leveling."] = [=[Le texte de quête/discussion ne disparaît pas lorsque vous arrêtez d'interagir avec le PNJ ou lorsque vous acceptez une nouvelle quête. Au lieu de cela, il disparaît à la fin de la séquence du texte. Ce qui vous permet de maintenir votre expérience immersive lors de la montée de niveaux rapide.]=]
 L["Tooltip"] = [=[Info-bulle]=]
 L["Use your primary mouse button to read through text, accept/turn in quests and select the best available gossip option."] = [=[Utilisez votre bouton de souris primaire pour parcourir le texte, accepter/rendre des quêtes et choisir la meilleure option de discussion disponible.]=]
+L['Default voice'] = "Default voice"
+L['Male voice'] = "Male voice"
+L['Female voice'] = "Female voice"

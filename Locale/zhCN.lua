@@ -41,3 +41,6 @@ L["The quest/gossip text doesn't vanish when you stop interacting with the NPC o
 L["The regular talking head frame appears in the same place as Immersion when you're not interacting with anything and on top of Immersion if they are visible at the same time."] = "当你没有和任何物品或NPC互动时，如果常规对话框架和沉浸模式对话框同时出现，它们会显示在相同的位置。"
 L["Tooltip"] = "鼠标提示"
 L["Use your primary mouse button to read through text, accept/turn in quests and select the best available gossip option."] = "使用你鼠标的主要按键来阅读文本、接受任务、提交任务以及选择可用的最佳对话选项。"
+L['Default voice'] = "Default voice"
+L['Male voice'] = "Male voice"
+L['Female voice'] = "Female voice"

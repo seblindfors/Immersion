@@ -31,6 +31,16 @@ function Model:IsPlayer() return self.unit == 'player' end
 function Model:IsNPC()    return self.unit == 'npc' or self.unit == 'questnpc' end
 function Model:IsEther()  return self.unit == 'ether' end
 function Model:GetUnit()  return self.unit end
+function Model:GetVoice()
+	local gender = UnitSex(self.unit)
+	local ttsvoice = L('ttsvoice')
+	if gender == 2 then
+		ttsvoice = L('ttsmalevoice')
+	elseif gender == 3 then
+		ttsvoice = L('ttsfemalevoice')
+	end
+	return ttsvoice	
+end
 
 function Model:GetCreature()
 	return self.creatureID or API:GetCreatureID(self.unit)

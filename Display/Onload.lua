@@ -252,7 +252,7 @@ function text:OnDisplayLineCallback(text)
 			C_VoiceChat.StopSpeakingText()
 			C_Timer.After(0, function()
 				C_VoiceChat.SpeakText(
-					(L('ttsvoice') or 1) -1,
+					(model:GetVoice() or 1) -1,
 					text,
 					Enum.VoiceTtsDestination.LocalPlayback,
 					L('ttsrate'),
