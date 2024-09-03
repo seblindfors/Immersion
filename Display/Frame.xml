@@ -657,6 +657,10 @@
 										<FontString parentKey="RewardText" inherits="SystemFont_Shadow_Med2" justifyH="LEFT" hidden="true">
 											<Size x="285" y="0"/>
 										</FontString>
+										
+										<FontString parentKey="QuestInfoAccountCompletedNotice" inherits="SystemFont_Small2" text="ACCOUNT_COMPLETED_QUEST_NOTICE" justifyH="LEFT" hidden="true">
+											<Size x="285" y="0"/>
+										</FontString>		
 									</Layer>
 								</Layers>
 							</Frame>
