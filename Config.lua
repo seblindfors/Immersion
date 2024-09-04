@@ -85,6 +85,8 @@ L.defaults = {
 	ttsrate = 0,
 	ttsvolume = 100,
 	ttsvoice = 1,
+	ttsmalevoice = 1,
+	ttsfemalevoice = 1,
 
 	inspect = 'SHIFT',
 	accept = 'SPACE',
@@ -361,6 +363,42 @@ L.options = {
 							get = L.GetFromDefaultOrSV,
 							set = function(_, val)
 								L.cfg.ttsvoice = val
+							end,
+							disabled = function() return not L('ttsenabled') end,
+						},
+						ttsfemalevoice = {
+							type = 'select',
+							name = L['Female voice'],
+							order = 6,
+							style = 'dropdown',
+							values = function()
+								local list, voices = {}, C_VoiceChat.GetTtsVoices()
+								for i, voice in ipairs(voices) do
+									list[voice.voiceID + 1] = voice.name
+								end
+								return list
+							end,
+							get = L.GetFromDefaultOrSV,
+							set = function(_, val)
+								L.cfg.ttsfemalevoice = val
+							end,
+							disabled = function() return not L('ttsenabled') end,
+						},
+						ttsmalevoice = {
+							type = 'select',
+							name = L['Male voice'],
+							order = 7,
+							style = 'dropdown',
+							values = function()
+								local list, voices = {}, C_VoiceChat.GetTtsVoices()
+								for i, voice in ipairs(voices) do
+									list[voice.voiceID + 1] = voice.name
+								end
+								return list
+							end,
+							get = L.GetFromDefaultOrSV,
+							set = function(_, val)
+								L.cfg.ttsmalevoice = val
 							end,
 							disabled = function() return not L('ttsenabled') end,
 						},

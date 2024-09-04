@@ -41,3 +41,6 @@ L["The quest/gossip text doesn't vanish when you stop interacting with the NPC o
 L["The regular talking head frame appears in the same place as Immersion when you're not interacting with anything and on top of Immersion if they are visible at the same time."] = "대화 중인 NPC가 없거나, 기본 UI 팝업창과 Immersion의 팝업창이 동시에 나오는데 기본 UI 프레임이 먼저 나올땐 Immersion 팝업창 위치에 기본 UI의 대화 팝업창 프레임이 표시됩니다."
 L["Tooltip"] = "툴팁"
 L["Use your primary mouse button to read through text, accept/turn in quests and select the best available gossip option."] = "마우스 왼쪽 버튼을 텍스트 넘기기, 퀘스트 수락/완료, 대화 옵션 중 최적 옵션 선택에 사용합니다."
+L['Default voice'] = "기본 음성"
+L['Male voice'] = "남성 음성"
+L['Female voice'] = "여성 음성"
