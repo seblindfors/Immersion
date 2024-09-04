@@ -40,6 +40,3 @@ L["The quest/gossip text doesn't vanish when you stop interacting with the NPC o
 L["The regular talking head frame appears in the same place as Immersion when you're not interacting with anything and on top of Immersion if they are visible at the same time."] = "El cuadro de cabeza parlante aparece en el mismo lugar que Immersion cuando no interactúas con nada y encima de Immersion si ambos son visibles al mismo tiempo."
 L["Tooltip"] = "Descripción emergente"
 L["Use your primary mouse button to read through text, accept/turn in quests and select the best available gossip option."] = "Utiliza el botón primario del ratón para leer el texto, aceptar/entregar misiones y seleccionar las mejores opciones de texto flotante."
-L['Default voice'] = "Default voice"
-L['Male voice'] = "Male voice"
-L['Female voice'] = "Female voice"
