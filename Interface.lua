@@ -204,7 +204,9 @@ function API:GetRewardMoney(...)
 end
 
 function API:GetRewardSkillPoints(...)
-	return GetRewardSkillPoints and GetRewardSkillPoints(...) or 0
+	if GetRewardSkillPoints then
+		return GetRewardSkillPoints(...)
+	end
 end
 
 function API:GetRewardXP(...)
