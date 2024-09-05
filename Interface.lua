@@ -13,60 +13,6 @@ end)();
 API.IsRetail = IS_RETAIL;
 API.IsWoW10  = IS_WOW10;
 
-API.ITERATORS = {
-	GOSSIP    = (IS_VANILLA or IS_CLASSIC) and 2 or IS_RETAIL and 2;
-	ACTIVE    = (IS_VANILLA or IS_CLASSIC) and 6 or IS_RETAIL and 7;
-	AVAILABLE = (IS_VANILLA or IS_CLASSIC) and 7 or IS_RETAIL and 8;
-}
-
--- Chunk iterators
-function API:GetGossipOptionIterator(...)   return self.ITERATORS.GOSSIP    end
-function API:GetActiveQuestIterator(...)    return self.ITERATORS.ACTIVE    end
-function API:GetAvailableQuestIterator(...) return self.ITERATORS.AVAILABLE end
-
--- Map select to table values
-local function map(lambda, step, ...)
-	local data = {}
-	for i = 1, select('#', ...), step do
-		data[#data + 1] = lambda(nil, i, ceil(i / step), ...)
-	end
-	return data
-end
-
-function API:MapGossipAvailableQuests(i, idx, ...)
-	local title, level, trivial, frequency, repeatable, legendary, id = select(i, ...)
-	return {
-		title       = title,
-		questLevel  = level,
-		isTrivial   = trivial,
-		frequency   = frequency,
-		repeatable  = repeatable,
-		isLegendary = legendary,
-		questID     = id or idx,
-	}
-end
-
-function API:MapGossipActiveQuests(i, idx, ...)
-	local title, level, trivial, complete, legendary, id = select(i, ...)
-	return {
-		title       = title,
-		questLevel  = level,
-		isTrivial   = trivial,
-		isComplete  = complete,
-		isLegendary = legendary,
-		questID     = id or idx,
-	}
-end
-
-function API:MapGossipOptions(i, idx, ...)
-	local name, icon = select(i, ...)
-	return {
-		name           = name,
-		type           = icon,
-		orderIndex     = idx,
-	}
-end
-
 -- Quest pickup API
 function API:CloseQuest(onQuestClosed, ...)
 	if onQuestClosed and IS_WOW10 then return end;
@@ -109,37 +55,28 @@ function API:QuestFlagsPVP(...)
 	return QuestFlagsPVP and QuestFlagsPVP(...)
 end
 
-function API:GetQuestIconOffer(quest)
-	if QuestUtil and QuestUtil.GetQuestIconOffer then
-		return QuestUtil.GetQuestIconOffer(
-			quest.isLegendary,
-			quest.frequency,
-			quest.repeatable,
-			QuestUtil.ShouldQuestIconsUseCampaignAppearance(quest.questID)
-		)
+function API:GetQuestIconOffer(...)
+	if QuestUtil and QuestUtil.GetQuestIconOfferForQuestID then
+		return QuestUtil.GetQuestIconOfferForQuestID(...)
 	end
+	local isLegendary, frequency, isRepeatable = select(2, ...)
 	local icon =
-		( quest.isLegendary and 'AvailableLegendaryQuestIcon') or
-		( quest.frequency and quest.frequency > 1 and 'DailyQuestIcon') or
-		( quest.repeatable and 'DailyActiveQuestIcon') or
+		( isLegendary and 'AvailableLegendaryQuestIcon') or
+		( frequency and frequency > 1 and 'DailyQuestIcon') or
+		( isRepeatable and 'DailyActiveQuestIcon') or
 		( 'AvailableQuestIcon' )
 	return ([[Interface\GossipFrame\%s]]):format(icon)
 end
 
-function API:GetQuestIconActive(quest)
-	if QuestUtil and QuestUtil.GetQuestIconActive then
-		return QuestUtil.GetQuestIconActive(
-			quest.isComplete,
-			quest.isLegendary,
-			quest.frequency,
-			quest.repeatable,
-			QuestUtil.ShouldQuestIconsUseCampaignAppearance(quest.questID)
-		)
+function API:GetQuestIconActive(...)
+	if QuestUtil and QuestUtil.GetQuestIconActiveForQuestID then
+		return QuestUtil.GetQuestIconActiveForQuestID(...)
 	end
+	local isComplete, isLegendary = select(2, ...)
 	local icon =
-		( quest.isComplete ) and (
-			( quest.isLegendary and  'ActiveLegendaryQuestIcon') or
-			( quest.isComplete and 'ActiveQuestIcon')
+		( isComplete ) and (
+			( isLegendary and  'ActiveLegendaryQuestIcon') or
+			( isComplete and 'ActiveQuestIcon')
 		) or ( 'InCompleteQuestIcon' )
 	return ([[Interface\GossipFrame\%s]]):format(icon)
 end
@@ -271,12 +208,11 @@ end
 -- Gossip API
 function API:CloseGossip(onGossipClosed, ...)
 	if onGossipClosed and IS_WOW10 then return end;
-	return (C_GossipInfo and C_GossipInfo.CloseGossip or CloseGossip)(...)
+	return C_GossipInfo and C_GossipInfo.CloseGossip(...)
 end
 
 function API:ForceGossip(...)
-	if ForceGossip then return ForceGossip(...) end
-	return C_GossipInfo.ForceGossip(...)
+	return C_GossipInfo and C_GossipInfo.ForceGossip(...)
 end
 
 function API:CanAutoSelectGossip(dontAutoSelect)
@@ -295,57 +231,30 @@ function API:CanAutoSelectGossip(dontAutoSelect)
 end
 
 function API:GetGossipText(...)
-	if GetGossipText then return GetGossipText(...) end
-	return C_GossipInfo.GetText()
+	return C_GossipInfo and C_GossipInfo.GetText(...)
 end
 
 function API:GetNumGossipAvailableQuests(...)
-	if GetNumGossipAvailableQuests then return GetNumGossipAvailableQuests(...) end
-	return C_GossipInfo.GetNumAvailableQuests(...)
+	return C_GossipInfo and C_GossipInfo.GetNumAvailableQuests(...)
 end
 
 function API:GetNumGossipActiveQuests(...)
-	if GetNumGossipActiveQuests then return GetNumGossipActiveQuests(...) end
-	return C_GossipInfo.GetNumActiveQuests(...)
+	return C_GossipInfo and C_GossipInfo.GetNumActiveQuests(...)
 end
 
 function API:GetNumGossipOptions(...)
-	return (GetNumGossipOptions or 
-		C_GossipInfo and C_GossipInfo.GetNumOptions or
-		C_GossipInfo and C_GossipInfo.GetOptions and
-		function() return #C_GossipInfo.GetOptions() end)(...)
+	return #(C_GossipInfo and C_GossipInfo.GetOptions(...) or {})
 end
 
 function API:GetGossipAvailableQuests(...)
-	if GetGossipAvailableQuests then
-		return map(
-			API.MapGossipAvailableQuests,
-			API:GetAvailableQuestIterator(),
-			GetGossipAvailableQuests(...)
-		)
-	end
-	return C_GossipInfo.GetAvailableQuests(...)
+	return C_GossipInfo and C_GossipInfo.GetAvailableQuests(...)
 end
 
 function API:GetGossipActiveQuests(...)
-	if GetGossipActiveQuests then
-		return map(
-			API.MapGossipActiveQuests,
-			API:GetActiveQuestIterator(),
-			GetGossipActiveQuests(...)
-		)
-	end
-	return C_GossipInfo.GetActiveQuests(...)
+	return C_GossipInfo and C_GossipInfo.GetActiveQuests(...)
 end
 
 function API:GetGossipOptions(...)
-	if GetGossipOptions then
-		return map(
-			API.MapGossipOptions,
-			API:GetGossipOptionIterator(),
-			GetGossipOptions(...)
-		)
-	end
 	assert(C_GossipInfo.GetOptions, 'C_GossipInfo.GetOptions does not exist.')
 	if GossipOptionSort then
 		local gossipOptions = C_GossipInfo.GetOptions(...)
@@ -386,11 +295,11 @@ function API:SelectGossipOption(...)
 end
 
 function API:SelectGossipActiveQuest(...)
-	return (C_GossipInfo and C_GossipInfo.SelectActiveQuest or SelectGossipActiveQuest)(...)
+	return C_GossipInfo and C_GossipInfo.SelectActiveQuest(...)
 end
 
 function API:SelectGossipAvailableQuest(...)
-	return (C_GossipInfo and C_GossipInfo.SelectAvailableQuest or SelectGossipAvailableQuest)(...)
+	return C_GossipInfo and C_GossipInfo.SelectAvailableQuest(...)
 end
 
 -- Misc
