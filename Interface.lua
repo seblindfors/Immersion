@@ -62,7 +62,7 @@ function API:GetQuestIconOffer(...)
 	local isLegendary, frequency, isRepeatable = select(2, ...)
 	local icon =
 		( isLegendary and 'AvailableLegendaryQuestIcon') or
-		( frequency and frequency > 1 and 'DailyQuestIcon') or
+		( frequency and frequency > 0 and 'DailyQuestIcon') or
 		( isRepeatable and 'DailyActiveQuestIcon') or
 		( 'AvailableQuestIcon' )
 	return ([[Interface\GossipFrame\%s]]):format(icon)
