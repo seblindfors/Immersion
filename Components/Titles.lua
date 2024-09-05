@@ -197,7 +197,7 @@ function Titles:UpdateAvailableQuests(data)
 		local typeOfQ = (quest.isTrivial and TRIVIAL_QUEST_DISPLAY)
 		button:SetFormattedText(typeOfQ or NORMAL_QUEST_DISPLAY, quest.title)
 		----------------------------------
-		local icon, useAtlas = API:GetQuestIconOffer(quest)
+		local icon, useAtlas = API:GetQuestIconOffer(quest.questID, quest.isLegendary, quest.frequency, quest.repeatable, quest.isImportant, quest.isMeta)
 		button:SetIcon(icon, typeOfQ and 0.5, useAtlas)
 		----------------------------------
 		button:SetPriority(P_AVAILABLE_QUEST)
@@ -217,7 +217,7 @@ function Titles:UpdateActiveQuests(data)
 		local typeOfQ = (quest.isTrivial and TRIVIAL_QUEST_DISPLAY)
 		button:SetFormattedText(typeOfQ or NORMAL_QUEST_DISPLAY, quest.title)
 		----------------------------------
-		local icon, useAtlas = API:GetQuestIconActive(quest)
+		local icon, useAtlas = API:GetQuestIconActive(quest.questID, quest.isComplete, quest.isLegendary, quest.frequency, quest.repeatable, quest.isImportant, quest.isMeta)
 		button:SetIcon(icon, typeOfQ and 0.5, useAtlas)
 		----------------------------------
 		button:SetPriority(quest.isComplete and P_COMPLETE_QUEST or P_INCOMPLETE_QUEST)
@@ -271,19 +271,17 @@ function Titles:QUEST_GREETING()
 	self:UpdateActive()
 end
 
-
 function Titles:UpdateActiveGreetingQuests(numActiveQuests)
 	for i=1, numActiveQuests do
 		local button = self:GetButton(self.idx)
 		local title, isComplete = GetActiveTitle(i)
+		local questID = GetActiveQuestID(i)
 		----------------------------------
 		local qType = ( IsActiveQuestTrivial(i) and TRIVIAL_QUEST_DISPLAY )
 		button:SetFormattedText(qType or NORMAL_QUEST_DISPLAY, title)
 		----------------------------------
-		local icon = ( isComplete and API:IsActiveQuestLegendary(i) and 'ActiveLegendaryQuestIcon' ) or
-					( isComplete and 'ActiveQuestIcon') or
-					( 'InCompleteQuestIcon' )
-		button:SetGossipQuestIcon(icon, qType and 0.75)
+		local icon, useAtlas = API:GetQuestIconActive(questID, isComplete, API:IsActiveQuestLegendary(i))
+		button:SetIcon(icon, qType and 0.5, useAtlas)
 		button:SetPriority(isComplete and P_COMPLETE_QUEST or P_INCOMPLETE_QUEST)
 		----------------------------------
 		button:SetID(i)
@@ -297,17 +295,13 @@ function Titles:UpdateAvailableGreetingQuests(numAvailableQuests)
 	for i=1, numAvailableQuests do
 		local button = self:GetButton(self.idx)
 		local title = GetAvailableTitle(i)
-		local isTrivial, frequency, isRepeatable, isLegendary, questID = API:GetAvailableQuestInfo(i)
+		local isTrivial, frequency, isRepeatable, isLegendary, questID, isImportant, isMeta = API:GetAvailableQuestInfo(i)
 		----------------------------------
 		local qType = ( isTrivial and TRIVIAL_QUEST_DISPLAY )
 		button:SetFormattedText(qType or NORMAL_QUEST_DISPLAY, title)
 		----------------------------------
-		local icon = ( isLegendary and 'AvailableLegendaryQuestIcon' ) or
-					( frequency == LE_QUEST_FREQUENCY_DAILY and 'DailyQuestIcon') or
-					( frequency == LE_QUEST_FREQUENCY_WEEKLY and 'DailyQuestIcon' ) or
-					( isRepeatable and 'DailyActiveQuestIcon' ) or
-					( 'AvailableQuestIcon' )
-		button:SetGossipQuestIcon(icon, qType and 0.5)
+		local icon, useAtlas = API:GetQuestIconOffer(questID, isLegendary, frequency, isRepeatable, isImportant, isMeta)
+		button:SetIcon(icon, qType and 0.5, useAtlas)
 		button:SetPriority(P_AVAILABLE_QUEST)
 		----------------------------------
 		button:SetID(i)
