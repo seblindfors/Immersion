@@ -87,7 +87,9 @@ function API:GetSuggestedGroupNum(...)
 end
 
 function API:GetAccountCompleted(...)
-	return (C_QuestLog and C_QuestLog.IsQuestFlaggedCompletedOnAccount)(...) or nil
+	if C_QuestLog and C_QuestLog.IsQuestFlaggedCompletedOnAccount then
+		return C_QuestLog.IsQuestFlaggedCompletedOnAccount(...)
+	end
 end
 
 function API:GetNumQuestRewards(...)
