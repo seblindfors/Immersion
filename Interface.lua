@@ -279,6 +279,10 @@ function API:GetNumAvailableQuests(...)
 	return GetNumAvailableQuests and GetNumAvailableQuests(...) or 0
 end
 
+function API:GetActiveQuestID(...)
+	return GetActiveQuestID and GetActiveQuestID(...)
+end
+
 -- Gossip/quest selectors API
 function API:SelectActiveQuest(...)
 	if SelectActiveQuest then
