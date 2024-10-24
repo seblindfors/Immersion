@@ -275,7 +275,7 @@ function Titles:UpdateActiveGreetingQuests(numActiveQuests)
 	for i=1, numActiveQuests do
 		local button = self:GetButton(self.idx)
 		local title, isComplete = GetActiveTitle(i)
-		local questID = GetActiveQuestID(i)
+		local questID = API:GetActiveQuestID(i)
 		----------------------------------
 		local qType = ( IsActiveQuestTrivial(i) and TRIVIAL_QUEST_DISPLAY )
 		button:SetFormattedText(qType or NORMAL_QUEST_DISPLAY, title)
