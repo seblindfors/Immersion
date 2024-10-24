@@ -87,13 +87,6 @@ function Button:SetIcon(texture, vertex, atlas)
 	else
 		self.Icon:SetTexture(texture)
 	end
-
-end
-
-function Button:SetGossipQuestIcon(texture, vertex)
-	vertex = vertex or 1
-	self.Icon:SetTexture(tonumber(texture) or ([[Interface\GossipFrame\%s]]):format(texture or ''))
-	self.Icon:SetVertexColor(vertex, vertex, vertex)
 end
 
 function Button:SetGossipIcon(texture, vertex)
