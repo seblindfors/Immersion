@@ -396,9 +396,8 @@ function Elements:ShowAccountCompleted()
 	if startingAccountCompletedQuest then
 		completeNotice:Show()
 		return completeNotice
-	else
-		return completeNotice:Hide()
 	end
+	return completeNotice:Hide()
 end
 
 function Elements:ShowGroupSize()
