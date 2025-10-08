@@ -1,8 +1,8 @@
-## Interface: 11507, 50500, 110200
+## Interface: 11507, 50500, 110205
 ## IconTexture: Interface\AddOns\Immersion\Textures\Logo
 ## Title: Immersion
 ## Notes: Immersive replacement for quest & gossip
-## Version: 1.4.47
+## Version: 1.4.48
 
 ## Author: Sebastian Lindfors
 ## X-Website: https://github.com/seblindfors/Immersion
