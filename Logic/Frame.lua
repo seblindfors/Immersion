@@ -39,16 +39,16 @@ function Frame:AddQuestInfo(template)
 	else
 		elements:Hide()
 		content:Hide()
-	end 
-	-- Extra: 32 px padding 
+	end
+	-- Extra: 32 px padding
 	self.TalkBox:SetExtraOffset((height + 32) * L('elementscale'))
 	self.TalkBox.NameFrame.FadeIn:Play()
 end
 
 function Frame:IsGossipAvailable(ignoreAutoSelect)
 	-- if there is only a non-gossip option, then go to it directly
-	if 	(API:GetNumGossipAvailableQuests() == 0) and 
-		(API:GetNumGossipActiveQuests() == 0) and 
+	if 	(API:GetNumGossipAvailableQuests() == 0) and
+		(API:GetNumGossipActiveQuests() == 0) and
 		(API:GetNumGossipOptions() == 1) and
 		not API:ForceGossip() then
 		----------------------------
@@ -61,7 +61,7 @@ end
 
 function Frame:IsQuestAutoAccepted(questStartItemID)
 	-- Auto-accepted quests need to be treated differently from other quests,
-	-- and different from eachother depending on the source of the quest. 
+	-- and different from eachother depending on the source of the quest.
 	-- Handling here is prone to cause bugs/weird behaviour, update with caution.
 
 	local questID = GetQuestID()
@@ -178,7 +178,7 @@ end
 
 function Frame:ResetElements(event)
 	if ( self.IgnoreResetEvent[event] ) then return end
-	
+
 	self.Inspector:Hide()
 	self.TalkBox.Elements:Reset()
 	self:SetBackground(nil)
@@ -200,8 +200,19 @@ function Frame:UpdateTalkingHead(title, text, npcType, explicitUnit, isToastPlay
 	talkBox.ReputationBar:Update()
 	talkBox.MainFrame.Indicator:SetTexture('Interface\\GossipFrame\\' .. npcType .. 'Icon')
 	talkBox.MainFrame.Model:SetUnit(unit)
-	talkBox.NameFrame.Name:SetText(title)
 	local textFrame = talkBox.TextFrame
+	-- Handle secret NPC names in the title, if applicable.
+	-- The gossip text can't determine truncation since it is normally anchored
+	-- to the name frame; so we adjust the name frame and text frame positions
+	-- based on whether the title is secret or not.
+	if API:IsSecretValue(title) then
+		talkBox.NameFrame.Name:SetMaxLines(1)
+		textFrame.Text:SetPoint('TOPLEFT', talkBox.MainFrame.Model, 'TOPRIGHT', 14, -30)
+	else
+		talkBox.NameFrame.Name:SetMaxLines(2)
+		textFrame.Text:SetPoint('TOPLEFT', talkBox.NameFrame.Name, 'BOTTOMLEFT', 0, -3)
+	end
+	talkBox.NameFrame.Name:SetText(title)
 	textFrame.Text:SetText(text)
 	-- Add contents to toast.
 	if not isToastPlayback then

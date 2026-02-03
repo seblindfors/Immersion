@@ -307,6 +307,13 @@ function API:SelectGossipAvailableQuest(...)
 end
 
 -- Misc
+function API:IsSecretValue(value)
+	if issecretvalue then
+		return issecretvalue(value)
+	end
+	return false;
+end
+
 function API:GetUnitName(...)
 	return GetUnitName and GetUnitName(...)
 end
