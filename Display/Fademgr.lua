@@ -23,13 +23,13 @@ end
 ----------------------------------
 local __cacheAlphaIgnored = {}
 local __staticAlphaIgnored = {
-	[AlertFrame]		= true,
-	[DressUpFrame]		= true,
---	[LevelUpDisplay] 	= true,
-	[StaticPopup1] 		= true,
-	[StaticPopup2] 		= true,
-	[StaticPopup3] 		= true,
-	[StaticPopup4] 		= true,
+	[AlertFrame]        = true,
+	[DressUpFrame]      = true,
+--	[LevelUpDisplay]    = true,
+	[StaticPopup1]      = true,
+	[StaticPopup2]      = true,
+	[StaticPopup3]      = true,
+	[StaticPopup4] 	    = true,
 	[SubZoneTextFrame] 	= true,
 	[ShoppingTooltip1] 	= true,
 	[ShoppingTooltip2] 	= true,
