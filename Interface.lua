@@ -345,9 +345,28 @@ function API:GetNamePlateForUnit(...)
 end
 
 function API:GetCreatureID(unit)
+	-- If the unit exists, fetch the Globally Unique Identifier (GUID).
 	local guid = unit and UnitGUID(unit)
-	return guid and select(6, strsplit('-', guid))
+
+	-- Check if Blizzard is hiding the unit ID so that the text display will initiate.
+	-- If hidden, the portrait of the unit speaking will be blank.
+
+	-- Validate that the retrieved GUID is a valid string
+	if not guid or type(guid) ~= "string" then return nil end
+	-- Filter out restricted or classified GUIDs that would cause a crash
+	if issecretvalue and issecretvalue(guid) then return nil end
+
+	-- Parse the GUID using a protected call (pcall).
+	-- WoW GUIDs use a hyphen-separated format (e.g., "Creature-0-1234-567-890-12345-0000000000").
+	-- The 6th token in a standard Creature GUID represents the specific Creature ID.
+	local ok, creatureID = pcall(function()
+		return select(6, strsplit('-', guid))
+	end)
+
+	-- If the pcall succeeded, return the extracted ID; otherwise, return nil.
+	return ok and creatureID or nil
 end
+
 
 function API:CloseItemText(...)
 	if CloseItemText then return CloseItemText(...) end

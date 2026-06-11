@@ -8,9 +8,8 @@ do  local LINE_FEED, CARRIAGE_RETURN = string.char(10), string.char(13)
 	LINE_BREAK_REPLACE = LINE_FEED .. CARRIAGE_RETURN .. LINE_FEED
 end
 
-local TEXT_TIME_DIVISOR -- set later as baseline divisor for (text length / time).
-local TEXT_TIME_PADDING = 2 -- static padding, feels more natural with a pause to breathe.
-local MAX_UNTIL_SPLIT = 200 -- start recursive string splitting if the text is too long.
+   local TEXT_TIME_DIVISOR       -- set later as baseline divisor for (text length / time).
+   local MAX_UNTIL_SPLIT   = 200 -- start recursive string splitting if the text is too long.
 
 Timer.Texts = {}
 L.TextMixin = {}
@@ -56,8 +55,28 @@ function Text:CreateLineData(text)
 	return timeToFinish, strings, timers
 end
 
-function Text:CalculateLineTime(length)
-	return (length / (TEXT_TIME_DIVISOR or 15) ) + TEXT_TIME_PADDING
+function Text:CalculateLineTime(length, nEndPunct, nMidPunct)
+	-- Calcuate time to allow for reading text (and for TTS if enabled).
+	-- For matching TTS, the linear calculation (constant divisor) sometimes resulted in too little time for short phrases (TTS clipped)
+	-- and too much time for long phrases (seconds of dead air).  This now scales by an inverse logarithm of the phrase length,
+	-- so more time is given for short phrases and relatively less time for longer phrases.
+	-- The Text speed option, TEXT_TIME_DIVISOR, is still applied by changing the base of the logarithm to the TEXT_TIME_DIVISORth root of 30.
+	-- It is calibrated for a phrase that is 30 characters long with a TEXT_TIME_DIVISOR = 15 to yield a time of 2 seconds.
+
+	-- It also gives extra time if the phrase has a lot of punctuation, because TTS will typically pause briefly for each:
+	--     half a second for each sentence-ending punctuation: period, exclamation point, or question mark
+	--     quarter of a second for each mid-sentence punctuation: comma, colon, semi-colon.
+
+	-- Protect against a length of 0, which causes math.log to fail, or 1, which causes math.log to return 0 and the division to fail
+	local safeLength = math.max(2, length)
+
+	-- If arguments are missing or nil, default them to 0
+	nEndPunct = nEndPunct or 0
+	nMidPunct = nMidPunct or 0
+
+	-- Changed formula to give more time for shorter strings, which were getting clipped, and less time for longer strings, which often had seconds of dead air after them.
+	-- return (safeLength /                                        (TEXT_TIME_DIVISOR or 15)   )                                          +   TEXT_TIME_PADDING
+	   return (safeLength / (math.log(safeLength) / math.log(30^(1/(TEXT_TIME_DIVISOR or 15))))) + (0.5 * nEndPunct) + (0.25 * nMidPunct) + L.TEXT_TIME_PADDING
 end
 
 function Text:AddString(str, strings, timers)
@@ -75,7 +94,42 @@ function Text:AddString(str, strings, timers)
 		end
 	end
 	if ( length ~= 0 or forceShow ) then
-		timer = self:CalculateLineTime(length)
+		-- Clean up the verbatim phrase for a more accurate reading calculation of TTS time
+		-- Count punctuation so extra time can be allowed for TTS if there are a lot of short sentences vs one long, flowing sentence.
+ 		local cleanStr = str or ""
+
+ 		-- For debugging, print the original text to chat before processing
+		-- print("|cff00ff00[Immersion Before]:|r " .. tostring(cleanStr))
+
+		-- 1. Clean the string.
+			-- a. Normalize the 3-byte ellipsis character to a standard period
+			cleanStr = string.gsub(cleanStr, "…", ".")
+
+			-- b. Remove all spaces that sit directly between ending punctuation
+			local changed
+			repeat
+				cleanStr, changed = string.gsub(cleanStr, "([.!?])%s+([.!?])", "%1%2")
+			until changed == 0
+
+			-- c. Collapse any remaining sequence of 2 or more ending punctuation into just one
+			cleanStr = string.gsub(cleanStr, "([.!?])[.!?]+", "%1")
+
+			-- d. Strip ALL leading punctuation, symbols, and spaces: many phrases begin with ...
+			cleanStr = string.gsub(cleanStr, "^[%p%s]+", "")
+
+		-- 2. Count major sentence-ending punctuation (. ? !)
+		local _, nEndPunct = string.gsub(cleanStr, "[.?!]", "")
+
+		-- 3. Count minor pauses (, ; :)
+		local _, nMidPunct = string.gsub(cleanStr, "[,;:]", "")
+
+		-- For debuggin, print the cleaned text to chat after processing
+		-- print("|cffff0000[Immersion After]:|r " .. tostring(cleanStr))
+
+		-- Recount the length of the (cleaned) string.
+		local length2 = strlenutf8(cleanStr) or 0
+
+		timer = self:CalculateLineTime(length, nEndPunct, nMidPunct)
 		timers[ #strings + 1] = timer
 		strings[ #strings + 1 ] = str
 	end
@@ -175,6 +229,18 @@ function Text:DisplayLine(text, time)
 	self:SetCurrentLineTime(time)
 	self:ApplyFontObjects()
 
+	-- Since TTS has a 3-second delay on the first phrase of the interaction, the time to display the text must be increased
+	-- If this is the first displayed phrase of the interaction with the unit and TTS is enabled,
+	-- add an extra 3 seconds to the line's timer so TTS has time to finish.
+	if L.___ttsDelayedStart and L('ttsenabled') then
+		-- add to remaining timer for the current line
+		if self.timers and self.timers[1] then
+			self.timers[1] = self.timers[1] + 3
+		end
+		-- also add to the original/current line time so progress calculations remain correct
+		self.currentLineTime = (self.currentLineTime or 0) + 3
+	end
+
 	if self.OnDisplayLineCallback then
 		self:OnDisplayLineCallback(text, time)
 	end
@@ -187,12 +253,26 @@ function Text:SetFontObjectsToTry(...)
 	end
 end
 
+-- Cache global security/sandboxing functions locally
+local issecretvalue  = issecretvalue
+local canaccessvalue = canaccessvalue
+
 function Text:ApplyFontObjects()
 	self:CheckApplicableFonts()
 
 	for i, fontObject in ipairs(self.fontObjectsToTry) do
 		self:SetFontObject(fontObject)
-		if not self:IsTruncated() then
+
+		-- Get truncation state
+		local truncated = self:IsTruncated()
+
+		-- If Blizzard returned a secret boolean, we cannot safely test it
+		if issecretvalue and issecretvalue(truncated) and (not canaccessvalue or not canaccessvalue(truncated)) then
+			-- Stop here; don't boolean-test a secret value
+			break
+		end
+		-- Safe to test normally
+		if not truncated then
 			break
 		end
 	end
@@ -264,7 +344,9 @@ function Timer:AddText(fontString)
 	end
 end
 
-function Timer:GetTexts() return pairs(self.Texts) end
+function Timer:GetTexts()
+	return pairs(self.Texts)
+end
 
 function Timer:RemoveText(fontString)
 	if fontString then

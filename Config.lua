@@ -1,5 +1,7 @@
 local _, L = ...
 
+L.TEXT_TIME_PADDING = 0.5 -- static padding, feels more natural with a pause to breathe.  Moved from Text.lua so that it can be used in the calculations for the mouseover description of Text speed option
+
 function L.GetListString(...)
 	local ret = ''
 	local strings = {...}
@@ -163,14 +165,17 @@ L.options = {
 						delaydivisor = {
 							type = 'range',
 							name = 'Text speed',
+							-- formulas below match formula in Text.lua for TTS time TTS calculations
 							desc = L['Change the speed of text delivery.'] .. '\n\n' ..
-								MINIMUM .. '\n"' ..  L['How are you doing today?'] .. '"\n  -> ' .. 
-								format(D_SECONDS, (strlen(L['How are you doing today?']) / 5) + 2)  .. '\n\n' .. 
-								MAXIMUM .. '\n"' .. L['How are you doing today?'] .. '"\n  -> ' .. 
-								format(D_SECONDS, (strlen(L['How are you doing today?']) / 40) + 2),
+								MINIMUM .. " = 5" .. '\n"' ..  'I need help with these quests.' .. '"\n  -> ' .. 
+								format(string.gsub(D_SECONDS, "%%[ds]", "%%.2f"), (strlen('I need help with these quests.') / (math.log(strlen('I need help with these quests.')) / math.log(30^(1/ 5)))) + L.TEXT_TIME_PADDING)  .. '\n\n' .. 
+								"Default = 15" .. '\n"' ..  'I need help with these quests.' .. '"\n  -> ' .. 
+								format(string.gsub(D_SECONDS, "%%[ds]", "%%.2f"), (strlen('I need help with these quests.') / (math.log(strlen('I need help with these quests.')) / math.log(30^(1/15)))) + L.TEXT_TIME_PADDING)  .. '\n\n' .. 
+								MAXIMUM .. " = 40" .. '\n"' .. 'I need help with these quests.' .. '"\n  -> ' .. 
+								format(string.gsub(D_SECONDS, "%%[ds]", "%%.2f"), (strlen('I need help with these quests.') / (math.log(strlen('I need help with these quests.')) / math.log(30^(1/40)))) + L.TEXT_TIME_PADDING),
 							min = 5,
 							max = 40,
-							step = 5,
+							step = 1,  -- changed 5 to 1 for more sensitivity when trying to match the text visual display time with the TTS time
 							order = 1,
 							get = L.GetFromDefaultOrSV,
 							set = function(self, val) 
