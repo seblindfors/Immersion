@@ -5,6 +5,7 @@ local titles = frame.TitleButtons
 local inspector = frame.Inspector
 local elements = talkbox.Elements
 L.frame = frame
+L.___ttsDelayedStart = true  -- flag for delaying TTS when first interacting with a unit (to give them time to say their Blizzard-recorded snippet)
 
 ----------------------------------
 -- Prepare propagation, so that we
@@ -250,13 +251,23 @@ function text:OnDisplayLineCallback(text)
 
 		if ( text and L('ttsenabled') ) then
 			C_VoiceChat.StopSpeakingText()
-			C_Timer.After(0, function()
+
+			-- If text is flagged for TTS delay (i.e., first phrase), wait 3 seconds to allow time for the unit to speak its Blizzard-recorded snippet that occurs when clicking on it
+			local delay = L.___ttsDelayedStart and 3 or 0
+
+			C_Timer.After(delay, function()
 				C_VoiceChat.SpeakText(
 					(model:GetVoice() or 1) -1,
 					text,
 					L('ttsrate'),
-					L('ttsvolume'))
+					L('ttsvolume')
+				) 
 			end)
+
+			-- After the delay is applied to the first TTS phrase, set the flag to false so that the remaining phrases will play without delay
+			if delay == 3 then
+				L.___ttsDelayedStart = false
+			end
 		end
 	end
 end
@@ -276,6 +287,9 @@ talkbox:RegisterForDrag('LeftButton')
 talkbox.TextFrame.SpeechProgress:SetFont('Fonts\\MORPHEUS.ttf', 16, '')
 talkbox.TextFrame.SpeechProgress:SetShadowColor(0, 0, 0, 1)
 talkbox.TextFrame.SpeechProgress:SetShadowOffset(0, -1)
+
+-- rearm the TTS delay at the start of each interaction
+talkbox:HookScript('OnShow', function() L.___ttsDelayedStart = true end)
 
 ----------------------------------
 -- Set movable frames
