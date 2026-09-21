@@ -99,9 +99,9 @@ L.defaults = {
 	reset = 'BACKSPACE',
 
 	padaccept  = 'PAD1',
-	padinspect = 'PAD2',
+	padinspect = 'PAD4',
 	padnext    = 'PAD3',
-	padgoodbye = 'PAD4',
+	padgoodbye = 'PAD2',
 	padup      = 'PADDUP',
 	paddown    = 'PADDDOWN',
 	padleft    = 'PADDLEFT',
