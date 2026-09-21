@@ -14,6 +14,10 @@ L.___ttsDelayedStart = true  -- flag for delaying TTS when first interacting wit
 ----------------------------------
 frame:SetPropagateKeyboardInput(true)
 
+if frame.EnableGamePadButton then
+	frame:EnableGamePadButton(true)
+end
+
 ----------------------------------
 -- In the case of hide UI option,
 -- frames needs to ignore the

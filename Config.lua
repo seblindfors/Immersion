@@ -16,6 +16,10 @@ function L.ValidateKey(key)
 	return ( key and ( not key:lower():match('button') ) ) and key
 end
 
+function L.ValidatePadKey(key)
+	return ( key and key:match('^PAD') ) and key
+end
+
 function L.GetDefaultConfig()
 	local t = {}
 	for k, v in pairs(L.defaults) do
@@ -93,6 +97,15 @@ L.defaults = {
 	inspect = 'SHIFT',
 	accept = 'SPACE',
 	reset = 'BACKSPACE',
+
+	padaccept  = 'PAD1',
+	padinspect = 'PAD2',
+	padnext    = 'PAD3',
+	padgoodbye = 'PAD4',
+	padup      = 'PADDUP',
+	paddown    = 'PADDDOWN',
+	padleft    = 'PADDLEFT',
+	padright   = 'PADDRIGHT',
 }---------------------------------
 
 local stratas = {
@@ -475,10 +488,51 @@ L.options = {
 				},
 			},
 		},
+		gamepad = {
+			type = 'group',
+			name = L['Gamepad'],
+			order = 3,
+			args = (function()
+				local args = {
+					header = {
+						type = 'header',
+						name = L['Gamepad'],
+						order = 0,
+					},
+					description = {
+						type = 'description',
+						fontSize = 'medium',
+						name = L['Press a gamepad button to assign it. Hints shown by ConsolePort follow these.'],
+						order = 1,
+					},
+				}
+				local actions = {
+					{ 'padaccept',  ACCEPT,               2 };
+					{ 'padinspect', INSPECT,              3 };
+					{ 'padnext',    NEXT,                 4 };
+					{ 'padgoodbye', GOODBYE,              5 };
+					{ 'padup',      L['Previous option'], 6 };
+					{ 'paddown',    L['Next option'],     7 };
+					{ 'padleft',    L['Previous item'],   8 };
+					{ 'padright',   L['Next item'],       9 };
+				}
+				for _, action in ipairs(actions) do
+					local key, name, order = unpack(action)
+					args[key] = {
+						type  = 'keybinding';
+						name  = name;
+						order = order;
+						get   = L.GetFromDefaultOrSV;
+						set   = function(_, val) L.cfg[key] = L.ValidatePadKey(val) end;
+					}
+				end
+				return args;
+			end)(),
+		},
 		display = {
 			type = 'group',
 			name = DISPLAY,
-			order = 3,
+			order = 4,
 			args = {
 				anidivisor = {
 					type = 'select',

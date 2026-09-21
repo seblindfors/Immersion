@@ -9,42 +9,63 @@
 -- Initialization
 -------------------------------------------------
 local NPC, API, _, L = ImmersionFrame, ImmersionAPI, ...
-local HANDLE, KEY
-do 
-	-- list of functions existing on the HANDLE
+local HANDLE
+do
 	local HANDLE_functions = {
 		'AddHint';
 		'RemoveHint';
 		'IsHintFocus';
+		'SetHintEnabled';
 		'SetHintDisabled';
 		'GetHintForKey';
 		'ClearHintsForFrame';
+		'SetHintFocus';
+		'HideHintBar';
+		'ShowUI';
+		'HideUI';
 	}
-	-- list of local functions that need to exist
-	local NPC_functions = {
-		'ToggleHintState';
-		'SetImmersionFocus';
-		'ClearImmersionFocus';
-		'ParseControllerCommand';
-	}
+	local handle = ConsolePortUIHandle;
+	for _, funcID in ipairs(HANDLE_functions) do
+		if not (handle and handle[funcID]) then
+			handle = nil;
+			break
+		end
+	end
+	HANDLE = handle;
+end
 
-	-- For programming convenience, set all these functions to no-op
-	-- if ConsolePort isn't loaded, since they won't be doing anything useful.
-	if (not ConsolePortUIHandle) then
-		for _, funcID in ipairs(HANDLE_functions) do
-			NPC[funcID] = nop
+local KEY_SETTING = {
+	CROSS    = 'padaccept';
+	CIRCLE   = 'padinspect';
+	SQUARE   = 'padnext';
+	TRIANGLE = 'padgoodbye';
+	UP       = 'padup';
+	DOWN     = 'paddown';
+	LEFT     = 'padleft';
+	RIGHT    = 'padright';
+};
+
+local KEY_FIXED = {
+	SHARE    = 'PADSOCIAL';
+	OPTIONS  = 'PADFORWARD';
+	CENTER   = 'PADSYSTEM';
+};
+
+local function GetButtonForKey(keyID)
+	local setting = KEY_SETTING[keyID];
+	return setting and L(setting) or KEY_FIXED[keyID];
+end
+
+local function GetKeyForButton(button)
+	if not button then return end;
+	for keyID, setting in pairs(KEY_SETTING) do
+		if ( L(setting) == button ) then
+			return keyID;
 		end
-		for _, funcID in ipairs(NPC_functions) do
-			NPC[funcID] = nop
-		end
-		return
-	else
-		HANDLE, KEY = ConsolePortUIHandle, ConsolePort:GetData().KEY
-		-- If any of the HANDLE functions are missing, bail out. 
-		for _, funcID in ipairs(HANDLE_functions) do
-			if not HANDLE[funcID] then
-				return
-			end
+	end
+	for keyID, fixed in pairs(KEY_FIXED) do
+		if ( fixed == button ) then
+			return keyID;
 		end
 	end
 end
@@ -60,26 +81,26 @@ local controllerInterrupt
 -------------------------------------------------
 
 function NPC:AddHint(buttonID, text)
-	if controllerInterrupt then
-		return HANDLE:AddHint(KEY[buttonID], text)
+	if HANDLE and controllerInterrupt then
+		return HANDLE:AddHint(GetButtonForKey(buttonID), text)
 	end
 end
 
 function NPC:RemoveHint(buttonID)
-	if controllerInterrupt then
-		return HANDLE:RemoveHint(KEY[buttonID])
+	if HANDLE and controllerInterrupt then
+		return HANDLE:RemoveHint(GetButtonForKey(buttonID))
 	end
 end
 
 function NPC:SetHintEnabled(buttonID)
-	if controllerInterrupt then
-		return HANDLE:SetHintEnabled(KEY[buttonID])
+	if HANDLE and controllerInterrupt then
+		return HANDLE:SetHintEnabled(GetButtonForKey(buttonID))
 	end
 end
 
 function NPC:SetHintDisabled(buttonID)
-	if controllerInterrupt then
-		return HANDLE:SetHintDisabled(KEY[buttonID])
+	if HANDLE and controllerInterrupt then
+		return HANDLE:SetHintDisabled(GetButtonForKey(buttonID))
 	end
 end
 
@@ -94,7 +115,9 @@ function NPC:ToggleHintState(buttonID, enabled)
 end
 
 function NPC:GetHintForKey(buttonID)
-	return HANDLE:GetHintForKey(KEY[buttonID])
+	if HANDLE then
+		return HANDLE:GetHintForKey(GetButtonForKey(buttonID))
+	end
 end
 
 -------------------------------------------------
@@ -102,6 +125,7 @@ end
 -------------------------------------------------
 function NPC:SetImmersionFocus()
 	controllerInterrupt = true
+	if not HANDLE then return end;
 	if not L('hideui') then
 		HANDLE:ShowUI()
 		HANDLE:HideUI(ImmersionFrame, true)
@@ -111,6 +135,7 @@ end
 
 function NPC:ClearImmersionFocus()
 	controllerInterrupt = false
+	if not HANDLE then return end;
 	if HANDLE:IsHintFocus(ImmersionFrame) then
 		HANDLE:HideHintBar()
 		if not L('hideui') then
@@ -123,35 +148,35 @@ end
 ---------------------------------------------------------
 local ControllerInput = { -- return true when propagating
 ---------------------------------------------------------
-	[KEY.UP] = function(self)
+	['UP'] = function(self)
 		if self.TitleButtons:IsVisible() then
 			self.TitleButtons:SetPrevious()
 		else
 			return true
 		end
 	end;
-	[KEY.DOWN] = function(self)
+	['DOWN'] = function(self)
 		if self.TitleButtons:IsVisible() then
 			self.TitleButtons:SetNext()
 		else
 			return true
 		end
 	end;
-	[KEY.LEFT] = function(self)
+	['LEFT'] = function(self)
 		if self.isInspecting then
 			self.Inspector:SetPrevious()
 		else
 			return true
 		end
 	end;
-	[KEY.RIGHT] = function(self)
+	['RIGHT'] = function(self)
 		if self.isInspecting then
 			self.Inspector:SetNext()
 		else
 			return true
 		end
 	end;
-	[KEY.SQUARE] = function(self)
+	['SQUARE'] = function(self)
 		if self.isInspecting then
 			local focus = self.Inspector:GetFocus()
 			if focus and focus.ModifiedClick then
@@ -168,14 +193,14 @@ local ControllerInput = { -- return true when propagating
 			end
 		end
 	end;
-	[KEY.CIRCLE] = function(self)
+	['CIRCLE'] = function(self)
 		if self.isInspecting then
 			self.Inspector:Hide()
 		elseif self.hasItems then
 			self:ShowItems()
 		end
 	end;
-	[KEY.CROSS] = function(self)
+	['CROSS'] = function(self)
 		-- Gossip/multiple quest choices
 		if self.TitleButtons:GetMaxIndex() > 0 then
 			self.TitleButtons:ClickFocused()
@@ -199,10 +224,10 @@ local ControllerInput = { -- return true when propagating
 			CompleteQuest()
 		end
 	end;
-	[KEY.TRIANGLE] = function(self) API:CloseGossip() API:CloseQuest() end;
-	[KEY.OPTIONS] = function(self) API:CloseGossip() API:CloseQuest() end;
-	[KEY.CENTER] = function(self) API:CloseGossip() API:CloseQuest() end;
-	[KEY.SHARE] = function(self) API:CloseGossip() API:CloseQuest() end;
+	['TRIANGLE'] = function(self) API:CloseGossip() API:CloseQuest() end;
+	['OPTIONS'] = function(self) API:CloseGossip() API:CloseQuest() end;
+	['CENTER'] = function(self) API:CloseGossip() API:CloseQuest() end;
+	['SHARE'] = function(self) API:CloseGossip() API:CloseQuest() end;
 -------------------------------------------------
 } -----------------------------------------------
 -------------------------------------------------
@@ -218,18 +243,21 @@ do
 	end
 end
 
+local IsGamePadButton = IsBindingForGamePad or function(button)
+	return not not button:match('^PAD')
+end
+
 local function GetUIControlKey(button)
-	if ConsolePort.GetUIControlKey then
-		return ConsolePort:GetUIControlKey(GetBindingAction(button))
-	elseif ConsolePortUIHandle.GetUIControlBinding then
-		return ConsolePortUIHandle:GetUIControlBinding(button)
+	if HANDLE and HANDLE.GetUIControlBinding then
+		return HANDLE:GetUIControlBinding(button)
 	end
+	return IsGamePadButton(button) and button or nil;
 end
 
 function NPC:ParseControllerCommand(button)
 	if controllerInterrupt then
 		-- Handle edge case when CP cursor should precede Immersion input.
-		if not ConsolePort:GetData()('disableUI') then
+		if not ( ConsolePort and ConsolePort:GetData()('disableUI') ) then
 			if ( popupCounter > 0 ) or ( AzeriteEmpoweredItemUI and AzeriteEmpoweredItemUI:IsVisible() ) then
 				return false
 			end
@@ -241,7 +269,7 @@ function NPC:ParseControllerCommand(button)
 			return true
 		end
 		-- Handle every other case of possible controller inputs.
-		local keyID = GetUIControlKey(button)
+		local keyID = GetKeyForButton(GetUIControlKey(button) or button)
 		local func = keyID and ControllerInput[keyID]
 		if func then
 			return not func(self)
@@ -359,7 +387,9 @@ Inspector:HookScript('OnShow', function(self)
 		parent:RemoveHint('CROSS')
 	else
 		parent:AddHint('CROSS', CHOOSE)
-		HANDLE:AddHint('M1', CURRENTLY_EQUIPPED)
+		if HANDLE then
+			HANDLE:AddHint('M1', CURRENTLY_EQUIPPED)
+		end
 	end
 end)
 
@@ -367,7 +397,9 @@ Inspector:HookScript('OnHide', function(self)
 	local parent = self.parent
 
 	parent.isInspecting = false
-	HANDLE:RemoveHint('M1')
+	if HANDLE then
+		HANDLE:RemoveHint('M1')
+	end
 	if self.CROSS then
 		parent:AddHint('CROSS', self.CROSS)
 	end
