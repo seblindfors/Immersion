@@ -33,7 +33,7 @@ Settings are saved per account in `ImmersionSetup`.
 ## Controller support
 
 Immersion handles gamepad input on its own — no other addon required. Every action is
-bound to a face button by default and can be reassigned in the Gamepad tab.
+bound to a face button by default and can be reassigned on the Gamepad settings page.
 
 [ConsolePort](https://github.com/seblindfors/ConsolePort) is optional. When it is
 installed, Immersion adds its prompts to ConsolePort's hint bar, so the available

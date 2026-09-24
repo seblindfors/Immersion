@@ -16,12 +16,6 @@
 # Locale
 Locale\Locale.xml
 
-# Libs
-Libs\LibStub\LibStub.lua
-Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
-Libs\AceGUI-3.0\AceGUI-3.0.xml
-Libs\AceConfig-3.0\AceConfig-3.0.xml
-
 # Compatibility scripts
 Compat.lua
 Interface.lua
@@ -29,6 +23,8 @@ Interface.lua
 # Extra stuff & config
 Utils.lua
 Config.lua
+Settings.lua
+Settings.xml
 
 # Components
 Components\Scaler.lua

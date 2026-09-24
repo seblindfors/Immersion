@@ -129,21 +129,12 @@ function frame:ADDON_LOADED(name)
 		L.ToggleIgnoreFrame(MinimapCluster, not L('hideminimap'))
 		L.ToggleIgnoreFrame(ObjectiveTrackerFrame, not L('hidetracker'))
 
-		-- Register options table
-		LibStub('AceConfigRegistry-3.0'):RegisterOptionsTable(_, L.options)
-		L.config = LibStub('AceConfigDialog-3.0'):AddToBlizOptions(_)
+		-- Register settings panel
+		L.SetupSettings()
 
 		-- Slash handler
 		_G['SLASH_' .. _:upper() .. '1'] = '/' .. _:lower()
-		SlashCmdList[_:upper()] = function() LibStub('AceConfigDialog-3.0'):Open(_) end
-
-		-- Add some sexiness to the config frame.
-		local logo = CreateFrame('Frame', nil, L.config)
-		logo:SetFrameLevel(4)
-		logo:SetSize(64, 64)
-		logo:SetPoint('TOPRIGHT', 8, 24)
-		L.SetBackdrop(logo, {bgFile = ('Interface\\AddOns\\%s\\Textures\\Logo'):format(_)})
-		L.config.logo = logo
+		SlashCmdList[_:upper()] = L.OpenSettings
 
 		-- Run functions for compatibility with other addons on load.
 		-- If the addon in question is already loaded, run the function and remove from list.
