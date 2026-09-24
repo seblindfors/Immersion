@@ -8,29 +8,6 @@ L.compat = {
 		if ConsolePortCursor then L.ToggleIgnoreFrame(ConsolePortCursor, true) end
 		if ConsolePortMouseHandle then L.ToggleIgnoreFrame(ConsolePortMouseHandle, true) end
 		if ConsolePortUIHandle then L.ToggleIgnoreFrame(ConsolePortUIHandle.HintBar, true) end
-
-		local config = ConsolePortOldConfig
-		if config then
-			local WindowMixin = {}
-			function WindowMixin:OnShow()
-				L.config:SetParent(self)
-				L.config:ClearAllPoints()
-				L.config:SetPoint('TOPLEFT', 16, -16)
-				L.config:SetPoint('BOTTOMRIGHT', -16, 16)
-				L.config.logo:Hide()
-				L.config:Show()
-			end
-
-			function WindowMixin:OnHide()
-				L.config.logo:Show()
-			end
-			
-			config:AddPanel({
-				name = _, 
-				header = _, 
-				mixin = WindowMixin,
-			})
-		end
 	end;
 ----------------------------------
 	['Blitz'] = function(self)
@@ -54,11 +31,9 @@ L.compat = {
 	['!KalielsTracker'] = function(self)
 		local KTF = _G['!KalielsTrackerFrame']
 		L.ToggleIgnoreFrame(KTF, not L('hidetracker'))
-		L.options.args.general.args.hide.args.hidetracker.set = function(_, val)
-			L.cfg.hidetracker = val 
-			L.ToggleIgnoreFrame(ObjectiveTrackerFrame, not val)
+		Settings.SetOnValueChangedCallback(L.GetSettingVariable('hidetracker'), function(_, _, val)
 			L.ToggleIgnoreFrame(KTF, not val)
-		end
+		end)
 
 		-- this override keeps the tracker from popping back up due to events when faded
 		function KTF:SetAlpha(...)
