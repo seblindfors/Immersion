@@ -33,7 +33,13 @@ end
 local function Register(category, key, name, varType, onSet)
 	local default = L.defaults[key]
 	if default == nil then
-		default = (varType == VarType.Boolean and false) or (varType == VarType.String and '') or 0
+		if varType == VarType.Boolean then
+			default = false
+		elseif varType == VarType.String then
+			default = ''
+		else
+			default = 0
+		end
 	end
 	local function GetValue()
 		local value = L.Get(key)
